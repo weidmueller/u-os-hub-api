@@ -1,0 +1,15 @@
+// SPDX-FileCopyrightText: 2024 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+//
+// SPDX-License-Identifier: MIT
+
+include "../types/state.fbs";
+
+namespace weidmueller.ucontrol.hub;
+
+/// An event that describes a state that has just changed.
+table StateChangedEvent {
+  /// A state that has just been changed.
+  state: State;
+}
+
+root_type StateChangedEvent;

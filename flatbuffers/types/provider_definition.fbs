@@ -1,0 +1,42 @@
+// SPDX-FileCopyrightText: 2024 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+//
+// SPDX-License-Identifier: MIT
+
+include "variable.fbs";
+
+namespace weidmueller.ucontrol.hub;
+
+/// The state of the provider definition. The state will be set by the registry.
+enum ProviderDefinitionState : ubyte {
+  /// The state is unspecified.
+  UNSPECIFIED,
+  /// The provider definition is ok and valid.
+  OK,
+  /// The provider definition is invalid => variable_definitions.size = 0
+  INVALID,
+}
+
+/// A definition of a provider's provided variables.
+///
+/// Definition elements have a flat list instead of a hierarchy structure.
+/// They support the folder concept as a means of grouping definitions by using
+/// a shared key prefix for the grouped definitions.
+/// This means that the grouped definitions have keys that begin with a common
+/// string.
+/// This common string, or shared prefix, is the folder key.
+///
+/// For security reasons, the provider id must be extracted from the
+/// communication channel.
+table ProviderDefinition {
+  /// The fingerprint is a version identification of the provider definition.
+  ///
+  /// Therefore, the fingerprint can be used by a consumer to check whether
+  /// the provider's definition matches the values received.
+  /// Whenever a provider definition changed, the provider must change the 
+  /// fingerprint.
+  fingerprint: uint64;
+  /// The list of variable definitions.
+  variable_definitions: [VariableDefinition];
+  /// The current state of the provider definition. The state will be set by the registry.
+  state: ProviderDefinitionState;
+}

@@ -1,0 +1,17 @@
+// SPDX-FileCopyrightText: 2024 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+//
+// SPDX-License-Identifier: MIT
+
+include "../types/variable.fbs";
+
+namespace weidmueller.ucontrol.hub;
+
+/// An event that describes a provider's list of variables that have just
+/// changed.
+table VariablesChangedEvent {
+  /// A list of variables that have just been changed.
+  /// Only contains changed variables!
+  changed_variables: VariableList (required);
+}
+
+root_type VariablesChangedEvent;

@@ -1,0 +1,15 @@
+// SPDX-FileCopyrightText: 2024 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+//
+// SPDX-License-Identifier: MIT
+
+include "../types/provider.fbs";
+
+namespace weidmueller.ucontrol.hub;
+
+/// A query response that returns a requested list of providers.
+table ReadProvidersQueryResponse {
+  /// A list of providers that have been requested.
+  providers: ProviderList (required);
+}
+
+root_type ReadProvidersQueryResponse;

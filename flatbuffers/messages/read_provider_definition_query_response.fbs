@@ -1,0 +1,15 @@
+// SPDX-FileCopyrightText: 2024 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+//
+// SPDX-License-Identifier: MIT
+
+include "../types/provider_definition.fbs";
+
+namespace weidmueller.ucontrol.hub;
+
+/// A query Response that returns a requested provider's definition.
+table ReadProviderDefinitionQueryResponse {
+  /// A provider's definition that has been requested.
+  provider_definition: ProviderDefinition;
+}
+
+root_type ReadProviderDefinitionQueryResponse;

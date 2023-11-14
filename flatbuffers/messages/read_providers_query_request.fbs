@@ -1,0 +1,11 @@
+// SPDX-FileCopyrightText: 2024 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+//
+// SPDX-License-Identifier: MIT
+
+namespace weidmueller.ucontrol.hub;
+
+/// A query request that requests a list of providers.
+table ReadProvidersQueryRequest {
+}
+
+root_type ReadProvidersQueryRequest;

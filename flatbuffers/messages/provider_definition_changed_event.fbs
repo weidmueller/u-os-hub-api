@@ -1,0 +1,16 @@
+// SPDX-FileCopyrightText: 2024 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+//
+// SPDX-License-Identifier: MIT
+
+include "../types/provider_definition.fbs";
+
+namespace weidmueller.ucontrol.hub;
+
+/// An event that describes a provider's definition that has just changed.
+table ProviderDefinitionChangedEvent {
+  /// A definition that has just been changed.
+  /// If the provider_definition is null, the provider is removed.
+  provider_definition: ProviderDefinition;
+}
+
+root_type ProviderDefinitionChangedEvent;

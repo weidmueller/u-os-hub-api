@@ -1,0 +1,15 @@
+// SPDX-FileCopyrightText: 2024 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+//
+// SPDX-License-Identifier: MIT
+
+include "../types/variable.fbs";
+
+namespace weidmueller.ucontrol.hub;
+
+/// A query response that responds to a requested list of provider variables.
+table ReadVariablesQueryResponse {
+  /// A list of variables that have been requested.
+  variables: VariableList (required);
+}
+
+root_type ReadVariablesQueryResponse;

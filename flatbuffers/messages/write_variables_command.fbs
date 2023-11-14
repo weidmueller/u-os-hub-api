@@ -1,0 +1,15 @@
+// SPDX-FileCopyrightText: 2024 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+//
+// SPDX-License-Identifier: MIT
+
+include "../types/variable.fbs";
+
+namespace weidmueller.ucontrol.hub;
+
+/// A command writing a list of provider variables.
+table WriteVariablesCommand {
+  /// A list of variables that have to be written.
+  variables: VariableList (required);
+}
+
+root_type WriteVariablesCommand;

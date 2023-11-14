@@ -1,0 +1,15 @@
+// SPDX-FileCopyrightText: 2024 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+//
+// SPDX-License-Identifier: MIT
+
+include "../types/provider.fbs";
+
+namespace weidmueller.ucontrol.hub;
+
+/// An event that describes a list of providers that have just changed.
+table ProvidersChangedEvent {
+  /// A list of providers that have just been changed.
+  providers: ProviderList (required);
+}
+
+root_type ProvidersChangedEvent;

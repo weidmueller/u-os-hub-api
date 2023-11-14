@@ -1,0 +1,136 @@
+// SPDX-FileCopyrightText: 2024 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+//
+// SPDX-License-Identifier: MIT
+
+include "timestamp.fbs";
+include "duration.fbs";
+
+namespace weidmueller.ucontrol.hub;
+
+/// The data type of a variable.
+enum VariableDataType: byte {
+  UNSPECIFIED,
+  BOOLEAN,
+  DURATION,
+  FLOAT64,
+  INT64,
+  STRING,
+  TIMESTAMP
+}
+
+/// The access type of a variable.
+enum VariableAccessType: byte {
+  UNSPECIFIED,
+  /// Consumers can only read the variable.
+  READ_ONLY,
+  /// Consumers can read and write the variable.
+  READ_WRITE
+}
+
+/// The quality of a variable.
+///
+/// This is set by the provider and indicates the quality of a variable value.
+/// Check the documentation of the individual values for more information.
+enum VariableQuality : ubyte {
+  /// Indicates that the value is not usable
+  BAD = 0,
+  /// Variable quality is uncertain without any specific reason, but may still be usable e.g. for display or other non critical purposes
+  UNCERTAIN = 0x40,
+  /// The variable has stopped updating and contains its last usable value
+  UNCERTAIN_LAST_USABLE_VALUE = 0x43,
+  /// Variable has not been written yet and still contains a default initial value
+  UNCERTAIN_INITIAL_VALUE = 0x44,
+  /// Indicates that the value is good and can be used without restrictions
+  GOOD = 0xc0
+}
+
+/// A boolean value of a variable.
+table VariableValueBoolean {
+  value: bool;
+}
+
+/// A duration value of a variable.
+table VariableValueDuration {
+  value: Duration;
+}
+
+/// A precision floating-point value of a variable.
+table VariableValueFloat64 {
+  value: float64;
+}
+
+/// A 64-bit, signed integer value of a variable.
+table VariableValueInt64 {
+  value: int64;
+}
+
+/// A string value of a variable.
+table VariableValueString {
+  value: string;
+}
+
+/// A date and time value of a variable.
+table VariableValueTimestamp {
+  value: Timestamp;
+}
+
+/// The value of a variable.
+union VariableValue {
+  Boolean: VariableValueBoolean,
+  Duration: VariableValueDuration,
+  Float64: VariableValueFloat64,
+  Int64: VariableValueInt64,
+  String: VariableValueString,
+  Timestamp: VariableValueTimestamp
+}
+
+/// The definition of a variable.
+table VariableDefinition {
+  /// The provider's unique key of the variable.
+  key: string (required);
+  /// The unique ID of the variable. It is only unique via one provider.
+  id: uint;
+  /// The data type of the variable.
+  data_type: VariableDataType;
+  /// The access type of the variable.
+  access_type: VariableAccessType;
+  /// Marker to indicate whether the variable is experimental.
+  ///
+  /// Experimental means that the variable is not stable/reliable and it is hidden in the user interface.
+  experimental: bool;
+}
+
+/// A variable associated with the provider's definition.
+table Variable {
+  /// The value of the variable.
+  value: VariableValue (required);
+  /// The ID of the variable associated with the provider's definition.
+  id: uint;
+  /// The individual timestamp of the variable.
+  ///
+  /// Only set by the provider!
+  /// Consumers can left this empty. This value is ignored by the provider in 
+  /// a write command.
+  timestamp: Timestamp;
+  /// The quality of the variable.
+  ///
+  /// Only set by the provider!
+  /// Consumers can set it to BAD. This value is ignored by the provider  
+  /// in a write command.
+  quality: VariableQuality;
+}
+
+/// A list of a provider's variables that match the provider's definition.
+table VariableList {
+  /// The fingerprint of the associated provider's definition.
+  provider_definition_fingerprint: uint64;
+  /// The timestamp for all changed variables. The base timestamp is the
+  /// fallback if no explicit was specified for the variable.
+  ///
+  /// Only set by the provider!
+  /// Consumers can set it to 0s and 0ns. This value is ignored by the 
+  /// provider in a write command.
+  base_timestamp: Timestamp (required);
+  /// The items of the provider's variable list.
+  items: [Variable];
+}

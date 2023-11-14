@@ -1,0 +1,15 @@
+// SPDX-FileCopyrightText: 2024 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+//
+// SPDX-License-Identifier: MIT
+
+namespace weidmueller.ucontrol.hub;
+
+/// A state of a service.
+///
+/// The state names are based on
+/// [the status names of the systemd services](https://www.freedesktop.org/software/systemd/man/latest/systemctl.html#is-system-running).
+enum State: byte {
+  UNSPECIFIED,
+  RUNNING,
+  STOPPING
+}

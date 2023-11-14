@@ -1,0 +1,19 @@
+// SPDX-FileCopyrightText: 2024 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+//
+// SPDX-License-Identifier: MIT
+
+include "variable.fbs";
+
+namespace weidmueller.ucontrol.hub;
+
+/// A provider that provides variables to consumers.
+table Provider {
+  /// The id of the provider.
+  id: string (required);
+}
+
+/// A list of providers that provide variables to consumers.
+table ProviderList {
+  /// The list of providers.
+  items: [Provider];
+}
