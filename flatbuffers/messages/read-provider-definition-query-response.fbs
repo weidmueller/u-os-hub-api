@@ -1,0 +1,11 @@
+include "../types/provider-definition.fbs";
+
+namespace weidmueller.ucontrol.hub;
+
+/// A query Response that response a requested provider's definition.
+table ReadProviderDefinitionQueryResponse {
+  /// A provider's definition that have been requested.
+  provider_definition: ProviderDefinition;
+}
+
+root_type ReadProviderDefinitionQueryResponse;

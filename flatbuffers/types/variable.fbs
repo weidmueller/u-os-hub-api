@@ -1,0 +1,99 @@
+include "datetime.fbs";
+
+namespace weidmueller.ucontrol.hub;
+
+/// An data type of a variable.
+enum VariableDataType: byte {
+  Boolean,
+  DateTime,
+  Double,
+  Int64,
+  String
+}
+
+/// An access type of a variable.
+enum VariableAccessType: byte {
+  ReadOnly,
+  ReadWrite
+}
+
+/// A quality of a variable.
+enum VariableQuality : ubyte {
+  Bad = 0,
+  Uncertain = 0x40,
+  UncertainLastUsableValue = 0x43,
+  UncertainInitialValue = 0x44,
+  Good = 0xc0
+}
+
+/// A boolean value of a variable.
+table VariableValueBoolean {
+  value: bool;
+}
+
+/// A date and time value of a variable.
+table VariableValueDateTime {
+  value: DateTime;
+}
+
+/// A double-precision floating-point value of a variable.
+table VariableValueDouble {
+  value: double;
+}
+
+/// A 64-bit, signed intege value of a variable.
+table VariableValueInt64 {
+  value: int64;
+}
+
+/// A string value of a variable.
+table VariableValueString {
+  value: string;
+}
+
+/// A value of a variable.
+union VariableValue {
+  Boolean: VariableValueBoolean,
+  DateTime: VariableValueDateTime,
+  Double: VariableValueDouble,
+  Int64: VariableValueInt64,
+  String: VariableValueString
+}
+
+/// A definition of a variable.
+table VariableDefinition {
+  /// The name of the variable.
+  name: string;
+  /// The povider's unique ID of the variable.
+  id: uint;
+  /// The data type of the variable.
+  data_type: VariableDataType;
+  /// The access type of the variable.
+  access_type: VariableAccessType;
+}
+
+/// A variable associated with the provider's definition.
+table Variable {
+  /// The value of the variable.
+  value: VariableValue;
+  /// The ID of the variable associated with the provider's definition.
+  id: uint;
+  /// The individual timestamp of the variable.
+  ///
+  /// Only set by the provider!
+  timestamp: DateTime;
+  /// The qualitiy of the variable.
+  quality: VariableQuality;
+}
+
+/// A list of a provider's variables that match the provider's definition.
+table VariableList {
+  /// The fingerprint of the associated provider's definition.
+  provider_definition_fingerprint: uint64;
+  /// The base timestamp as fallback for variable timestamps to minimize transfer size.
+  ///
+  /// Only set by the provider!
+  base_timestamp: DateTime;
+  /// The items of the provider's variable list.
+  items: [Variable];
+}

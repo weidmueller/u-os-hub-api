@@ -1,0 +1,15 @@
+include "variable.fbs";
+
+namespace weidmueller.ucontrol.hub;
+
+/// A provider that provides variables to consumers.
+table Provider {
+  /// The name of the provider.
+  name: string;
+}
+
+/// A list of providers that provide variables to consumers.
+table ProviderList {
+  /// The list of providers.
+  items: [Provider];
+}

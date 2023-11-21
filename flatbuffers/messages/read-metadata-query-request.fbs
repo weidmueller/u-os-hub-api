@@ -1,0 +1,11 @@
+namespace weidmueller.ucontrol.hub;
+
+table Filter {
+    node_names: [string]; // node name "folder1/metric1" or folder "folder1"
+}
+
+table ReadMetadataQueryRequest {
+    filter: Filter;
+}
+
+root_type ReadMetadataQueryRequest;

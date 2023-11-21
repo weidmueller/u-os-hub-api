@@ -1,0 +1,10 @@
+include "../types/provider.fbs";
+include "../types/variable.fbs";
+
+namespace weidmueller.ucontrol.hub;
+
+table ProvidersUpdatedEvent { 
+    providers:[Provider]; // Only names and description of the providers
+}
+
+root_type ProvidersUpdatedEvent;

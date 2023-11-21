@@ -1,0 +1,11 @@
+include "../types/provider-definition.fbs";
+
+namespace weidmueller.ucontrol.hub;
+
+/// An event that describes a provider's definition that have just changed.
+table ProviderDefinitionChangedEvent {
+  /// A definition that have just been changed.
+  provider_definition: ProviderDefinition;
+}
+
+root_type ProviderDefinitionChangedEvent;

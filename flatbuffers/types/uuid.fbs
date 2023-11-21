@@ -1,0 +1,6 @@
+namespace weidmueller.ucontrol.hub;
+
+struct Uuid {
+  upper: uint64;
+  lower: uint64;
+}

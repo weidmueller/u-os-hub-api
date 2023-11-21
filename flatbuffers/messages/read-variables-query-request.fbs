@@ -1,0 +1,11 @@
+namespace weidmueller.ucontrol.hub;
+
+/// A query request that requests a list of provider variables.
+///
+/// The returned variables could be filtered using an array of IDs.
+table ReadVariablesQueryRequest {
+  /// An array of IDs of the provider variables to request.
+  ids: [uint];
+}
+
+root_type ReadVariablesQueryRequest;

@@ -1,0 +1,11 @@
+namespace weidmueller.ucontrol.hub;
+
+/// A data and time measured by the number of nanoseconds that have elapsed
+/// since 00:00:00 UTC on 1 January 1970, which is referred to as the Unix
+/// epoch, without adjustments made due to leap seconds.
+struct DateTime {
+  /// The seconds that have elapsed since the Unix epoch.
+  seconds: int64;
+  /// The fractional nanoseconds that have elapsed since the Unix epoch.
+  nanos: int32;
+}

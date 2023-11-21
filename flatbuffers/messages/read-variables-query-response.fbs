@@ -1,0 +1,11 @@
+include "../types/variable.fbs";
+
+namespace weidmueller.ucontrol.hub;
+
+/// A query response that response a requested list of provider variables.
+table ReadVariablesQueryResponse {
+  /// A list of variables that have been requested.
+  variables: VariableList;
+}
+
+root_type ReadVariablesQueryResponse;

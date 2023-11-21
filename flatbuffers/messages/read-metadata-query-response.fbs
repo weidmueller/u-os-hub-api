@@ -1,0 +1,9 @@
+include "../types/provider.fbs";
+
+namespace weidmueller.ucontrol.hub;
+
+table ReadMetadataQueryResponse {
+    provider_metadata: ProviderMetadata;
+}
+
+root_type ReadMetadataQueryResponse;
