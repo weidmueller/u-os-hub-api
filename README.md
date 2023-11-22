@@ -16,3 +16,11 @@ Please contact the persons above for merge requests or any questions regarding t
 
 Flatbuffers schema are compiled into target source code via the flatc compiler.
 For an example, see the uc-hub repository.
+
+## Installation
+
+Install `Remote Development` and `Remote-Containers` in Visual Studio Code and start the developing environment via `Reopen in Container`.
+
+## Live Server
+
+Click on `Go Live` from the status bar to turn a [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) on/off and open a live view in the browser.

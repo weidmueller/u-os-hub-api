@@ -1,0 +1,18 @@
+{
+    "cSpell": {
+        "language": "en-GB",
+        "words": []
+    },
+    "editor": {
+        "wordWrapColumn": 79,
+        "wordWrap": "bounded",
+        "rulers": [
+            79
+        ]
+    },
+    "liveServer": {
+        "settings": {
+            "root": "/dist"
+        }
+    }
+}

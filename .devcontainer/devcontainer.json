@@ -1,0 +1,33 @@
+{
+  "containerUser": "node",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ban.spellright",
+        "esbenp.prettier-vscode",
+        "fnando.linter",
+        "ms-azuretools.vscode-docker",
+        "pucelle.run-on-save",
+        "ritwickdey.LiveServer",
+        "streetsidesoftware.code-spell-checker",
+        "streetsidesoftware.code-spell-checker-british-english",
+        "tyriar.sort-lines"
+      ]
+    }
+  },
+  "dockerComposeFile": [
+    "../docker-compose.yml",
+    "docker-compose.extend.yml"
+  ],
+  "mounts": [
+    {
+      "source": "${localWorkspaceFolder}",
+      "target": "/${localWorkspaceFolderBasename}",
+      "type": "bind"
+    }
+  ],
+  "name": "uc-hub-api",
+  "service": "uc-hub-api",
+  "shutdownAction": "stopCompose",
+  "workspaceFolder": "/${localWorkspaceFolderBasename}"
+}

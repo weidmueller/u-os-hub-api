@@ -1,0 +1,7 @@
+version: "3"
+services:
+  uc-hub-api:
+    build:
+      context: .
+      target: devcontainer
+    command: /bin/sh -c "while sleep 1000; do :; done"
