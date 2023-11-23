@@ -1,4 +1,4 @@
-include "../types/provider-definition.fbs";
+include "../types/provider_definition.fbs";
 
 namespace weidmueller.ucontrol.hub;
 
