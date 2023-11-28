@@ -4,7 +4,7 @@ include "../types/variable.fbs";
 namespace weidmueller.ucontrol.hub;
 
 table ProvidersUpdatedEvent { 
-    providers:[Provider]; // Only names and description of the providers
+    providers:[Provider] (required); // Only names and description of the providers
 }
 
 root_type ProvidersUpdatedEvent;

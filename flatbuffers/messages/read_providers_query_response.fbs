@@ -5,7 +5,7 @@ namespace weidmueller.ucontrol.hub;
 /// A query response that response a requested list of providers.
 table ReadProvidersQueryResponse {
   /// A list of providers that have been requested.
-  providers: ProviderList;
+  providers: ProviderList (required);
 }
 
 root_type ReadProvidersQueryResponse;

@@ -5,7 +5,7 @@ namespace weidmueller.ucontrol.hub;
 /// A query response that response a requested list of provider variables.
 table ReadVariablesQueryResponse {
   /// A list of variables that have been requested.
-  variables: VariableList;
+  variables: VariableList (required);
 }
 
 root_type ReadVariablesQueryResponse;

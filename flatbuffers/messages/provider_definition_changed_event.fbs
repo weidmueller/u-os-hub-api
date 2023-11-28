@@ -5,7 +5,7 @@ namespace weidmueller.ucontrol.hub;
 /// An event that describes a provider's definition that have just changed.
 table ProviderDefinitionChangedEvent {
   /// A definition that have just been changed.
-  provider_definition: ProviderDefinition;
+  provider_definition: ProviderDefinition (required);
 }
 
 root_type ProviderDefinitionChangedEvent;

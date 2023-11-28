@@ -5,7 +5,7 @@ namespace weidmueller.ucontrol.hub;
 /// A command writing a list of provider variables.
 table WriteVariablesCommand {
   /// A list of variables that have to be written.
-  variables: VariableList;
+  variables: VariableList (required);
 }
 
 root_type WriteVariablesCommand;
