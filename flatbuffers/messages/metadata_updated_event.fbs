@@ -1,9 +1,0 @@
-include "../types/provider.fbs";
-
-namespace weidmueller.ucontrol.hub;
-
-table MetadataUpdatedEvent {
-  provider_metadata: ProviderMetadata;
-}
-
-root_type MetadataUpdatedEvent;
