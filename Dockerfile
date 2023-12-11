@@ -1,9 +1,14 @@
 FROM node:18 AS builder
 
+ENV PUPPETEER_EXECUTABLE_PATH /usr/bin/chromium
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
+
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
+    chromium \
     flatbuffers-compiler \
     git \
+    jq \
  && rm -rf /var/lib/apt/lists/*
 
 FROM builder AS devcontainer

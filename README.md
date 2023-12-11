@@ -21,6 +21,16 @@ For an example, see the uc-hub repository.
 
 Install `Remote Development` and `Remote-Containers` in Visual Studio Code and start the developing environment via `Reopen in Container`.
 
+## Build
+
+The developing environment installs the project's npm dependencies and executes a build command on startup.
+[Run on Save](https://marketplace.visualstudio.com/items?itemName=pucelle.run-on-save) automatically executes a build command when files were saved.
+
+```
+npm ci --ignore-optional --silent
+npm run build
+```
+
 ## Live Server
 
 Click on `Go Live` from the status bar to turn a [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) on/off and open a live view in the browser.

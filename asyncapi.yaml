@@ -1,0 +1,270 @@
+asyncapi: 2.6.0
+id: https://uc-hub.u-control.weidmueller.com/
+info:
+  title: uc-hub
+  version: 0.1.0
+  description: |
+    The u-control data hub consists of participants.
+    A participant could be a consumer, provider or both.
+    A consumer accesses and manipulates the data of an provider.
+    A provider owns data and offers its data as variables or objects.
+    A variable is a named single variable value with a fixed type.
+    An object is a potentially large composition that may or may not have a
+    predefined schema.
+    
+    A provider's definition describes the data and contains additional
+    metadata.
+    The definition elements use a flat list instead of a hierarchy structure.
+    They support the folder concept as a means of grouping definitions by using
+    a shared name prefix for the grouped definitions.
+    This means that the grouped definitions have names that begin with a common
+    string.
+    This common string, or shared prefix, is the folder name, for example
+    `module0/` is the folder of the variable `module0/input0`.
+  contact:
+    name: Weidmüller Interface GmbH & Co. KG
+    url: https://www.weidmueller.com
+    email: info@weidmueller.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+  device:
+    url: localhost:4222
+    protocol: nats
+defaultContentType: application/x-flatbuffers
+channels:
+  v1.loc.{providerName}.vars.evt.changed:
+    description: An event from a provider to the consumers that describes a provider's list of variables that have just changed its value or quality.
+    parameters:
+      providerName:
+        $ref: "#/components/parameters/ProviderName"
+    publish:
+      operationId: emitVariablesChangedEvent
+      tags:
+        - name: provider
+      message:
+        $ref: "#/components/messages/VariablesChangedEvent"
+    subscribe:
+      operationId: receiveVariablesChangedEvent
+      tags:
+        - name: consumer
+      message:
+        $ref: "#/components/messages/VariablesChangedEvent"
+  v1.loc.{providerName}.vars.qry.read:
+    description: A query from a consumer to a provider requesting a list of provider variables.
+    parameters:
+      providerName:
+        $ref: "#/components/parameters/ProviderName"
+    publish:
+      operationId: emitReadVariablesQueryRequest
+      tags:
+        - name: consumer
+      message:
+        $ref: "#/components/messages/ReadVariablesQueryRequest"
+    subscribe:
+      operationId: receiveReadVariablesQueryRequest
+      tags:
+        - name: provider
+      message:
+        $ref: "#/components/messages/ReadVariablesQueryRequest"
+  v1.loc.{providerName}.vars.cmd.write:
+    description: A command from a consumer to a provider writing a list of provider variables.
+    parameters:
+      providerName:
+        $ref: "#/components/parameters/ProviderName"
+    publish:
+      operationId: emitWriteVariablesCommand
+      tags:
+        - name: consumer
+      message:
+        $ref: "#/components/messages/WriteVariablesCommand"
+    subscribe:
+      operationId: receiveWriteVariablesCommand
+      tags:
+        - name: provider
+      message:
+        $ref: "#/components/messages/WriteVariablesCommand"
+  v1.loc.{providerName}.def.evt.changed:
+    description: An event from a provider to the registry that describes a provider's definition that have just changed.
+    parameters:
+      providerName:
+        $ref: "#/components/parameters/ProviderName"
+    publish:
+      operationId: emitProviderDefinitionChangedEvent
+      tags:
+        - name: provider
+      message:
+        $ref: "#/components/messages/ProviderDefinitionChangedEvent"
+  v1.loc.registry.providers.{providerName}.def.qry.read:
+    description: A query from a consumer to the registry requesting a provider's definition.
+    parameters:
+      providerName:
+        $ref: "#/components/parameters/ProviderName"
+    publish:
+      operationId: emitReadProviderDefinitionQueryRequest
+      tags:
+        - name: consumer
+      message:
+        $ref: "#/components/messages/ReadProviderDefinitionQueryRequest"
+  v1.loc.registry.providers.{providerName}.def.evt.changed:
+    description: An event from the registry to the consumers that describes a provider's definition that have just changed.
+    parameters:
+      providerName:
+        $ref: "#/components/parameters/ProviderName"
+    subscribe:
+      operationId: receiveProviderDefinitionChangedEvent
+      tags:
+        - name: consumer
+      message:
+        $ref: "#/components/messages/ProviderDefinitionChangedEvent"
+  v1.loc.registry.providers.qry.read:
+    description: A query from a consumer to the registry requesting a list of providers.
+    publish:
+      operationId: emitReadProvidersQueryRequest
+      tags:
+        - name: consumer
+      message:
+        $ref: "#/components/messages/ReadProvidersQueryRequest"
+  v1.loc.registry.providers.evt.changed:
+    description: An event from the registry to the consumers that describes a list of providers that have just changed.
+    subscribe:
+      operationId: receiveProvidersChangedEvent
+      tags:
+        - name: consumer
+      message:
+        $ref: "#/components/messages/ProvidersChangedEvent"
+  v1.loc.registry.state.evt.changed:
+    description: An event from the registry to the consumers that describes a state that have just changed.
+    subscribe:
+      operationId: receiveStateChangedEvent
+      tags:
+        - name: consumer
+        - name: provider
+      message:
+        $ref: "#/components/messages/StateChangedEvent"
+  _INBOX.{consumerName}.{sessionId}:
+    parameters:
+      consumerName:
+        $ref: "#/components/parameters/ConsumerName"
+      sessionId:
+        $ref: "#/components/parameters/SessionId"
+    publish:
+      operationId: replyFromConsumer
+      tags:
+        - name: consumer
+      message:
+        oneOf:
+          - $ref: "#/components/messages/ReadProviderDefinitionQueryResponse"
+          - $ref: "#/components/messages/ReadProvidersQueryResponse"
+          - $ref: "#/components/messages/ReadVariablesQueryResponse"
+  _INBOX.{providerName}.{sessionId}:
+    parameters:
+      providerName:
+        $ref: "#/components/parameters/ProviderName"
+      sessionId:
+        $ref: "#/components/parameters/SessionId"
+    publish:
+      operationId: replyFromProvider
+      tags:
+        - name: provider
+      message:
+        oneOf:
+          - $ref: "#/components/messages/ReadVariablesQueryResponse"
+components:
+  messages:
+    ProviderDefinitionChangedEvent:
+      #      messageId: ProviderDefinitionChangedEvent
+      payload:
+        $ref: "jsonschemas/messages/provider_definition_changed_event.schema.json"
+    ProvidersChangedEvent:
+      messageId: ProvidersChangedEvent
+      payload:
+        $ref: "jsonschemas/messages/providers_changed_event.schema.json"
+    ReadProviderDefinitionQueryRequest:
+      messageId: ReadProviderDefinitionQueryRequest
+      headers:
+        $ref: "#/components/schemas/Headers"
+      correlationId:
+        $ref: "#/components/correlationIds/Reply"
+      payload:
+        $ref: "jsonschemas/messages/read_provider_definition_query_request.schema.json"
+    ReadProviderDefinitionQueryResponse:
+      messageId: ReadProviderDefinitionQueryResponse
+      payload:
+        $ref: "jsonschemas/messages/read_provider_definition_query_response.schema.json"
+    ReadProvidersQueryRequest:
+      messageId: ReadProvidersQueryRequest
+      headers:
+        $ref: "#/components/schemas/Headers"
+      correlationId:
+        $ref: "#/components/correlationIds/Reply"
+      payload:
+        $ref: "jsonschemas/messages/read_providers_query_request.schema.json"
+    ReadProvidersQueryResponse:
+      messageId: ReadProvidersQueryResponse
+      payload:
+        $ref: "jsonschemas/messages/read_providers_query_response.schema.json"
+    ReadVariablesQueryRequest:
+      #      messageId: ReadVariablesQueryRequest
+      headers:
+        $ref: "#/components/schemas/Headers"
+      correlationId:
+        $ref: "#/components/correlationIds/Reply"
+      payload:
+        $ref: "jsonschemas/messages/read_variables_query_request.schema.json"
+    ReadVariablesQueryResponse:
+      #      messageId: ReadVariablesQueryResponse
+      payload:
+        $ref: "jsonschemas/messages/read_variables_query_response.schema.json"
+    StateChangedEvent:
+      messageId: StateChangedEvent
+      payload:
+        $ref: "jsonschemas/messages/state_changed_event.schema.json"
+    VariablesChangedEvent:
+      #      messageId: VariablesChangedEvent
+      payload:
+        $ref: "jsonschemas/messages/variables_changed_event.schema.json"
+    WriteVariablesCommand:
+      #      messageId: WriteVariablesCommand
+      payload:
+        $ref: "jsonschemas/messages/write_variables_command.schema.json"
+  parameters:
+    ConsumerName:
+      description: Name of the consumer.
+      schema:
+        type: string
+    ProviderName:
+      description: Name of the provider.
+      schema:
+        type: string
+    SessionId:
+      description: Id of the request-reply session.
+      schema:
+        type: string
+  correlationIds:
+    Reply:
+      description: Correlation reply channel.
+      location: $message.header#/reply
+  schemas:
+    DateTime:
+      $ref: "jsonschemas/messages/variables_changed_event.schema.json#/definitions/weidmueller_ucontrol_hub_DateTime"
+    Headers:
+      type: object
+      properties:
+        reply:
+          description: Reply channel set by application
+          type: string
+    ProviderDefinition:
+      $ref: "jsonschemas/messages/provider_definition_changed_event.schema.json#/definitions/weidmueller_ucontrol_hub_ProviderDefinition"
+    ProviderList:
+      $ref: "jsonschemas/messages/providers_changed_event.schema.json#/definitions/weidmueller_ucontrol_hub_ProviderList"
+    State:
+      $ref: "jsonschemas/messages/state_changed_event.schema.json#/definitions/weidmueller_ucontrol_hub_State"
+    VariableList:
+      $ref: "jsonschemas/messages/variables_changed_event.schema.json#/definitions/weidmueller_ucontrol_hub_VariableList"
+tags:
+  - name: consumer
+    description: Consumer
+  - name: provider
+    description: Provider

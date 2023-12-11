@@ -3,6 +3,7 @@
   "customizations": {
     "vscode": {
       "extensions": [
+        "asyncapi.asyncapi-preview",
         "ban.spellright",
         "esbenp.prettier-vscode",
         "fnando.linter",
@@ -27,6 +28,7 @@
     }
   ],
   "name": "uc-hub-api",
+  "postCreateCommand": "npm ci --ignore-optional && npm run build",
   "service": "uc-hub-api",
   "shutdownAction": "stopCompose",
   "workspaceFolder": "/${localWorkspaceFolderBasename}"

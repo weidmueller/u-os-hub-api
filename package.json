@@ -1,0 +1,8 @@
+{
+  "devDependencies": {
+    "@asyncapi/cli": "^0.60.4"
+  },
+  "scripts": {
+    "build": "./scripts/generate.sh"
+  }
+}
