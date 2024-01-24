@@ -24,7 +24,7 @@ Install `Remote Development` and `Remote-Containers` in Visual Studio Code and s
 ## Build
 
 The developing environment installs the project's npm dependencies and executes a build command on startup.
-[Run on Save](https://marketplace.visualstudio.com/items?itemName=pucelle.run-on-save) automatically executes a build command when files were saved.
+[Run on Save](https://marketplace.visualstudio.com/items?itemName=pucelle.run-on-save) automatically executes a build command when the asyncapi.yaml or openapi.yaml are saved.
 
 ```
 npm ci --ignore-optional --silent

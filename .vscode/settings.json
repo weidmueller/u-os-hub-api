@@ -1,31 +1,29 @@
 {
-    "cSpell": {
-        "language": "en-GB",
-        "words": []
-    },
-    "editor": {
-        "wordWrapColumn": 79,
-        "wordWrap": "bounded",
-        "rulers": [
-            79
-        ]
-    },
-    "liveServer": {
-        "settings": {
-            "root": "/dist"
-        }
-    },
-    "runOnSave": {
-        "commands": [
-            {
-                "async": false,
-                "command": "npm run build && echo 'Site generation complete!'",
-                "finishStatusMessage": "Site generation complete!",
-                "match": ".*",
-                "notMatch": "(dist|node_modules|.git)",
-                "runIn": "backend",
-                "runningStatusMessage": "Generating site..."
-            }
-        ]
+  "cSpell": {
+    "language": "en-GB",
+    "words": []
+  },
+  "editor": {
+    "wordWrapColumn": 79,
+    "wordWrap": "bounded",
+    "rulers": [79]
+  },
+  "liveServer": {
+    "settings": {
+      "root": "/dist"
     }
+  },
+  "runOnSave": {
+    "commands": [
+      {
+        "async": false,
+        "command": "npm run build && echo 'Site generation complete!'",
+        "finishStatusMessage": "Site generation complete!",
+        "match": "\\.*api.yaml$",
+        "notMatch": "(dist|node_modules|.git)",
+        "runIn": "backend",
+        "runningStatusMessage": "Generating site..."
+      }
+    ]
+  }
 }
