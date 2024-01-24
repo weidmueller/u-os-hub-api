@@ -40,3 +40,17 @@ echo "Generate AsyncAPI site"
     --force-write \
     -p sidebarOrganization=byTags \
 )
+
+echo "Validate openapi.yaml"
+(cd ${project_dir} \
+  && openapi-generator-cli validate -i openapi.yaml \
+  || exit 1
+)
+echo ""
+
+echo "Generate OpenAPI site"
+(rm -rf dist/openapi \
+  && mkdir -p dist/openapi \
+  && cp tools/swagger-ui-template/* dist/openapi \
+  && cp openapi.yaml dist/openapi \
+)

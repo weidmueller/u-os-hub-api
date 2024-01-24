@@ -1,8 +1,9 @@
 {
   "devDependencies": {
-    "@asyncapi/cli": "^0.60.4"
+    "@asyncapi/cli": "^1",
+    "@openapitools/openapi-generator-cli": "^2"
   },
   "scripts": {
-    "build": "./scripts/generate.sh"
+    "build": "./tools/generate.sh"
   }
 }

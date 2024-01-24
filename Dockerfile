@@ -6,6 +6,7 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
     chromium \
+    default-jre \
     flatbuffers-compiler \
     git \
     jq \

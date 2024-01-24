@@ -1,0 +1,18 @@
+openapi: "3.0.3"
+info:
+  title: uc-hub HTTP API
+  description: This document describes the HTTP API for accessing uc-hub.
+  version: 0.1.0
+servers:
+  - url: https://localhost/uc-hub/api/v1
+paths:
+  /providers:
+    get:
+      summary: Dummy
+      responses:
+        200:
+          description: Dummy
+          content:
+            application/json:
+              schema:
+                type: object

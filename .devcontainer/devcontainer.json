@@ -3,6 +3,7 @@
   "customizations": {
     "vscode": {
       "extensions": [
+        "42Crunch.vscode-openapi",
         "asyncapi.asyncapi-preview",
         "ban.spellright",
         "esbenp.prettier-vscode",
