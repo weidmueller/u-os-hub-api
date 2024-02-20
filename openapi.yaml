@@ -1,18 +1,499 @@
-openapi: "3.0.3"
+openapi: "3.1.0"
 info:
   title: uc-hub HTTP API
-  description: This document describes the HTTP API for accessing uc-hub.
+  description: >
+    *uc-hub* is the data communication system in u-OS. This document describes the HTTP API for accessing uc-hub as a consumer.
+    <br><br>
+    Each participant at uc-hub is either a consumer, a provider or both. A *consumer* can list/get available providers and list/get/update variables published by providers. A *provider* publishes variables to uc-hub.
   version: 0.1.0
 servers:
-  - url: https://localhost/uc-hub/api/v1
+  - url: http://localhost:3000/uc-hub/api/v1
+    description: Mock HTTP API from uc-hub-api.
 paths:
   /providers:
     get:
-      summary: Dummy
+      summary: List providers.
+      description: >
+        List providers.
+      tags:
+        - Consumer
+      security:
+        - oauth2:
+            - browse
+      operationId: listProviders
       responses:
         200:
-          description: Dummy
+          description: A list of providers.
+          headers:
+            ETag:
+              $ref: "#/components/headers/ETag"
           content:
             application/json:
               schema:
-                type: object
+                type: array
+                items:
+                  $ref: "#/components/schemas/Provider"
+              example:
+                - name: providers/web-plc
+                  description: Weidmueller web-plc provider.
+                  links:
+                    variables: http://localhost:3000/uc-hub/api/v1/providers/web-plc/variables
+                - name: providers/sys
+                  description: System data provider.
+                  links:
+                    variables: http://localhost:3000/uc-hub/api/v1/providers/sys/variables
+        304:
+          $ref: "#/components/responses/304NotModified"
+        400:
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 400
+                message: "List providers failed due to a malformed request."
+        500:
+          $ref: "#/components/responses/500InternalServerError"
+  /providers/{provider-id}:
+    get:
+      summary: Get a single provider.
+      description: Get a single provider.
+      tags:
+        - Consumer
+      security:
+        - oauth2:
+            - browse
+      operationId: getProvider
+      responses:
+        200:
+          description: A single provider.
+          headers:
+            ETag:
+              $ref: "#/components/headers/ETag"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Provider"
+              example:
+                name: providers/web-plc
+                description: Weidmueller web-plc provider.
+                links:
+                  variables: http://localhost:3000/uc-hub/api/v1/providers/web-plc/variables
+        304:
+          $ref: "#/components/responses/304NotModified"
+        401:
+          $ref: "#/components/responses/401UnauthorizedRead"
+        404:
+          description: The provider id was not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                message: "The provider id was not found."
+        500:
+          $ref: "#/components/responses/500InternalServerError"
+    parameters:
+      - $ref: "#/components/parameters/ProviderId"
+  /providers/{provider-id}/variables:
+    get:
+      summary: List variable values of a single provider.
+      description: >
+        List all variable values or a subset of variable values of a single provider with or without variable definitions.
+      tags:
+        - Consumer
+      security:
+        - oauth2:
+            - read_variables
+      operationId: listVariables
+      parameters:
+        - $ref: "#/components/parameters/Definition"
+        - $ref: "#/components/parameters/Prefixes"
+      responses:
+        200:
+          description: Variables of a single provider with or without variable definitions.
+          headers:
+            ETag:
+              $ref: "#/components/headers/ETag"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Variable"
+              examples:
+                VariablesWithDefinition:
+                  value:
+                    - name: providers/web-plc/variables/gvl/input-1
+                      value: true
+                      definition:
+                        data_type: boolean
+                        access_type: readonly
+                    - name: providers/web-plc/variables/gvl/output-1
+                      value: false
+                      definition:
+                        data_type: boolean
+                        access_type: readwrite
+                Variables:
+                  value:
+                    - name: providers/web-plc/variables/gvl/input-1
+                      value: true
+                    - name: providers/web-plc/variables/gvl/output-1
+                      value: false
+        304:
+          $ref: "#/components/responses/304NotModified"
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 400
+                message: "Bad request."
+        401:
+          $ref: "#/components/responses/401UnauthorizedRead"
+        404:
+          description: No variables found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                message: "Variables were not found."
+        500:
+          $ref: "#/components/responses/500InternalServerError"
+    parameters:
+      - $ref: "#/components/parameters/ProviderId"
+  /providers/{provider-id}/variables:batchUpdate:
+    post:
+      summary: Update variable values of a single provider.
+      description: Update all variable values or a subset of variable values of a single provider.
+      tags:
+        - Consumer
+      security:
+        - oauth2:
+            - update_variables
+      operationId: updateVariables
+      requestBody:
+        description: The request body contains the variable values which shall be updated.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/Variable"
+              example:
+                - name: providers/web-plc/variables/gvl/input-1
+                  value: true
+                - name: providers/web-plc/variables/gvl/output-1
+                  value: false
+      responses:
+        200:
+          description: >
+            Ok<br><br>
+            Variables were successfully updated. The updated variables are returned.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Variable"
+                example:
+                  - name: providers/web-plc/variables/gvl/input-1
+                    value: true
+                  - name: providers/web-plc/variables/gvl/output-1
+                    value: false
+        400:
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 400
+                message: "Variables were not updated due to a malformed request."
+        401:
+          $ref: "#/components/responses/401UnauthorizedWrite"
+        404:
+          description: No variables found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                message: "Variables were not found."
+        500:
+          $ref: "#/components/responses/500InternalServerError"
+    parameters:
+      - $ref: "#/components/parameters/ProviderId"
+  /providers/{provider-id}/variables/{variable-id}:
+    get:
+      summary: Get variable value of a single provider.
+      description: Get variable value of a single provider with or without variable definition.
+      tags:
+        - Consumer
+      security:
+        - oauth2:
+            - read_variables
+      operationId: getVariable
+      parameters:
+        - $ref: "#/components/parameters/Definition"
+      responses:
+        200:
+          description: A variable value with or without definition.
+          headers:
+            ETag:
+              $ref: "#/components/headers/ETag"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Variable"
+              examples:
+                VariableWithDefinition:
+                  value:
+                    name: providers/web-plc/variables/gvl/input-1
+                    value: true
+                    definition:
+                      data_type: boolean
+                      access_type: readonly
+                Variable:
+                  value:
+                    name: providers/web-plc/variables/gvl/input-1
+                    value: true
+        304:
+          $ref: "#/components/responses/304NotModified"
+        401:
+          $ref: "#/components/responses/401UnauthorizedRead"
+        500:
+          $ref: "#/components/responses/500InternalServerError"
+    post:
+      summary: Update variable value of a single provider.
+      description: Update variable value of a single provider.
+      tags:
+        - Consumer
+      security:
+        - oauth2:
+            - update_variables
+      operationId: updateVariable
+      requestBody:
+        description: The request body contains the variable value which shall be updated.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Variable"
+            example:
+              name: providers/web-plc/variables/gvl/output-1
+              value: true
+      responses:
+        200:
+          description: >
+            Ok<br><br>
+            Variable was successfully updated. The updated variable is returned.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Variable"
+              example:
+                name: providers/web-plc/variables/gvl/output-1
+                value: true
+        400:
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 400
+                message: "Variable was not updated due to a malformed request."
+        401:
+          $ref: "#/components/responses/401UnauthorizedWrite"
+        404:
+          description: Variable not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                message: "Variable was not found."
+        500:
+          $ref: "#/components/responses/500InternalServerError"
+    parameters:
+      - $ref: "#/components/parameters/ProviderId"
+      - $ref: "#/components/parameters/VariableId"
+components:
+  headers:
+    ETag:
+      schema:
+        type: string
+      description: >
+        The [ETag](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag) header contains a hash over the returned resource used for caching. On further requests of the resource, the client can send the ETag value in the [If-None-Match](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-None-Match) header. The server responds with a 304 (Not modified) if the value matches the actual ETag value.
+  parameters:
+    ProviderId:
+      name: provider-id
+      in: path
+      description: Id of a provider.
+      required: true
+      schema:
+        type: string
+      example: web-plc
+    VariableId:
+      name: variable-id
+      in: path
+      description: Id of a variable.
+      required: true
+      schema:
+        type: string
+      example: gvl/input-1
+    Prefixes:
+      name: prefixes
+      in: query
+      description: >
+        This parameter is used to filter variables by prefixes. The parameter shall contain a comma-separated list of prefixes. The response will include all variables where the variable name matches one of the given prefixes.
+        <br><br>
+        The endpoint will filter out duplicates: Each variable will occur only once in the response array.
+        <br><br>
+        Since the names might contain '/' characters, the parameter needs to be URL-encoded.
+      schema:
+        type: string
+      example: gvl,gvl/output-1
+    Definition:
+      name: definition
+      in: query
+      description: If true, the response will contain variable definitions.
+      schema:
+        type: boolean
+  responses:
+    304NotModified:
+      description: Not modified.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            code: 304
+            message: "The resource was not modified."
+    401UnauthorizedRead:
+      description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            code: 401
+            message: "You are not authorized to get this resource."
+    401UnauthorizedWrite:
+      description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            code: 401
+            message: "You are not authorized to update this resource."
+    500InternalServerError:
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            code: 500
+            message: "The request was not handled due to an internal server error."
+  schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: number
+          description: HTTP error status code.
+        message:
+          type: string
+          description: Error message.
+      required:
+        - code
+        - message
+    Provider:
+      type: object
+      properties:
+        name:
+          description: The relative resource name without the leading slash, e.g. 'providers/web-plc'.
+          type: string
+        description:
+          description: The description of the provider.
+          type: string
+        links:
+          description: URLs for requesting subresources.
+          type: object
+          properties:
+            variables:
+              description: URL for requesting variables of the provider.
+              type: string
+    VariableAccesstype:
+      type: string
+      description: Access type of the variable, e.g. readonly.
+      enum:
+        - readonly
+        - readwrite
+    VariableDatatype:
+      type: string
+      description: Data type of the variable.
+      enum:
+        - boolean
+        - datetime
+        - double
+        - int64
+        - string
+    Variable:
+      type: object
+      description: A variable containing the name and the actual value.
+      properties:
+        name:
+          type: string
+          required: true
+          description: The relative resource name of the variable without the leading slash, e.g. 'providers/web-plc/variables/gvl/input-1'.
+        value:
+          description: The value of the variable.
+          required: true
+          oneOf:
+            - type: string
+            - type: number
+            - type: boolean
+        definition:
+          $ref: "#/components/schemas/VariableDefinition"
+    VariableDefinition:
+      type: object
+      description: The definition of a variable containing data type and access type.
+      properties:
+        data_type:
+          required: true
+          $ref: "#/components/schemas/VariableDatatype"
+        access_type:
+          required: true
+          $ref: "#/components/schemas/VariableAccesstype"
+  securitySchemes:
+    oAuth2:
+      type: oauth2
+      description: The HTTP API uses the OAuth2 client credentials.
+      flows:
+        clientCredentials:
+          tokenUrl: "tbd"
+          scopes:
+            browse: Browse available providers and variables.
+            read_variables: Read variables.
+            update_variables: Update variables.
+tags:
+  - name: Consumer
+    description: >
+      A consumer may
+
+      - list/get available providers
+
+      - list/get/update variables published by providers.
