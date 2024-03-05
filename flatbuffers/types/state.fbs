@@ -6,6 +6,7 @@ namespace weidmueller.ucontrol.hub;
 /// The status names are based on
 /// [the status names of the systemd services](https://www.freedesktop.org/software/systemd/man/latest/systemctl.html#is-system-running).
 enum State: byte {
+  UNSPECIFIED,
   RUNNING,
   STOPPING
 }
