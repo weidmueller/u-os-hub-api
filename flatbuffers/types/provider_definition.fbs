@@ -2,6 +2,16 @@ include "variable.fbs";
 
 namespace weidmueller.ucontrol.hub;
 
+/// The state of the provider definition. The state will be set by the registry.
+enum State : ubyte {
+  /// The state is unspecified.
+  UNSPECIFIED,
+  /// The provider definition is ok and valid.
+  OK,
+  /// The provider definition is invalid => variable_definitions.size = 0
+  INVALID,
+}
+
 /// A definition of a provider's provided variables.
 ///
 /// Definition elements have a flat list instead of a hierarchy structure.
@@ -18,4 +28,6 @@ table ProviderDefinition {
   fingerprint: uint64;
   /// The list of variable definitions.
   variable_definitions: [VariableDefinition];
+  /// The current state of the provider definition. The state will be set by the registry.
+  state: State;
 }
