@@ -178,6 +178,8 @@ components:
         $ref: "jsonschemas/messages/read_provider_definition_query_request.schema.json"
     ReadProviderDefinitionQueryResponse:
       messageId: ReadProviderDefinitionQueryResponse
+      headers:
+        $ref: "#/components/schemas/ResponseHeaders"
       payload:
         $ref: "jsonschemas/messages/read_provider_definition_query_response.schema.json"
     ReadProvidersQueryRequest:
@@ -190,6 +192,8 @@ components:
         $ref: "jsonschemas/messages/read_providers_query_request.schema.json"
     ReadProvidersQueryResponse:
       messageId: ReadProvidersQueryResponse
+      headers:
+        $ref: "#/components/schemas/ResponseHeaders"
       payload:
         $ref: "jsonschemas/messages/read_providers_query_response.schema.json"
     ReadVariablesQueryRequest:
@@ -202,6 +206,8 @@ components:
         $ref: "jsonschemas/messages/read_variables_query_request.schema.json"
     ReadVariablesQueryResponse:
       #      messageId: ReadVariablesQueryResponse
+      headers:
+        $ref: "#/components/schemas/ResponseHeaders"
       payload:
         $ref: "jsonschemas/messages/read_variables_query_response.schema.json"
     StateChangedEvent:
@@ -242,6 +248,15 @@ components:
         reply:
           description: Reply channel set by application
           type: string
+    ResponseHeaders:
+      type: object
+      properties:
+        reply:
+          description: Reply channel set by application
+          type: string
+        status:
+          description: Status code like defined in [RFC7231](https://datatracker.ietf.org/doc/html/rfc7231#section-6)
+          type: integer
     ProviderDefinition:
       $ref: "jsonschemas/messages/provider_definition_changed_event.schema.json#/definitions/weidmueller_ucontrol_hub_ProviderDefinition"
     ProviderList:
