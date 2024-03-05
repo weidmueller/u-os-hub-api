@@ -158,19 +158,6 @@ channels:
           - $ref: "#/components/messages/ReadProviderDefinitionQueryResponse"
           - $ref: "#/components/messages/ReadProvidersQueryResponse"
           - $ref: "#/components/messages/ReadVariablesQueryResponse"
-  _INBOX.{providerName}.{sessionId}:
-    parameters:
-      providerName:
-        $ref: "#/components/parameters/ProviderName"
-      sessionId:
-        $ref: "#/components/parameters/SessionId"
-    publish:
-      operationId: replyFromProvider
-      tags:
-        - name: provider
-      message:
-        oneOf:
-          - $ref: "#/components/messages/ReadVariablesQueryResponse"
 components:
   messages:
     ProviderDefinitionChangedEvent:
