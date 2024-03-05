@@ -36,9 +36,9 @@ table VariableValueTimestamp {
   value: Timestamp;
 }
 
-/// A double-precision floating-point value of a variable.
-table VariableValueDouble {
-  value: double;
+/// A precision floating-point value of a variable.
+table VariableValueFloat64 {
+  value: float64;
 }
 
 /// A 64-bit, signed intege value of a variable.
@@ -55,7 +55,7 @@ table VariableValueString {
 union VariableValue {
   Boolean: VariableValueBoolean,
   Timestamp: VariableValueTimestamp,
-  Double: VariableValueDouble,
+  Float64: VariableValueFloat64,
   Int64: VariableValueInt64,
   String: VariableValueString
 }
