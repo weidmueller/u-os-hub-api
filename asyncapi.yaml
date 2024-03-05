@@ -247,8 +247,8 @@ components:
       description: Correlation reply channel.
       location: $message.header#/reply
   schemas:
-    DateTime:
-      $ref: "jsonschemas/messages/variables_changed_event.schema.json#/definitions/weidmueller_ucontrol_hub_DateTime"
+    Timestamp:
+      $ref: "jsonschemas/messages/variables_changed_event.schema.json#/definitions/weidmueller_ucontrol_hub_Timestamp"
     Headers:
       type: object
       properties:

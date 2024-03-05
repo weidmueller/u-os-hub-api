@@ -447,7 +447,7 @@ components:
       description: Data type of the variable.
       enum:
         - boolean
-        - datetime
+        - timestamp
         - double
         - int64
         - string

@@ -1,4 +1,4 @@
-include "datetime.fbs";
+include "timestamp.fbs";
 
 namespace weidmueller.ucontrol.hub;
 
@@ -32,8 +32,8 @@ table VariableValueBoolean {
 }
 
 /// A date and time value of a variable.
-table VariableValueDateTime {
-  value: DateTime;
+table VariableValueTimestamp {
+  value: Timestamp;
 }
 
 /// A double-precision floating-point value of a variable.
@@ -54,7 +54,7 @@ table VariableValueString {
 /// A value of a variable.
 union VariableValue {
   Boolean: VariableValueBoolean,
-  DateTime: VariableValueDateTime,
+  Timestamp: VariableValueTimestamp,
   Double: VariableValueDouble,
   Int64: VariableValueInt64,
   String: VariableValueString
@@ -81,7 +81,7 @@ table Variable {
   /// The individual timestamp of the variable.
   ///
   /// Only set by the provider!
-  timestamp: DateTime;
+  timestamp: Timestamp;
   /// The qualitiy of the variable.
   quality: VariableQuality;
 }
@@ -93,7 +93,7 @@ table VariableList {
   /// The base timestamp as fallback for variable timestamps to minimize transfer size.
   ///
   /// Only set by the provider!
-  base_timestamp: DateTime;
+  base_timestamp: Timestamp (required);
   /// The items of the provider's variable list.
   items: [Variable];
 }
