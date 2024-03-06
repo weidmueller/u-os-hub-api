@@ -1,4 +1,5 @@
 include "timestamp.fbs";
+include "duration.fbs";
 
 namespace weidmueller.ucontrol.hub;
 
@@ -6,10 +7,11 @@ namespace weidmueller.ucontrol.hub;
 enum VariableDataType: byte {
   UNSPECIFIED,
   BOOLEAN,
-  TIMESTAMP,
+  DURATION,
   FLOAT64,
   INT64,
-  STRING
+  STRING,
+  TIMESTAMP
 }
 
 /// An access type of a variable.
@@ -33,9 +35,9 @@ table VariableValueBoolean {
   value: bool;
 }
 
-/// A date and time value of a variable.
-table VariableValueTimestamp {
-  value: Timestamp;
+/// A duration value of a variable.
+table VariableValueDuration {
+  value: Duration;
 }
 
 /// A precision floating-point value of a variable.
@@ -53,13 +55,19 @@ table VariableValueString {
   value: string;
 }
 
+/// A date and time value of a variable.
+table VariableValueTimestamp {
+  value: Timestamp;
+}
+
 /// A value of a variable.
 union VariableValue {
   Boolean: VariableValueBoolean,
-  Timestamp: VariableValueTimestamp,
+  Duration: VariableValueDuration,
   Float64: VariableValueFloat64,
   Int64: VariableValueInt64,
-  String: VariableValueString
+  String: VariableValueString,
+  Timestamp: VariableValueTimestamp
 }
 
 /// A definition of a variable.

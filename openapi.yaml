@@ -408,6 +408,14 @@ components:
             code: 500
             message: "The request was not handled due to an internal server error."
   schemas:
+    Duration:
+      type: object
+      description: A duration between two timestamps.
+      properties:
+        seconds:
+          type: integer
+        nanos:
+          type: integer
     Error:
       type: object
       properties:
@@ -436,6 +444,14 @@ components:
             variables:
               description: URL for requesting variables of the provider.
               type: string
+    Timestamp:
+      type: object
+      description: A timestamp measured by the number of nanoseconds that have elapsed since 00:00:00 UTC on 1 January 1970, which is referred to as the Unix epoch, without adjustments made due to leap seconds.
+      properties:
+        seconds:
+          type: integer
+        nanos:
+          type: integer
     VariableAccesstype:
       type: string
       description: Access type of the variable, e.g. readonly.
@@ -447,10 +463,11 @@ components:
       description: Data type of the variable.
       enum:
         - boolean
-        - timestamp
+        - duration
         - double
         - int64
         - string
+        - timestamp
     Variable:
       type: object
       description: A variable containing the name and the actual value.
@@ -466,6 +483,8 @@ components:
             - type: string
             - type: number
             - type: boolean
+            - $ref: "#/components/schemas/Duration"
+            - $ref: "#/components/schemas/Timestamp"
         definition:
           $ref: "#/components/schemas/VariableDefinition"
     VariableDefinition:

@@ -11,7 +11,7 @@ info:
     A variable is a named single variable value with a fixed type.
     An object is a potentially large composition that may or may not have a
     predefined schema.
-    
+
     A provider's definition describes the data and contains additional
     metadata.
     The definition elements use a flat list instead of a hierarchy structure.
@@ -240,14 +240,18 @@ components:
       description: Correlation reply channel.
       location: $message.header#/reply
   schemas:
-    Timestamp:
-      $ref: "jsonschemas/messages/variables_changed_event.schema.json#/definitions/weidmueller_ucontrol_hub_Timestamp"
+    Duration:
+      $ref: "jsonschemas/messages/variables_changed_event.schema.json#/definitions/weidmueller_ucontrol_hub_Duration"
     Headers:
       type: object
       properties:
         reply:
           description: Reply channel set by application
           type: string
+    ProviderDefinition:
+      $ref: "jsonschemas/messages/provider_definition_changed_event.schema.json#/definitions/weidmueller_ucontrol_hub_ProviderDefinition"
+    ProviderList:
+      $ref: "jsonschemas/messages/providers_changed_event.schema.json#/definitions/weidmueller_ucontrol_hub_ProviderList"
     ResponseHeaders:
       type: object
       properties:
@@ -257,12 +261,10 @@ components:
         status:
           description: Status code like defined in [RFC7231](https://datatracker.ietf.org/doc/html/rfc7231#section-6)
           type: integer
-    ProviderDefinition:
-      $ref: "jsonschemas/messages/provider_definition_changed_event.schema.json#/definitions/weidmueller_ucontrol_hub_ProviderDefinition"
-    ProviderList:
-      $ref: "jsonschemas/messages/providers_changed_event.schema.json#/definitions/weidmueller_ucontrol_hub_ProviderList"
     State:
       $ref: "jsonschemas/messages/state_changed_event.schema.json#/definitions/weidmueller_ucontrol_hub_State"
+    Timestamp:
+      $ref: "jsonschemas/messages/variables_changed_event.schema.json#/definitions/weidmueller_ucontrol_hub_Timestamp"
     VariableList:
       $ref: "jsonschemas/messages/variables_changed_event.schema.json#/definitions/weidmueller_ucontrol_hub_VariableList"
 tags:
