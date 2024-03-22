@@ -474,11 +474,9 @@ components:
       properties:
         name:
           type: string
-          required: true
           description: The relative resource name of the variable without the leading slash, e.g. 'providers/web-plc/variables/gvl/input-1'.
         value:
           description: The value of the variable.
-          required: true
           oneOf:
             - type: string
             - type: number
@@ -487,16 +485,20 @@ components:
             - $ref: "#/components/schemas/Timestamp"
         definition:
           $ref: "#/components/schemas/VariableDefinition"
+      required:
+        - name
+        - value
     VariableDefinition:
       type: object
       description: The definition of a variable containing data type and access type.
       properties:
         data_type:
-          required: true
           $ref: "#/components/schemas/VariableDatatype"
         access_type:
-          required: true
           $ref: "#/components/schemas/VariableAccesstype"
+      required:
+        - data_type
+        - access_type
   securitySchemes:
     oAuth2:
       type: oauth2
