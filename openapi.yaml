@@ -18,7 +18,7 @@ paths:
       tags:
         - Consumer
       security:
-        - oauth2:
+        - OAuth2:
             - browse
       operationId: listProviders
       responses:
@@ -62,7 +62,7 @@ paths:
       tags:
         - Consumer
       security:
-        - oauth2:
+        - OAuth2:
             - browse
       operationId: getProvider
       responses:
@@ -105,7 +105,7 @@ paths:
       tags:
         - Consumer
       security:
-        - oauth2:
+        - OAuth2:
             - read_variables
       operationId: listVariables
       parameters:
@@ -175,7 +175,7 @@ paths:
       tags:
         - Consumer
       security:
-        - oauth2:
+        - OAuth2:
             - update_variables
       operationId: updateVariables
       requestBody:
@@ -239,7 +239,7 @@ paths:
       tags:
         - Consumer
       security:
-        - oauth2:
+        - OAuth2:
             - read_variables
       operationId: getVariable
       parameters:
@@ -278,7 +278,7 @@ paths:
       tags:
         - Consumer
       security:
-        - oauth2:
+        - OAuth2:
             - update_variables
       operationId: updateVariable
       requestBody:
@@ -500,7 +500,7 @@ components:
         - data_type
         - access_type
   securitySchemes:
-    oAuth2:
+    OAuth2:
       type: oauth2
       description: The HTTP API uses the OAuth2 client credentials.
       flows:
