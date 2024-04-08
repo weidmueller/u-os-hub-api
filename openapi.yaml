@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2024 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+#
+# SPDX-License-Identifier: MIT
+
 openapi: "3.1.0"
 info:
   title: uc-hub HTTP API
@@ -5,6 +9,8 @@ info:
     *uc-hub* is the data communication system in u-OS. This document describes the HTTP API for accessing uc-hub as a consumer.
     <br><br>
     Each participant at uc-hub is either a consumer, a provider or both. A *consumer* can list/get available providers and list/get/update variables published by providers. A *provider* publishes variables to uc-hub.
+  license:
+    name: MIT
   version: 0.1.0
 servers:
   - url: http://localhost:3000/uc-hub/api/v1
