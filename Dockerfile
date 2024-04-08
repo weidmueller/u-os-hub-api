@@ -10,6 +10,7 @@ RUN apt-get update \
     flatbuffers-compiler \
     git \
     jq \
+    reuse \
  && rm -rf /var/lib/apt/lists/*
 
 FROM builder AS devcontainer
