@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2024 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+//
+// SPDX-License-Identifier: MIT
+
 namespace weidmueller.ucontrol.hub;
 
 /// A query request that requests a provider's definition.

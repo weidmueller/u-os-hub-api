@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2024 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+//
+// SPDX-License-Identifier: MIT
+
 namespace weidmueller.ucontrol.hub;
 
 /// A timestamp measured by the number of nanoseconds that have elapsed
