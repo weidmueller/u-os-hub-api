@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2024 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+
+SPDX-License-Identifier: MIT
+-->
+
 # uc-hub-api
 
 uc-hub-api contains the flatbuffers messages and types used in uc-hub.
