@@ -13,7 +13,7 @@ info:
     name: MIT
   version: 0.1.0
 servers:
-  - url: http://localhost:3000/uc-hub/api/v1
+  - url: /uc-hub/api/v1
     description: Mock HTTP API from uc-hub-api.
 paths:
   /providers:
