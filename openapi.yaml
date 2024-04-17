@@ -202,18 +202,8 @@ paths:
         '200':
           description: >
             Ok<br><br>
-            Variables were successfully updated. The updated variables are returned.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Variable"
-                example:
-                  - name: providers/web-plc/variables/gvl/input-1
-                    value: true
-                  - name: providers/web-plc/variables/gvl/output-1
-                    value: false
+            Variable write command was successfully send.
+            The updated variables are not being returned because the provider may query the write and apply the changes asynchronously. The value write might occur later or could be overridden by another write, thus never being applied.
         '400':
           description: Bad request.
           content:
@@ -301,14 +291,8 @@ paths:
         '200':
           description: >
             Ok<br><br>
-            Variable was successfully updated. The updated variable is returned.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Variable"
-              example:
-                name: providers/web-plc/variables/gvl/output-1
-                value: true
+            Variable write command was successfully send.
+            The updated variable is not being returned because the provider may query the write and apply the changes asynchronously. The value write might occur later or could be overridden by another write, thus never being applied.
         '400':
           description: Bad request.
           content:
