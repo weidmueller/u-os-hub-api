@@ -14,7 +14,7 @@ info:
   version: 0.1.0
 servers:
   - url: /uc-hub/api/v1
-    description: Mock HTTP API from uc-hub-api.
+    description: HTTP API from uc-hub-api.
 paths:
   /providers:
     get:
