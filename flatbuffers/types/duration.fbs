@@ -11,7 +11,7 @@ namespace weidmueller.ucontrol.hub;
 /// two Timestamp values is a Duration and it can be added or subtracted
 /// from a Timestamp. Range is approximately +-10,000 years.
 /// 
-/// Based on google protobuf duration definition: https://github.com/protocolbuffers/protobuf/blob/main/src/google/protobuf/duration.proto
+/// Based on google protobuf duration definition: <https://github.com/protocolbuffers/protobuf/blob/main/src/google/protobuf/duration.proto>
 struct Duration {
   /// Signed seconds of the span of time. Must be from -315,576,000,000
   /// to +315,576,000,000 inclusive. Note: these bounds are computed from:
