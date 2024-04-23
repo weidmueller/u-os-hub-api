@@ -48,9 +48,5 @@ echo "Validate openapi.yaml"
 )
 echo ""
 
-echo "Generate OpenAPI site"
-(rm -rf dist/openapi \
-  && mkdir -p dist/openapi \
-  && cp tools/swagger-ui-template/* dist/openapi \
-  && cp openapi.yaml dist/openapi \
-)
+echo "Generate UI"
+./tools/generateSwaggerUi.sh

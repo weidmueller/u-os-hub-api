@@ -1,9 +1,13 @@
 {
-  "devDependencies": {
-    "@asyncapi/cli": "^1",
-    "@openapitools/openapi-generator-cli": "^2"
-  },
   "scripts": {
-    "build": "./tools/generate.sh"
+    "build": "./tools/generate.sh",
+    "buildUi": "./tools/generateSwaggerUi.sh"
+  },
+  "dependencies": {
+    "swagger-ui-dist": "^5.15.2"
+  },
+  "devDependencies": {
+    "@asyncapi/cli": "^0.8.1",
+    "@openapitools/openapi-generator-cli": "^2"
   }
 }
