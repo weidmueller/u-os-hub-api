@@ -7,7 +7,6 @@ services:
   uc-hub-api:
     build:
       context: .
-      target: devcontainer
     ports:
       - 3000:3000
     command: /bin/sh -c "while sleep 1000; do :; done"

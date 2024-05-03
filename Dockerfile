@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: CC0-1.0
 
-FROM node:18 AS builder
+FROM node:18
 
 ENV PUPPETEER_EXECUTABLE_PATH /usr/bin/chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
@@ -17,11 +17,10 @@ RUN apt-get update \
     reuse \
  && rm -rf /var/lib/apt/lists/*
 
-FROM builder AS devcontainer
-
 ARG USERNAME=node
 ARG USER_UID=1000
 ARG USER_GID=${USER_UID}
+ARG HOME=/home/${USERNAME}
 
 RUN test "${USERNAME}" = "node" \
   || ( \
@@ -45,6 +44,5 @@ RUN HADOLINT=/usr/local/bin/hadolint; \
   && chmod 0755 ${HADOLINT}
 
 # NestJS
-RUN npm install -g @nestjs/cli
-
-FROM builder
+RUN npm install -g @nestjs/cli \
+ && chown ${USER_UID}:${USER_GID} ${HOME} -R
