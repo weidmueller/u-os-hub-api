@@ -56,7 +56,7 @@ paths:
                 message: "List providers failed due to a malformed request."
         "500":
           $ref: "#/components/responses/500InternalServerError"
-  /providers/{provider-id}:
+  /providers/{provider_name}:
     get:
       summary: Get a single provider.
       description: Get a single provider.
@@ -92,8 +92,8 @@ paths:
         "500":
           $ref: "#/components/responses/500InternalServerError"
     parameters:
-      - $ref: "#/components/parameters/ProviderId"
-  /providers/{provider-id}/variables:
+      - $ref: "#/components/parameters/provider_name"
+  /providers/{provider_name}/variables:
     get:
       summary: List variable values of a single provider.
       description: >
@@ -157,9 +157,6 @@ paths:
                 message: "Variables were not found."
         "500":
           $ref: "#/components/responses/500InternalServerError"
-    parameters:
-      - $ref: "#/components/parameters/ProviderId"
-  /providers/{provider-id}/variables:batchUpdate:
     post:
       summary: Update variable values of a single provider.
       description: Update all variable values or a subset of variable values of a single provider.
@@ -212,8 +209,8 @@ paths:
         "500":
           $ref: "#/components/responses/500InternalServerError"
     parameters:
-      - $ref: "#/components/parameters/ProviderId"
-  /providers/{provider-id}/variables/{variable-id}:
+      - $ref: "#/components/parameters/provider_name"
+  /providers/{provider_name}/variables/{variable_name}:
     get:
       summary: Get variable value of a single provider.
       description: Get variable value of a single provider with or without variable definition.
@@ -296,22 +293,22 @@ paths:
         "500":
           $ref: "#/components/responses/500InternalServerError"
     parameters:
-      - $ref: "#/components/parameters/ProviderId"
-      - $ref: "#/components/parameters/VariableId"
+      - $ref: "#/components/parameters/provider_name"
+      - $ref: "#/components/parameters/variable_name"
 components:
   parameters:
-    ProviderId:
-      name: provider-id
+    provider_name:
+      name: provider_name
       in: path
-      description: Id of a provider.
+      description: Name of a provider.
       required: true
       schema:
         type: string
       example: web-plc
-    VariableId:
-      name: variable-id
+    variable_name:
+      name: variable_name
       in: path
-      description: Id of a variable.
+      description: Name of a variable.
       required: true
       schema:
         type: string
