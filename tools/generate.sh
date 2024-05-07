@@ -26,10 +26,9 @@ echo ""
 
 echo "Validate asyncapi.yaml"
 (cd ${project_dir} \
-  && asyncapi validate asyncapi.yaml \
+  && asyncapi validate --fail-severity=warn asyncapi.yaml \
   || exit 1
 )
-echo ""
 
 echo "Generate AsyncAPI site"
 (cd ${project_dir} \
@@ -43,7 +42,7 @@ echo "Generate AsyncAPI site"
 
 echo "Validate openapi.yaml"
 (cd ${project_dir} \
-  && openapi-generator-cli validate -i openapi.yaml \
+  && openapi-generator-cli validate --fail-severity=warn -i openapi.yaml \
   || exit 1
 )
 echo ""
