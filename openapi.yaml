@@ -59,6 +59,8 @@ paths:
               example:
                 code: 400
                 message: "List providers failed due to a malformed request."
+        "401":
+          $ref: "#/components/responses/401UnauthorizedRead"
         "500":
           $ref: "#/components/responses/500InternalServerError"
   /providers/{provider_name}:
@@ -83,6 +85,15 @@ paths:
                 description: Weidmueller web-plc provider.
                 links:
                   variables: http://localhost:3000/uc-hub/api/v1/providers/web-plc/variables
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 400
+                message: "Bad request."
         "401":
           $ref: "#/components/responses/401UnauthorizedRead"
         "404":
@@ -246,6 +257,15 @@ paths:
                   value:
                     name: providers/web-plc/variables/gvl/input-1
                     value: true
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 400
+                message: "Bad request."
         "401":
           $ref: "#/components/responses/401UnauthorizedRead"
         "500":
