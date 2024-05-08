@@ -7,5 +7,5 @@ project_dir="$(dirname ${script_dir})"
 
 echo "Validate openapi.yaml"
 cd ${project_dir} \
-  && openapi-generator-cli validate --fail-severity=warn -i openapi.yaml \
+  && spectral lint --fail-severity=warn openapi.yaml --ruleset ./tools/spectral.json \
   || exit 1

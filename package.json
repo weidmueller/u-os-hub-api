@@ -8,10 +8,10 @@
     "validateAsyncApi": "./tools/validate_asyncapi.sh"
   },
   "dependencies": {
-    "swagger-ui-dist": "^5.15.2"
+    "swagger-ui-dist": "^5"
   },
   "devDependencies": {
     "@asyncapi/cli": "^0.8.1",
-    "@openapitools/openapi-generator-cli": "^2"
+    "@stoplight/spectral-cli": "^6"
   }
 }
