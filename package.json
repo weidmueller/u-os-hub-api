@@ -12,6 +12,7 @@
   },
   "devDependencies": {
     "@asyncapi/cli": "^0.8.1",
-    "@stoplight/spectral-cli": "^6"
+    "@stoplight/spectral-cli": "^6",
+    "@stoplight/spectral-owasp-ruleset": "^2.0.1"
   }
 }
