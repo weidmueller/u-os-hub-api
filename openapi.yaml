@@ -28,7 +28,7 @@ paths:
             - browse
       operationId: listProviders
       responses:
-        '200':
+        "200":
           description: A list of providers.
           headers:
             ETag:
@@ -48,7 +48,7 @@ paths:
                   description: System data provider.
                   links:
                     variables: http://localhost:3000/uc-hub/api/v1/providers/sys/variables
-        '304':
+        "400":
           $ref: "#/components/responses/304NotModified"
         '400':
           description: Bad request.
@@ -59,7 +59,7 @@ paths:
               example:
                 code: 400
                 message: "List providers failed due to a malformed request."
-        '500':
+        "500":
           $ref: "#/components/responses/500InternalServerError"
   /providers/{provider-id}:
     get:
@@ -72,7 +72,7 @@ paths:
             - browse
       operationId: getProvider
       responses:
-        '200':
+        "200":
           description: A single provider.
           headers:
             ETag:
@@ -86,11 +86,11 @@ paths:
                 description: Weidmueller web-plc provider.
                 links:
                   variables: http://localhost:3000/uc-hub/api/v1/providers/web-plc/variables
-        '304':
+        "401":
           $ref: "#/components/responses/304NotModified"
         '401':
           $ref: "#/components/responses/401UnauthorizedRead"
-        '404':
+        "404":
           description: The provider id was not found.
           content:
             application/json:
@@ -99,7 +99,7 @@ paths:
               example:
                 code: 404
                 message: "The provider id was not found."
-        '500':
+        "500":
           $ref: "#/components/responses/500InternalServerError"
     parameters:
       - $ref: "#/components/parameters/ProviderId"
@@ -118,7 +118,7 @@ paths:
         - $ref: "#/components/parameters/Definition"
         - $ref: "#/components/parameters/Prefixes"
       responses:
-        '200':
+        "200":
           description: Variables of a single provider with or without variable definitions.
           headers:
             ETag:
@@ -148,7 +148,7 @@ paths:
                       value: true
                     - name: providers/web-plc/variables/gvl/output-1
                       value: false
-        '304':
+        "400":
           $ref: "#/components/responses/304NotModified"
         '400':
           description: Bad request
@@ -159,9 +159,9 @@ paths:
               example:
                 code: 400
                 message: "Bad request."
-        '401':
+        "401":
           $ref: "#/components/responses/401UnauthorizedRead"
-        '404':
+        "404":
           description: No variables found.
           content:
             application/json:
@@ -170,7 +170,7 @@ paths:
               example:
                 code: 404
                 message: "Variables were not found."
-        '500':
+        "500":
           $ref: "#/components/responses/500InternalServerError"
     parameters:
       - $ref: "#/components/parameters/ProviderId"
@@ -199,12 +199,12 @@ paths:
                 - name: providers/web-plc/variables/gvl/output-1
                   value: false
       responses:
-        '200':
+        "200":
           description: >
             Ok<br><br>
             Variable write command was successfully send.
             The updated variables are not being returned because the provider may query the write and apply the changes asynchronously. The value write might occur later or could be overridden by another write, thus never being applied.
-        '400':
+        "400":
           description: Bad request.
           content:
             application/json:
@@ -213,9 +213,9 @@ paths:
               example:
                 code: 400
                 message: "Variables were not updated due to a malformed request."
-        '401':
+        "401":
           $ref: "#/components/responses/401UnauthorizedWrite"
-        '404':
+        "404":
           description: No variables found.
           content:
             application/json:
@@ -224,7 +224,7 @@ paths:
               example:
                 code: 404
                 message: "Variables were not found."
-        '500':
+        "500":
           $ref: "#/components/responses/500InternalServerError"
     parameters:
       - $ref: "#/components/parameters/ProviderId"
@@ -241,7 +241,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/Definition"
       responses:
-        '200':
+        "200":
           description: A variable value with or without definition.
           headers:
             ETag:
@@ -262,11 +262,11 @@ paths:
                   value:
                     name: providers/web-plc/variables/gvl/input-1
                     value: true
-        '304':
+        "401":
           $ref: "#/components/responses/304NotModified"
         '401':
           $ref: "#/components/responses/401UnauthorizedRead"
-        '500':
+        "500":
           $ref: "#/components/responses/500InternalServerError"
     post:
       summary: Update variable value of a single provider.
@@ -288,12 +288,12 @@ paths:
               name: providers/web-plc/variables/gvl/output-1
               value: true
       responses:
-        '200':
+        "200":
           description: >
             Ok<br><br>
             Variable write command was successfully send.
             The updated variable is not being returned because the provider may query the write and apply the changes asynchronously. The value write might occur later or could be overridden by another write, thus never being applied.
-        '400':
+        "400":
           description: Bad request.
           content:
             application/json:
@@ -302,9 +302,9 @@ paths:
               example:
                 code: 400
                 message: "Variable was not updated due to a malformed request."
-        '401':
+        "401":
           $ref: "#/components/responses/401UnauthorizedWrite"
-        '404':
+        "404":
           description: Variable not found.
           content:
             application/json:
@@ -313,7 +313,7 @@ paths:
               example:
                 code: 404
                 message: "Variable was not found."
-        '500':
+        "500":
           $ref: "#/components/responses/500InternalServerError"
     parameters:
       - $ref: "#/components/parameters/ProviderId"
