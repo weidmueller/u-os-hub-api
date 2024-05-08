@@ -7,7 +7,9 @@ pipeline {
         gitlabBuilds(builds: [
             'Install dependencies',
             'Audit dependencies',
-            'Generate APIs',
+            'Generate JSON Schemas',
+            'Validate OpenAPI',
+            'Build OpenAPI UI'
             ])
     }
     stages {
@@ -48,10 +50,24 @@ pipeline {
                         }
                     }
                 }
-                stage('Generate APIs') {
+                stage ('Generate JSON Schemas'){
                     steps {
                         gitlabCommitStatus(name:"$STAGE_NAME") {
-                            sh './tools/generate.sh'
+                            sh 'npm run generateJsonSchemas'
+                        } 
+                    }
+                }
+                stage ('Validate OpenAPI'){
+                    steps {
+                        gitlabCommitStatus(name:"$STAGE_NAME") {
+                            sh 'npm run validateOpenApi'
+                        } 
+                    }
+                }
+                stage ('Build OpenAPI UI'){
+                    steps {
+                        gitlabCommitStatus(name:"$STAGE_NAME") {
+                            sh 'npm run buildUi'
                         } 
                     }
                 }
