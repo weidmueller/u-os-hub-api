@@ -30,9 +30,6 @@ paths:
       responses:
         "200":
           description: A list of providers.
-          headers:
-            ETag:
-              $ref: "#/components/headers/ETag"
           content:
             application/json:
               schema:
@@ -49,8 +46,6 @@ paths:
                   links:
                     variables: http://localhost:3000/uc-hub/api/v1/providers/sys/variables
         "400":
-          $ref: "#/components/responses/304NotModified"
-        '400':
           description: Bad request.
           content:
             application/json:
@@ -74,9 +69,6 @@ paths:
       responses:
         "200":
           description: A single provider.
-          headers:
-            ETag:
-              $ref: "#/components/headers/ETag"
           content:
             application/json:
               schema:
@@ -87,8 +79,6 @@ paths:
                 links:
                   variables: http://localhost:3000/uc-hub/api/v1/providers/web-plc/variables
         "401":
-          $ref: "#/components/responses/304NotModified"
-        '401':
           $ref: "#/components/responses/401UnauthorizedRead"
         "404":
           description: The provider id was not found.
@@ -120,9 +110,6 @@ paths:
       responses:
         "200":
           description: Variables of a single provider with or without variable definitions.
-          headers:
-            ETag:
-              $ref: "#/components/headers/ETag"
           content:
             application/json:
               schema:
@@ -149,8 +136,6 @@ paths:
                     - name: providers/web-plc/variables/gvl/output-1
                       value: false
         "400":
-          $ref: "#/components/responses/304NotModified"
-        '400':
           description: Bad request
           content:
             application/json:
@@ -243,9 +228,6 @@ paths:
       responses:
         "200":
           description: A variable value with or without definition.
-          headers:
-            ETag:
-              $ref: "#/components/headers/ETag"
           content:
             application/json:
               schema:
@@ -263,8 +245,6 @@ paths:
                     name: providers/web-plc/variables/gvl/input-1
                     value: true
         "401":
-          $ref: "#/components/responses/304NotModified"
-        '401':
           $ref: "#/components/responses/401UnauthorizedRead"
         "500":
           $ref: "#/components/responses/500InternalServerError"
@@ -319,12 +299,6 @@ paths:
       - $ref: "#/components/parameters/ProviderId"
       - $ref: "#/components/parameters/VariableId"
 components:
-  headers:
-    ETag:
-      schema:
-        type: string
-      description: >
-        The [ETag](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag) header contains a hash over the returned resource used for caching. On further requests of the resource, the client can send the ETag value in the [If-None-Match](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-None-Match) header. The server responds with a 304 (Not modified) if the value matches the actual ETag value.
   parameters:
     ProviderId:
       name: provider-id
@@ -361,15 +335,6 @@ components:
       schema:
         type: boolean
   responses:
-    304NotModified:
-      description: Not modified.
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/Error"
-          example:
-            code: 304
-            message: "The resource was not modified."
     401UnauthorizedRead:
       description: Unauthorized.
       content:
