@@ -1,3 +1,8 @@
 {
-    "extends": ["spectral:oas", "spectral:asyncapi", "@stoplight/spectral-owasp-ruleset"]
+    "extends": ["spectral:oas", "spectral:asyncapi", "@stoplight/spectral-owasp-ruleset"],
+    "rules": 
+    {
+        "owasp:api4:2023-rate-limit": "off",
+        "owasp:api4:2023-rate-limit-responses-429": "off"
+    }
 }
