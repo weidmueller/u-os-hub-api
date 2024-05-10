@@ -215,6 +215,8 @@ paths:
           description: Bad request.
         "401":
           $ref: "#/components/responses/401UnauthorizedRead"
+        "404":
+          description: Not found. The response body contains a detailed error message, e.g. provider not found or variable not found.
         "500":
           $ref: "#/components/responses/500InternalServerError"
     post:
