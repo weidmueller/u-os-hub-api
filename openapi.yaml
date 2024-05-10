@@ -321,14 +321,7 @@ components:
             code: 401
             message: "You are not authorized to update this resource."
     500InternalServerError:
-      description: Internal server error.
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/Error"
-          example:
-            code: 500
-            message: "The request was not handled due to an internal server error."
+      description: Internal server error. The response body contains a detailed error message.
   schemas:
     Duration:
       type: object
