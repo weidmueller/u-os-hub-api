@@ -114,42 +114,28 @@ paths:
               examples:
                 VariablesWithDefinition:
                   value:
-                    - name: providers/web-plc/variables/gvl/input-1
+                    - name: gvl/input-1
                       value: true
                       definition:
                         data_type: BOOLEAN
                         access_type: READ_ONLY
-                    - name: providers/web-plc/variables/gvl/output-1
+                    - name: gvl/output-1
                       value: false
                       definition:
                         data_type: BOOLEAN
                         access_type: READ_WRITE
                 Variables:
                   value:
-                    - name: providers/web-plc/variables/gvl/input-1
+                    - name: gvl/input-1
                       value: true
-                    - name: providers/web-plc/variables/gvl/output-1
+                    - name: gvl/output-1
                       value: false
         "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-              example:
-                code: 400
-                message: "Bad request."
+          description: Bad request.
         "401":
           $ref: "#/components/responses/401UnauthorizedRead"
         "404":
-          description: No variables found.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-              example:
-                code: 404
-                message: "Variables were not found."
+          description: Provider not found.
         "500":
           $ref: "#/components/responses/500InternalServerError"
     post:
