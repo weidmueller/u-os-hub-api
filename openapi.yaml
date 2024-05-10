@@ -118,12 +118,12 @@ paths:
                       value: true
                       definition:
                         data_type: boolean
-                        access_type: readonly
+                        access_type: READ_ONLY
                     - name: providers/web-plc/variables/gvl/output-1
                       value: false
                       definition:
                         data_type: boolean
-                        access_type: readwrite
+                        access_type: READ_WRITE
                 Variables:
                   value:
                     - name: providers/web-plc/variables/gvl/input-1
@@ -232,7 +232,7 @@ paths:
                     value: true
                     definition:
                       data_type: boolean
-                      access_type: readonly
+                      access_type: READ_ONLY
                 Variable:
                   value:
                     name: providers/web-plc/variables/gvl/input-1
@@ -433,10 +433,10 @@ components:
     VariableAccesstype:
       type: string
       maxItems: 1
-      description: Access type of the variable, e.g. readonly.
+      description: Access type of the variable, e.g. READ_ONLY.
       enum:
-        - readonly
-        - readwrite
+        - READ_ONLY
+        - READ_WRITE
     VariableDatatype:
       type: string
       maxItems: 1
