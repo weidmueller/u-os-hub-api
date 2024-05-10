@@ -117,12 +117,12 @@ paths:
                     - name: providers/web-plc/variables/gvl/input-1
                       value: true
                       definition:
-                        data_type: boolean
+                        data_type: BOOLEAN
                         access_type: READ_ONLY
                     - name: providers/web-plc/variables/gvl/output-1
                       value: false
                       definition:
-                        data_type: boolean
+                        data_type: BOOLEAN
                         access_type: READ_WRITE
                 Variables:
                   value:
@@ -231,7 +231,7 @@ paths:
                     name: providers/web-plc/variables/gvl/input-1
                     value: true
                     definition:
-                      data_type: boolean
+                      data_type: BOOLEAN
                       access_type: READ_ONLY
                 Variable:
                   value:
@@ -440,14 +440,14 @@ components:
     VariableDatatype:
       type: string
       maxItems: 1
-      description: Data type of the variable.
+      description: Data type of the variable, e.g. BOOLEAN.
       enum:
-        - boolean
-        - duration
-        - double
-        - int64
-        - string
-        - timestamp
+        - BOOLEAN
+        - DURATION
+        - FLOAT64
+        - INT64
+        - STRING
+        - TIMESTAMP
     Variable:
       type: object
       description: A variable containing the name and the actual value.
