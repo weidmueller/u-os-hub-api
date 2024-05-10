@@ -19,7 +19,8 @@ info:
   version: 0.1.0
 servers:
   - url: /uc-hub/api/v1
-    description: HTTP API from uc-hub-api.
+    description: This product is a HTTP API from uc-hub-api.
+    x-internal: false
 paths:
   /providers:
     get:
