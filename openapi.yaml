@@ -236,7 +236,7 @@ paths:
             schema:
               $ref: "#/components/schemas/Variable"
             example:
-              name: providers/web-plc/variables/gvl/output-1
+              name: gvl/output-1
               value: true
       responses:
         "200":
@@ -246,24 +246,14 @@ paths:
             The updated variable is not being returned because the provider may query the write and apply the changes asynchronously. The value write might occur later or could be overridden by another write, thus never being applied.
         "400":
           description: Bad request.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-              example:
-                code: 400
-                message: "Variable was not updated due to a malformed request."
         "401":
           $ref: "#/components/responses/401UnauthorizedWrite"
         "404":
-          description: Variable not found.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-              example:
-                code: 404
-                message: "Variable was not found."
+          description: Not found. The response body contains a detailed error message, e.g. provider not found or variable not found.
+        "405":
+          description: Method not allowed.
+        "422":
+          description: Unprocessable entity. The variable in the request body cannot be processed.
         "500":
           $ref: "#/components/responses/500InternalServerError"
     parameters:
