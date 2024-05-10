@@ -46,10 +46,10 @@ paths:
               example:
                 - name: providers/web-plc
                   links:
-                    variables: http://localhost:3000/uc-hub/api/v1/providers/web-plc/variables
+                    variables: /uc-hub/api/v1/providers/web-plc/variables
                 - name: providers/sys
                   links:
-                    variables: http://localhost:3000/uc-hub/api/v1/providers/sys/variables
+                    variables: /uc-hub/api/v1/providers/sys/variables
         "400":
           description: Bad request.
         "401":
@@ -76,7 +76,7 @@ paths:
               example:
                 name: providers/web-plc
                 links:
-                  variables: http://localhost:3000/uc-hub/api/v1/providers/web-plc/variables
+                  variables: /uc-hub/api/v1/providers/web-plc/variables
         "400":
           description: Bad request
           content:
