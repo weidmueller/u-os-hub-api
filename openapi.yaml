@@ -514,7 +514,7 @@ components:
   securitySchemes:
     OAuth2:
       type: oauth2
-      description: The HTTP API uses the OAuth2 client credentials. We do not use the JWTs from RFC8725, but an opaque token.
+      description: The HTTP API uses the OAuth2 client credentials flow.
       flows:
         clientCredentials:
           tokenUrl: "tbd"
