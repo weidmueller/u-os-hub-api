@@ -158,9 +158,9 @@ paths:
               items:
                 $ref: "#/components/schemas/Variable"
               example:
-                - name: providers/web-plc/variables/gvl/input-1
+                - name: gvl/input-1
                   value: true
-                - name: providers/web-plc/variables/gvl/output-1
+                - name: gvl/output-1
                   value: false
       responses:
         "200":
@@ -170,24 +170,12 @@ paths:
             The updated variables are not being returned because the provider may query the write and apply the changes asynchronously. The value write might occur later or could be overridden by another write, thus never being applied.
         "400":
           description: Bad request.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-              example:
-                code: 400
-                message: "Variables were not updated due to a malformed request."
         "401":
           $ref: "#/components/responses/401UnauthorizedWrite"
         "404":
-          description: No variables found.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-              example:
-                code: 404
-                message: "Variables were not found."
+          description: Provider not found.
+        "422":
+          description: Unprocessable entity. The variables in the request body cannot be processed.
         "500":
           $ref: "#/components/responses/500InternalServerError"
     parameters:
@@ -214,24 +202,17 @@ paths:
               examples:
                 VariableWithDefinition:
                   value:
-                    name: providers/web-plc/variables/gvl/input-1
+                    name: gvl/input-1
                     value: true
                     definition:
                       data_type: BOOLEAN
                       access_type: READ_ONLY
                 Variable:
                   value:
-                    name: providers/web-plc/variables/gvl/input-1
+                    name: gvl/input-1
                     value: true
         "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-              example:
-                code: 400
-                message: "Bad request."
+          description: Bad request.
         "401":
           $ref: "#/components/responses/401UnauthorizedRead"
         "500":
