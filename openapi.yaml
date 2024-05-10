@@ -58,8 +58,8 @@ paths:
           $ref: "#/components/responses/500InternalServerError"
   /providers/{provider_name}:
     get:
-      summary: Get a single provider.
-      description: Get a single provider.
+      summary: Get a single provider by name.
+      description: Get a single provider by name.
       tags:
         - Consumer
       security:
