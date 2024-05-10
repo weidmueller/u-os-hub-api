@@ -78,25 +78,11 @@ paths:
                 links:
                   variables: /uc-hub/api/v1/providers/web-plc/variables
         "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-              example:
-                code: 400
-                message: "Bad request."
+          description: Bad request.
         "401":
           $ref: "#/components/responses/401UnauthorizedRead"
         "404":
-          description: The provider id was not found.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-              example:
-                code: 404
-                message: "The provider id was not found."
+          description: Provider not found.
         "500":
           $ref: "#/components/responses/500InternalServerError"
     parameters:
