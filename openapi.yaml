@@ -45,11 +45,9 @@ paths:
                   $ref: "#/components/schemas/Provider"
               example:
                 - name: providers/web-plc
-                  description: Weidmueller web-plc provider.
                   links:
                     variables: http://localhost:3000/uc-hub/api/v1/providers/web-plc/variables
                 - name: providers/sys
-                  description: System data provider.
                   links:
                     variables: http://localhost:3000/uc-hub/api/v1/providers/sys/variables
         "400":
@@ -77,7 +75,6 @@ paths:
                 $ref: "#/components/schemas/Provider"
               example:
                 name: providers/web-plc
-                description: Weidmueller web-plc provider.
                 links:
                   variables: http://localhost:3000/uc-hub/api/v1/providers/web-plc/variables
         "400":
