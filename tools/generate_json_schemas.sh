@@ -1,4 +1,9 @@
 #!/bin/sh
+
+# SPDX-FileCopyrightText: 2024 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+#
+# SPDX-License-Identifier: CC0-1.0
+
 # This script needs to be executed via npm.
 
 script_path="$(readlink -f ${0})"

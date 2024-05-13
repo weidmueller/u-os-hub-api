@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# SPDX-FileCopyrightText: 2024 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+#
+# SPDX-License-Identifier: CC0-1.0
+
 echo "Provide UI"
 
 echo "Copy OpenAPI site und yaml file"

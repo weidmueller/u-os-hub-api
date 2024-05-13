@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# SPDX-FileCopyrightText: 2024 2024 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+#
+# SPDX-License-Identifier: MIT
+
 ASYNCAPI_HTML_TEMPLATE_VERSION=0.28.4
 
 script_path="$(readlink -f ${0})"
