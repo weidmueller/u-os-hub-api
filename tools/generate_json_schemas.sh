@@ -4,8 +4,6 @@
 #
 # SPDX-License-Identifier: CC0-1.0
 
-# This script needs to be executed via npm.
-
 script_path="$(readlink -f ${0})"
 script_dir="$(dirname ${script_path})"
 project_dir="$(dirname ${script_dir})"
