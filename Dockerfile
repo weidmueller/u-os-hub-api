@@ -28,6 +28,8 @@ RUN test "${USERNAME}" = "node" \
     && adduser -G ${USERNAME} -D -u ${USER_UID} ${USERNAME} \
   )
 
+RUN chown -R ${USER_UID}:${USER_GID} ${HOME}
+
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
     sudo \
@@ -45,4 +47,4 @@ RUN HADOLINT=/usr/local/bin/hadolint; \
 
 # NestJS
 RUN npm install -g @nestjs/cli \
- && chown ${USER_UID}:${USER_GID} ${HOME} -R
+ && rm -rf ${HOME}/.npm
