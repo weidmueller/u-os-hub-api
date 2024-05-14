@@ -39,6 +39,7 @@ paths:
             application/json:
               schema:
                 type: array
+                maxItems: 100
                 items:
                   $ref: "#/components/schemas/Provider"
               example:
@@ -130,6 +131,7 @@ paths:
             application/json:
               schema:
                 type: array
+                maxItems: 100000
                 items:
                   $ref: "#/components/schemas/Variable"
               examples:
@@ -189,6 +191,7 @@ paths:
           application/json:
             schema:
               type: array
+              maxItems: 100000
               items:
                 $ref: "#/components/schemas/Variable"
               example:
@@ -329,6 +332,8 @@ components:
       required: true
       schema:
         type: string
+        maxLength: 63
+        pattern: ^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$
       example: web-plc
     variable_name:
       name: variable_name
@@ -337,6 +342,8 @@ components:
       required: true
       schema:
         type: string
+        maxLength: 1023
+        pattern: ^[a-z]([a-z0-9-]{0,61}[a-z0-9])?(\/[a-z]([a-z0-9-]{0,61}[a-z0-9])?)*$
       example: gvl/input-1
     Prefixes:
       name: prefixes
@@ -349,6 +356,8 @@ components:
         Since the names might contain '/' characters, the parameter needs to be URL-encoded.
       schema:
         type: string
+        maxLength: 1023
+        format: ^[a-z]([a-z0-9-]{0,61}[a-z0-9])?(\/[a-z]([a-z0-9-]{0,61}[a-z0-9])?)*$
       example: gvl,gvl/output-1
     Definition:
       name: definition
@@ -391,8 +400,14 @@ components:
       properties:
         seconds:
           type: integer
+          format: int64
+          minimum: -9223372036854776000
+          maximum: 9223372036854776000
         nanos:
           type: integer
+          format: int32
+          minimum: -999999999
+          maximum: 999999999
     Error:
       type: object
       properties:
@@ -401,6 +416,8 @@ components:
           description: HTTP error status code.
         message:
           type: string
+          maxLength: 1023
+          format: string
           description: Error message.
       required:
         - code
@@ -411,9 +428,13 @@ components:
         name:
           description: The relative resource name without the leading slash, e.g. 'providers/web-plc'.
           type: string
+          maxLength: 63
+          format: ^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$
         description:
           description: The description of the provider.
           type: string
+          maxLength: 1023
+          format: string
         links:
           description: URLs for requesting subresources.
           type: object
@@ -421,22 +442,32 @@ components:
             variables:
               description: URL for requesting variables of the provider.
               type: string
+              maxLength: 2047
+              format: ^[a-z]([a-z0-9-]{0,61}[a-z0-9])?(\/[a-z]([a-z0-9-]{0,61}[a-z0-9])?)*$
     Timestamp:
       type: object
       description: A timestamp measured by the number of nanoseconds that have elapsed since 00:00:00 UTC on 1 January 1970, which is referred to as the Unix epoch, without adjustments made due to leap seconds.
       properties:
         seconds:
           type: integer
+          format: int64
+          minimum: -9223372036854776000
+          maximum: 9223372036854776000
         nanos:
           type: integer
+          format: int32
+          minimum: 0
+          maximum: 999999999
     VariableAccesstype:
       type: string
+      maxItems: 1
       description: Access type of the variable, e.g. readonly.
       enum:
         - readonly
         - readwrite
     VariableDatatype:
       type: string
+      maxItems: 1
       description: Data type of the variable.
       enum:
         - boolean
@@ -451,11 +482,15 @@ components:
       properties:
         name:
           type: string
+          maxLength: 1023
+          format: ^[a-z]([a-z0-9-]{0,61}[a-z0-9])?(\/[a-z]([a-z0-9-]{0,61}[a-z0-9])?)*$
           description: The relative resource name of the variable without the leading slash, e.g. 'providers/web-plc/variables/gvl/input-1'.
         value:
           description: The value of the variable.
           oneOf:
             - type: string
+              format: string
+              maxLength: 16383
             - type: number
             - type: boolean
             - $ref: "#/components/schemas/Duration"
