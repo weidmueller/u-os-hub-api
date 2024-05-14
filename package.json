@@ -5,7 +5,7 @@
     "generateJsonSchemas": "./tools/generate_json_schemas.sh",
     "generateAsyncApi": "asyncapi generate fromTemplate asyncapi.yaml @asyncapi/html-template@0.28.4 -o ./dist/asyncapi --force-write -p sidebarOrganization=byTags",
     "validateOpenApi": "spectral lint --fail-severity=warn openapi.yaml --ruleset ./tools/spectral.json",
-    "validateAsyncApi": "asyncapi validate --fail-severity=warn asyncapi.yaml"
+    "validateAsyncApi": "spectral lint --fail-severity=warn asyncapi.yaml --ruleset ./tools/spectral.json"
   },
   "dependencies": {
     "swagger-ui-dist": "^5"
