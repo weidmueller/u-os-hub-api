@@ -43,12 +43,14 @@ channels:
       providerName:
         $ref: "#/components/parameters/ProviderName"
     publish:
+      description: A provider publishes its list of variables, if they have changed its value or quality.
       operationId: emitVariablesChangedEvent
       tags:
         - name: provider
       message:
         $ref: "#/components/messages/VariablesChangedEvent"
     subscribe:
+      description: A consumer subscribes to a list of variables and get informed via an event if they have changed its value or quality and receives the updated list.
       operationId: receiveVariablesChangedEvent
       tags:
         - name: consumer
@@ -60,12 +62,14 @@ channels:
       providerName:
         $ref: "#/components/parameters/ProviderName"
     publish:
+      description: A consumer publishes a request for reading a list of provider variables.
       operationId: emitReadVariablesQueryRequest
       tags:
         - name: consumer
       message:
         $ref: "#/components/messages/ReadVariablesQueryRequest"
     subscribe:
+      description: A consumer subscribes to requesting a list of provider variables.
       operationId: receiveReadVariablesQueryRequest
       tags:
         - name: provider
@@ -77,12 +81,14 @@ channels:
       providerName:
         $ref: "#/components/parameters/ProviderName"
     publish:
+      description: A consumer publishes a request for writing a list of provider variables.
       operationId: emitWriteVariablesCommand
       tags:
         - name: consumer
       message:
         $ref: "#/components/messages/WriteVariablesCommand"
     subscribe:
+      description: A consumer subscribes writing a list of provider variables.
       operationId: receiveWriteVariablesCommand
       tags:
         - name: provider
@@ -94,6 +100,7 @@ channels:
       providerName:
         $ref: "#/components/parameters/ProviderName"
     publish:
+      description: A provider publishes its provider's definition, if it has changed.
       operationId: emitProviderDefinitionChangedEvent
       tags:
         - name: provider
@@ -105,6 +112,7 @@ channels:
       providerName:
         $ref: "#/components/parameters/ProviderName"
     publish:
+      description: A consumer queries a provider's definition.
       operationId: emitReadProviderDefinitionQueryRequest
       tags:
         - name: consumer
@@ -116,6 +124,7 @@ channels:
       providerName:
         $ref: "#/components/parameters/ProviderName"
     subscribe:
+      description: A consumer subscribes to a provider's definition and get informed via an event if it has changed and receives the updated provider definition.
       operationId: receiveProviderDefinitionChangedEvent
       tags:
         - name: consumer
@@ -124,6 +133,7 @@ channels:
   v1.loc.registry.providers.qry.read:
     description: A query from a consumer to the registry requesting a list of providers.
     publish:
+      description: A consumer requests a list of providers.
       operationId: emitReadProvidersQueryRequest
       tags:
         - name: consumer
@@ -132,6 +142,7 @@ channels:
   v1.loc.registry.providers.evt.changed:
     description: An event from the registry to the consumers that describes a list of providers that have just changed.
     subscribe:
+      description: A consumer subscribes a list of providers and get informed via an event if they have changed and receives the updated list.
       operationId: receiveProvidersChangedEvent
       tags:
         - name: consumer
@@ -140,6 +151,7 @@ channels:
   v1.loc.registry.state.evt.changed:
     description: An event from the registry to the consumers that describes a state that have just changed.
     subscribe:
+      description: A consumer subscribes a state and get informed via an event if it has changed and receives the updated state.
       operationId: receiveStateChangedEvent
       tags:
         - name: consumer
@@ -153,6 +165,7 @@ channels:
       sessionId:
         $ref: "#/components/parameters/SessionId"
     publish:
+      description: A publish event from the consumer.
       operationId: replyFromConsumer
       tags:
         - name: consumer
