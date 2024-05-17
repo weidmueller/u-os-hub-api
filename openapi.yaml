@@ -320,6 +320,12 @@ components:
             format: string
     500InternalServerError:
       description: Internal server error. The response body contains a detailed error message.
+      content:
+        text/plain:
+          schema:
+            type: string
+            maxLength: 1023
+            format: string
   schemas:
     Duration:
       type: object
