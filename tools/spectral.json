@@ -6,6 +6,7 @@
         "owasp:api4:2023-rate-limit-responses-429": "off",
         "owasp:api8:2023-define-cors-origin": "off",
         "owasp:api2:2023-jwt-best-practices": "off",
-        "owasp:api2:2023-short-lived-access-tokens": "off"
+        "owasp:api2:2023-short-lived-access-tokens": "off",
+        "asyncapi-unused-components-schema": "off"
     }
 }
