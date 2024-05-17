@@ -305,21 +305,19 @@ components:
     401UnauthorizedRead:
       description: Unauthorized.
       content:
-        application/json:
+        text/plain:
           schema:
-            $ref: "#/components/schemas/Error"
-          example:
-            code: 401
-            message: "You are not authorized to get this resource."
+            type: string
+            maxLength: 1023
+            format: string
     401UnauthorizedWrite:
       description: Unauthorized.
       content:
-        application/json:
+        text/plain:
           schema:
-            $ref: "#/components/schemas/Error"
-          example:
-            code: 401
-            message: "You are not authorized to update this resource."
+            type: string
+            maxLength: 1023
+            format: string
     500InternalServerError:
       description: Internal server error. The response body contains a detailed error message.
   schemas:
@@ -337,20 +335,6 @@ components:
           format: int32
           minimum: -999999999
           maximum: 999999999
-    Error:
-      type: object
-      properties:
-        code:
-          type: number
-          description: HTTP error status code.
-        message:
-          type: string
-          maxLength: 1023
-          format: string
-          description: Error message.
-      required:
-        - code
-        - message
     Provider:
       type: object
       properties:
