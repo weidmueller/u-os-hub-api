@@ -431,7 +431,7 @@ components:
       description: The HTTP API uses the OAuth2 client credentials flow.
       flows:
         clientCredentials:
-          tokenUrl: "tbd"
+          tokenUrl: "/hydra/oauth2/token"
           scopes:
             browse: Browse available providers and variables.
             read_variables: Read variables.
