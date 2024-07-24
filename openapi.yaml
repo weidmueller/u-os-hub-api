@@ -31,7 +31,8 @@ paths:
         - Consumer
       security:
         - OAuth2:
-            - browse
+            - hub.variables.readonly
+            - hub.variables.readwrite
       operationId: listProviders
       responses:
         "200":
@@ -64,7 +65,8 @@ paths:
         - Consumer
       security:
         - OAuth2:
-            - browse
+            - hub.variables.readonly
+            - hub.variables.readwrite
       operationId: getProvider
       responses:
         "200":
@@ -96,7 +98,8 @@ paths:
         - Consumer
       security:
         - OAuth2:
-            - read_variables
+            - hub.variables.readonly
+            - hub.variables.readwrite
       operationId: listVariables
       parameters:
         - $ref: "#/components/parameters/Definition"
@@ -145,7 +148,7 @@ paths:
         - Consumer
       security:
         - OAuth2:
-            - update_variables
+            - hub.variables.readwrite
       operationId: updateVariables
       requestBody:
         description: The request body contains the variable values which shall be updated.
@@ -188,7 +191,8 @@ paths:
         - Consumer
       security:
         - OAuth2:
-            - read_variables
+            - hub.variables.readonly
+            - hub.variables.readwrite
       operationId: getVariable
       parameters:
         - $ref: "#/components/parameters/Definition"
@@ -226,7 +230,7 @@ paths:
         - Consumer
       security:
         - OAuth2:
-            - update_variables
+            - hub.variables.readwrite
       operationId: updateVariable
       requestBody:
         description: The request body contains the variable value which shall be updated.
@@ -433,9 +437,8 @@ components:
         clientCredentials:
           tokenUrl: "/hydra/oauth2/token"
           scopes:
-            browse: Browse available providers and variables.
-            read_variables: Read variables.
-            update_variables: Update variables.
+            hub.variables.readonly: Readonly access to variables.
+            hub.variables.readwrite: Read & write access to variables.
 tags:
   - name: Consumer
     description: >
