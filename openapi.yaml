@@ -1,449 +1,572 @@
 # SPDX-FileCopyrightText: 2024 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
 #
 # SPDX-License-Identifier: MIT
-
-openapi: "3.1.0"
+openapi: 3.0.3
 info:
   title: uc-hub HTTP API
-  description: >
+  description: |-
     *uc-hub* is the data communication system in u-OS. This document describes the HTTP API for accessing uc-hub as a consumer.
     <br><br>
     Each participant at uc-hub is either a consumer, a provider or both. A *consumer* can list/get available providers and list/get/update variables published by providers. A *provider* publishes variables to uc-hub.
-  license:
-    name: MIT
-    url: https://spdx.org/licenses/MIT.html
   contact:
     name: Weidmüller Interface GmbH & Co. KG
     url: https://www.weidmueller.com/
     email: oss@weidmueller.com
+  license:
+    name: MIT
+    url: https://spdx.org/licenses/MIT.html
   version: 0.1.0
 servers:
-  - url: /uc-hub/api/v1
-    description: This product is a HTTP API from uc-hub-api.
-    x-internal: false
+- url: /uc-hub/api/v1
+  description: A synchronous HTTP API for accessing the local u-OS datahub.
 paths:
   /providers:
     get:
-      summary: List providers.
-      description: >
-        List providers.
       tags:
-        - Consumer
-      security:
-        - OAuth2:
-            - hub.variables.readonly
-            - hub.variables.readwrite
-      operationId: listProviders
+      - Consumer
+      summary: List providers.
+      description: List providers.
+      operationId: get_providers_handler
       responses:
-        "200":
+        '200':
           description: A list of providers.
           content:
             application/json:
               schema:
                 type: array
-                maxItems: 100
                 items:
-                  $ref: "#/components/schemas/Provider"
+                  $ref: '#/components/schemas/ResponseSingleProvider'
               example:
-                - name: providers/web-plc
-                  links:
-                    variables: /uc-hub/api/v1/providers/web-plc/variables
-                - name: providers/sys
-                  links:
-                    variables: /uc-hub/api/v1/providers/sys/variables
-        "400":
+              - links:
+                  variables: /uc-hub/api/v1/providers/web-plc/variables
+                name: web-plc
+              - links:
+                  variables: /uc-hub/api/v1/providers/sys/variables
+                name: sys
+        '400':
           description: Bad request.
-        "401":
-          $ref: "#/components/responses/401UnauthorizedRead"
-        "500":
-          $ref: "#/components/responses/500InternalServerError"
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/FormatlessString'
+        '401':
+          description: Unauthorized.
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/FormatlessString'
+        '500':
+          description: Internal server error.
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/FormatlessString'
+      security:
+      - OAuth2: []
   /providers/{provider_name}:
     get:
+      tags:
+      - Consumer
       summary: Get a single provider by name.
       description: Get a single provider by name.
-      tags:
-        - Consumer
-      security:
-        - OAuth2:
-            - hub.variables.readonly
-            - hub.variables.readwrite
-      operationId: getProvider
+      operationId: get_single_provider_handler
+      parameters:
+      - name: provider_name
+        in: path
+        description: Name of a provider
+        required: true
+        schema:
+          $ref: '#/components/schemas/ProviderName'
       responses:
-        "200":
+        '200':
           description: A single provider.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Provider"
+                $ref: '#/components/schemas/ResponseSingleProvider'
               example:
-                name: providers/web-plc
                 links:
                   variables: /uc-hub/api/v1/providers/web-plc/variables
-        "400":
+                name: web-plc
+        '400':
           description: Bad request.
-        "401":
-          $ref: "#/components/responses/401UnauthorizedRead"
-        "404":
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/FormatlessString'
+        '401':
+          description: Unauthorized.
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/FormatlessString'
+        '404':
           description: Provider not found.
-        "500":
-          $ref: "#/components/responses/500InternalServerError"
-    parameters:
-      - $ref: "#/components/parameters/provider_name"
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/FormatlessString'
+        '500':
+          description: Internal Server Error
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/FormatlessString'
+      security:
+      - OAuth2: []
   /providers/{provider_name}/variables:
     get:
-      summary: List variable values of a single provider.
-      description: >
-        List all variable values or a subset of variable values of a single provider with or without variable definitions.
       tags:
-        - Consumer
-      security:
-        - OAuth2:
-            - hub.variables.readonly
-            - hub.variables.readwrite
-      operationId: listVariables
+      - Consumer
+      summary: List variable values of a single provider.
+      description: List all variable values or a subset of variable values of a single provider with or without variable definitions.
+      operationId: get_variables_handler
       parameters:
-        - $ref: "#/components/parameters/Definition"
-        - $ref: "#/components/parameters/Prefixes"
+      - name: provider_name
+        in: path
+        description: Name of a provider
+        required: true
+        schema:
+          $ref: '#/components/schemas/ProviderName'
+      - name: prefixes
+        in: query
+        description: |-
+          This parameter is used to filter variables by prefixes. The parameter shall contain a comma-separated list of prefixes. The response will include all variables where the variable name matches one of the given prefixes.
+                      The endpoint will filter out duplicates: Each variable will occur only once in the response array.
+                      Since the names might contain '/' characters, the parameter needs to be URL-encoded.
+        required: false
+        schema:
+          allOf:
+          - $ref: '#/components/schemas/Prefixes'
+          nullable: true
+      - name: definition
+        in: query
+        description: If true, the response will contain variable definitions.
+        required: false
+        schema:
+          type: boolean
+          nullable: true
       responses:
-        "200":
+        '200':
           description: Variables of a single provider with or without variable definitions.
           content:
             application/json:
               schema:
                 type: array
-                maxItems: 100000
                 items:
-                  $ref: "#/components/schemas/Variable"
+                  $ref: '#/components/schemas/ResponseSingleRead'
               examples:
                 VariablesWithDefinition:
                   value:
-                    - name: gvl/input-1
-                      value: true
-                      definition:
-                        data_type: BOOLEAN
-                        access_type: READ_ONLY
-                    - name: gvl/output-1
-                      value: false
-                      definition:
-                        data_type: BOOLEAN
-                        access_type: READ_WRITE
-                Variables:
+                  - definition:
+                      access_type: READ_ONLY
+                      data_type: BOOLEAN
+                    name: gvl/input-1
+                    value: true
+                  - definition:
+                      access_type: READ_WRITE
+                      data_type: BOOLEAN
+                    name: gvl/input-2
+                    value: true
+                VariablesWithoutDefinition:
                   value:
-                    - name: gvl/input-1
-                      value: true
-                    - name: gvl/output-1
-                      value: false
-        "400":
+                  - name: gvl/input-1
+                    value: true
+                  - name: gvl/input-2
+                    value: true
+        '400':
           description: Bad request.
-        "401":
-          $ref: "#/components/responses/401UnauthorizedRead"
-        "404":
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/FormatlessString'
+        '401':
+          description: Unauthorized.
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/FormatlessString'
+        '404':
           description: Provider not found.
-        "500":
-          $ref: "#/components/responses/500InternalServerError"
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/FormatlessString'
+        '500':
+          description: Internal Server Error
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/FormatlessString'
+      security:
+      - OAuth2:
+        - hub.variables.readonly
     post:
+      tags:
+      - Consumer
       summary: Update variable values of a single provider.
       description: Update all variable values or a subset of variable values of a single provider.
-      tags:
-        - Consumer
-      security:
-        - OAuth2:
-            - hub.variables.readwrite
-      operationId: updateVariables
+      operationId: post_multiple_variables_handler
+      parameters:
+      - name: provider_name
+        in: path
+        description: Name of a provider
+        required: true
+        schema:
+          $ref: '#/components/schemas/ProviderName'
       requestBody:
         description: The request body contains the variable values which shall be updated.
-        required: true
         content:
           application/json:
             schema:
               type: array
-              maxItems: 100000
               items:
-                $ref: "#/components/schemas/Variable"
-              example:
-                - name: gvl/input-1
-                  value: true
-                - name: gvl/output-1
-                  value: false
+                $ref: '#/components/schemas/VariableUpdatePostPayload'
+            example:
+            - name: gvl/input-1
+              value: true
+            - name: gvl/input-2
+              value: false
+        required: true
       responses:
-        "200":
-          description: >
-            Ok<br><br>
-            Variable write command was successfully send.
-            The updated variables are not being returned because the provider may query the write and apply the changes asynchronously. The value write might occur later or could be overridden by another write, thus never being applied.
-        "400":
+        '200':
+          description: |-
+            Ok
+
+                        Variable write command was successfully sent.
+                        The updated variables are not being returned because the provider may query the write and apply the changes asynchronously. The value write might occur later or could be overridden by another write, thus never being applied.
+        '400':
           description: Bad request.
-        "401":
-          $ref: "#/components/responses/401UnauthorizedWrite"
-        "404":
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/FormatlessString'
+        '401':
+          description: Unauthorized.
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/FormatlessString'
+        '404':
           description: Provider not found.
-        "422":
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/FormatlessString'
+        '422':
           description: Unprocessable entity. The variables in the request body cannot be processed.
-        "500":
-          $ref: "#/components/responses/500InternalServerError"
-    parameters:
-      - $ref: "#/components/parameters/provider_name"
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/FormatlessString'
+        '500':
+          description: Internal Server Error
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/FormatlessString'
+      security:
+      - OAuth2:
+        - hub.variables.readwrite
   /providers/{provider_name}/variables/{variable_name}:
     get:
+      tags:
+      - Consumer
       summary: Get variable value of a single provider.
       description: Get variable value of a single provider with or without variable definition.
-      tags:
-        - Consumer
-      security:
-        - OAuth2:
-            - hub.variables.readonly
-            - hub.variables.readwrite
-      operationId: getVariable
+      operationId: get_single_variable_handler
       parameters:
-        - $ref: "#/components/parameters/Definition"
+      - name: provider_name
+        in: path
+        description: Name of a provider
+        required: true
+        schema:
+          $ref: '#/components/schemas/ProviderName'
+      - name: variable_name
+        in: path
+        description: Name of a variable
+        required: true
+        schema:
+          $ref: '#/components/schemas/VariableName'
+      - name: definition
+        in: query
+        description: If true, the response will contain variable definitions.
+        required: false
+        schema:
+          type: boolean
+          nullable: true
       responses:
-        "200":
+        '200':
           description: A variable value with or without definition.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Variable"
+                $ref: '#/components/schemas/ResponseSingleRead'
               examples:
                 VariableWithDefinition:
                   value:
+                    definition:
+                      access_type: READ_ONLY
+                      data_type: BOOLEAN
                     name: gvl/input-1
                     value: true
-                    definition:
-                      data_type: BOOLEAN
-                      access_type: READ_ONLY
-                Variable:
+                VariableWithoutDefinition:
                   value:
                     name: gvl/input-1
                     value: true
-        "400":
+        '400':
           description: Bad request.
-        "401":
-          $ref: "#/components/responses/401UnauthorizedRead"
-        "404":
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/FormatlessString'
+        '401':
+          description: Unauthorized.
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/FormatlessString'
+        '404':
           description: Not found. The response body contains a detailed error message, e.g. provider not found or variable not found.
-        "500":
-          $ref: "#/components/responses/500InternalServerError"
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/FormatlessString'
+        '500':
+          description: Internal Server Error
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/FormatlessString'
+      security:
+      - OAuth2:
+        - hub.variables.readonly
     post:
+      tags:
+      - Consumer
       summary: Update variable value of a single provider.
       description: Update variable value of a single provider.
-      tags:
-        - Consumer
-      security:
-        - OAuth2:
-            - hub.variables.readwrite
-      operationId: updateVariable
+      operationId: post_single_variable_handler
+      parameters:
+      - name: provider_name
+        in: path
+        description: Name of a Provider
+        required: true
+        schema:
+          $ref: '#/components/schemas/ProviderName'
+      - name: variable_name
+        in: path
+        description: Name of a variable
+        required: true
+        schema:
+          $ref: '#/components/schemas/VariableName'
       requestBody:
         description: The request body contains the variable value which shall be updated.
-        required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Variable"
+              $ref: '#/components/schemas/VariableUpdatePostPayload'
             example:
-              name: gvl/output-1
+              name: gvl/input-1
               value: true
+        required: true
       responses:
-        "200":
-          description: >
-            Ok<br><br>
-            Variable write command was successfully send.
-            The updated variable is not being returned because the provider may query the write and apply the changes asynchronously. The value write might occur later or could be overridden by another write, thus never being applied.
-        "400":
+        '200':
+          description: ''
+        '400':
           description: Bad request.
-        "401":
-          $ref: "#/components/responses/401UnauthorizedWrite"
-        "404":
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/FormatlessString'
+        '401':
+          description: Unauthorized.
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/FormatlessString'
+        '404':
           description: Not found. The response body contains a detailed error message, e.g. provider not found or variable not found.
-        "405":
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/FormatlessString'
+        '405':
           description: Method not allowed.
-        "422":
-          description: Unprocessable entity. The variable in the request body cannot be processed.
-        "500":
-          $ref: "#/components/responses/500InternalServerError"
-    parameters:
-      - $ref: "#/components/parameters/provider_name"
-      - $ref: "#/components/parameters/variable_name"
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/FormatlessString'
+        '422':
+          description: Unprocessable entity.
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/FormatlessString'
+        '500':
+          description: Internal Server Error.
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/FormatlessString'
+      security:
+      - OAuth2:
+        - hub.variables.readwrite
 components:
-  parameters:
-    provider_name:
-      name: provider_name
-      in: path
-      description: Name of a provider.
-      required: true
-      schema:
-        type: string
-        maxLength: 63
-        pattern: ^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$
-      example: web-plc
-    variable_name:
-      name: variable_name
-      in: path
-      description: Name of a variable.
-      required: true
-      schema:
-        type: string
-        maxLength: 1023
-        pattern: ^[a-z]([a-z0-9-]{0,61}[a-z0-9])?(\/[a-z]([a-z0-9-]{0,61}[a-z0-9])?)*$
-      example: gvl/input-1
-    Prefixes:
-      name: prefixes
-      in: query
-      description: >
-        This parameter is used to filter variables by prefixes. The parameter shall contain a comma-separated list of prefixes. The response will include all variables where the variable name matches one of the given prefixes.
-        <br><br>
-        The endpoint will filter out duplicates: Each variable will occur only once in the response array.
-        <br><br>
-        Since the names might contain '/' characters, the parameter needs to be URL-encoded.
-      schema:
-        type: string
-        maxLength: 1023
-        format: ^[a-z]([a-z0-9-]{0,61}[a-z0-9])?(\/[a-z]([a-z0-9-]{0,61}[a-z0-9])?)*$
-      example: gvl,gvl/output-1
-    Definition:
-      name: definition
-      in: query
-      description: If true, the response will contain variable definitions.
-      schema:
-        type: boolean
-  responses:
-    401UnauthorizedRead:
-      description: Unauthorized.
-      content:
-        text/plain:
-          schema:
-            type: string
-            maxLength: 1023
-            format: string
-    401UnauthorizedWrite:
-      description: Unauthorized.
-      content:
-        text/plain:
-          schema:
-            type: string
-            maxLength: 1023
-            format: string
-    500InternalServerError:
-      description: Internal server error. The response body contains a detailed error message.
-      content:
-        text/plain:
-          schema:
-            type: string
-            maxLength: 1023
-            format: string
   schemas:
     Duration:
       type: object
-      description: A duration between two timestamps.
+      required:
+      - seconds
+      - nanos
       properties:
-        seconds:
-          type: integer
-          format: int64
-          minimum: -9223372036854776000
-          maximum: 9223372036854776000
         nanos:
           type: integer
           format: int32
-          minimum: -999999999
-          maximum: 999999999
-    Provider:
+        seconds:
+          type: integer
+          format: int64
+    FormatlessString:
+      type: string
+      format: string
+      description: String without special format.
+      additionalProperties: true
+      maxLength: 1023
+    Links:
       type: object
+      description: |-
+        Contains URLs to further resources of a provider.
+
+        The URLs are absolute starting with a forward slash ('/').
+      required:
+      - variables
       properties:
-        name:
-          description: The relative resource name without the leading slash, e.g. 'providers/web-plc'.
+        variables:
           type: string
-          maxLength: 63
-          format: ^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$
+          format: ^[a-z]([a-z0-9-]{0,61}[a-z0-9])?(\/[a-z]([a-z0-9-]{0,61}[a-z0-9])?)*$
+          description: URL to the variables resource.
+          maxLength: 2047
+    Prefixes:
+      type: string
+      format: ^[a-z]([a-z0-9-]{0,61}[a-z0-9])?(\/[a-z]([a-z0-9-]{0,61}[a-z0-9])?)*$
+      description: A comma-separated list of prefixes used for listing a subset of variables.
+      additionalProperties: true
+      maxLength: 1023
+    ProviderName:
+      type: string
+      format: ^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$
+      description: The name of a provider.
+      additionalProperties: true
+      maxLength: 63
+    ResponseSingleProvider:
+      type: object
+      description: Response containing a single provider.
+      required:
+      - name
+      - links
+      properties:
         links:
-          description: URLs for requesting subresources.
-          type: object
-          properties:
-            variables:
-              description: URL for requesting variables of the provider.
-              type: string
-              maxLength: 2047
-              format: ^[a-z]([a-z0-9-]{0,61}[a-z0-9])?(\/[a-z]([a-z0-9-]{0,61}[a-z0-9])?)*$
+          $ref: '#/components/schemas/Links'
+        name:
+          type: string
+          format: ^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$
+          maxLength: 63
+    ResponseSingleRead:
+      type: object
+      description: Response object for a single variable.
+      required:
+      - name
+      - value
+      properties:
+        definition:
+          $ref: '#/components/schemas/VariableDefinition'
+        name:
+          type: string
+          format: ^[a-z]([a-z0-9-]{0,61}[a-z0-9])?(\/[a-z]([a-z0-9-]{0,61}[a-z0-9])?)*$
+          maxLength: 1023
+        value:
+          $ref: '#/components/schemas/VariableValue'
     Timestamp:
       type: object
-      description: A timestamp measured by the number of nanoseconds that have elapsed since 00:00:00 UTC on 1 January 1970, which is referred to as the Unix epoch, without adjustments made due to leap seconds.
+      required:
+      - seconds
+      - nanos
       properties:
-        seconds:
-          type: integer
-          format: int64
-          minimum: -9223372036854776000
-          maximum: 9223372036854776000
         nanos:
           type: integer
           format: int32
-          minimum: 0
-          maximum: 999999999
-    VariableAccesstype:
+        seconds:
+          type: integer
+          format: int64
+    VariableAccessType:
       type: string
-      maxItems: 1
-      description: Access type of the variable, e.g. READ_ONLY.
       enum:
-        - READ_ONLY
-        - READ_WRITE
-    VariableDatatype:
+      - UNSPECIFIED
+      - READ_ONLY
+      - READ_WRITE
+    VariableDataType:
       type: string
-      maxItems: 1
-      description: Data type of the variable, e.g. BOOLEAN.
       enum:
-        - BOOLEAN
-        - DURATION
-        - FLOAT64
-        - INT64
-        - STRING
-        - TIMESTAMP
-    Variable:
+      - UNSPECIFIED
+      - BOOLEAN
+      - DURATION
+      - FLOAT64
+      - INT64
+      - STRING
+      - TIMESTAMP
+    VariableDefinition:
       type: object
-      description: A variable containing the name and the actual value.
+      required:
+      - data_type
+      - access_type
+      properties:
+        access_type:
+          $ref: '#/components/schemas/VariableAccessType'
+        data_type:
+          $ref: '#/components/schemas/VariableDataType'
+    VariableName:
+      type: string
+      format: ^[a-z]([a-z0-9-]{0,61}[a-z0-9])?(\/[a-z]([a-z0-9-]{0,61}[a-z0-9])?)*$
+      description: String that contains the name of a variable.
+      additionalProperties: true
+      maxLength: 1023
+    VariableUpdatePostPayload:
+      type: object
+      description: The JSON payload of a POST request (to update a single variable) is deserialized into this struct.
+      required:
+      - name
+      - value
       properties:
         name:
           type: string
-          maxLength: 1023
           format: ^[a-z]([a-z0-9-]{0,61}[a-z0-9])?(\/[a-z]([a-z0-9-]{0,61}[a-z0-9])?)*$
-          description: The relative resource name of the variable without the leading slash, e.g. 'providers/web-plc/variables/gvl/input-1'.
+          maxLength: 1023
         value:
-          description: The value of the variable.
-          oneOf:
-            - type: string
-              format: string
-              maxLength: 16383
-            - type: number
-            - type: boolean
-            - $ref: "#/components/schemas/Duration"
-            - $ref: "#/components/schemas/Timestamp"
-        definition:
-          $ref: "#/components/schemas/VariableDefinition"
-      required:
-        - name
-        - value
-    VariableDefinition:
-      type: object
-      description: The definition of a variable containing data type and access type.
-      properties:
-        data_type:
-          $ref: "#/components/schemas/VariableDatatype"
-        access_type:
-          $ref: "#/components/schemas/VariableAccesstype"
-      required:
-        - data_type
-        - access_type
+          $ref: '#/components/schemas/VariableValue'
+    VariableValue:
+      oneOf:
+      - type: integer
+        format: int64
+      - type: boolean
+      - $ref: '#/components/schemas/FormatlessString'
+      - type: number
+        format: double
+      - $ref: '#/components/schemas/Duration'
+      - $ref: '#/components/schemas/Timestamp'
   securitySchemes:
     OAuth2:
       type: oauth2
-      description: The HTTP API uses the OAuth2 client credentials flow.
       flows:
         clientCredentials:
-          tokenUrl: "/hydra/oauth2/token"
+          tokenUrl: /hydra/oauth2/token
           scopes:
-            hub.variables.readonly: Readonly access to variables.
-            hub.variables.readwrite: Read & write access to variables.
+            hub.variables.readonly: Readonly access to hub variables.
+            hub.variables.readwrite: Read and write access to hub variables.
+      description: The HTTP API uses the OAuth2 client credentials flow.
 tags:
-  - name: Consumer
-    description: >
-      A consumer may
+- name: Consumer
+  description: |-
+    A consumer may
 
       - list/get available providers
-
       - list/get/update variables published by providers.
