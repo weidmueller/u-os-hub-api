@@ -19,3 +19,6 @@ echo "Copy OpenAPI site und yaml file"
 # https://github.com/swagger-api/swagger-ui/issues/9237
 echo "Replace url"
 sed -i 's#https://petstore.swagger.io/v2/swagger.json#openapi.yaml#g' dist/openapi/swagger-initializer.js
+
+echo "Replace Layout"
+sed -i 's#StandaloneLayout#BaseLayout#g' dist/openapi/swagger-initializer.js
