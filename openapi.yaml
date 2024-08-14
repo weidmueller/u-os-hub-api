@@ -3,11 +3,11 @@
 # SPDX-License-Identifier: MIT
 openapi: 3.0.3
 info:
-  title: uc-hub HTTP API
+  title: u-OS Data Hub HTTP API
   description: |-
-    *uc-hub* is the data communication system in u-OS. This document describes the HTTP API for accessing uc-hub as a consumer.
+    The u-OS Data Hub is a standardized way of communicating for system services and apps. This document describes the HTTP API for accessing the u-OS Data Hub as a consumer.
     <br><br>
-    Each participant at uc-hub is either a consumer, a provider or both. A *consumer* can list/get available providers and list/get/update variables published by providers. A *provider* publishes variables to uc-hub.
+    Each participant at the Data Hub is either a consumer, a provider or both. A *consumer* can list/get available providers and list/get/update variables published by providers. A *provider* publishes variables to the Data Hub.
   contact:
     name: Weidmüller Interface GmbH & Co. KG
     url: https://www.weidmueller.com/
@@ -18,7 +18,7 @@ info:
   version: 0.1.0
 servers:
 - url: /uc-hub/api/v1
-  description: A synchronous HTTP API for accessing the local u-OS datahub.
+  description: A synchronous HTTP API for accessing the local u-OS Data Hub.
 paths:
   /providers:
     get:
@@ -62,7 +62,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/FormatlessString'
       security:
-      - OAuth2: []
+      - OAuth2:
+        - hub.variables.readonly
+        - hub.variables.readwrite
   /providers/{provider_name}:
     get:
       tags:
@@ -113,7 +115,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/FormatlessString'
       security:
-      - OAuth2: []
+      - OAuth2:
+        - hub.variables.readonly
+        - hub.variables.readwrite
   /providers/{provider_name}/variables:
     get:
       tags:
@@ -201,6 +205,7 @@ paths:
       security:
       - OAuth2:
         - hub.variables.readonly
+        - hub.variables.readwrite
     post:
       tags:
       - Consumer
@@ -341,6 +346,7 @@ paths:
       security:
       - OAuth2:
         - hub.variables.readonly
+        - hub.variables.readwrite
     post:
       tags:
       - Consumer
@@ -560,8 +566,8 @@ components:
         clientCredentials:
           tokenUrl: /hydra/oauth2/token
           scopes:
-            hub.variables.readonly: Readonly access to hub variables.
-            hub.variables.readwrite: Read and write access to hub variables.
+            hub.variables.readonly: Readonly access to Data Hub variables.
+            hub.variables.readwrite: Read and write access to Data Hub variables.
       description: The HTTP API uses the OAuth2 client credentials flow.
 tags:
 - name: Consumer
