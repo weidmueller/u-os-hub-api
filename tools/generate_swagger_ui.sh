@@ -22,3 +22,6 @@ sed -i 's#https://petstore.swagger.io/v2/swagger.json#openapi.yaml#g' dist/opena
 
 echo "Replace Layout"
 sed -i 's#StandaloneLayout#BaseLayout#g' dist/openapi/swagger-initializer.js
+
+echo "Replace Title"
+sed -i 's#Swagger UI#u-OS HTTP API#g' dist/openapi/index.html
