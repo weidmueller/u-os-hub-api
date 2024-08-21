@@ -17,7 +17,7 @@ info:
     url: https://spdx.org/licenses/MIT.html
   version: 0.1.0
 servers:
-- url: /uc-hub/api/v1
+- url: /data-hub/api/v1
   description: A synchronous HTTP API for accessing the local u-OS Data Hub.
 paths:
   /providers:
@@ -38,10 +38,10 @@ paths:
                   $ref: '#/components/schemas/ResponseSingleProvider'
               example:
               - links:
-                  variables: /uc-hub/api/v1/providers/web-plc/variables
+                  variables: /data-hub/api/v1/providers/web-plc/variables
                 name: web-plc
               - links:
-                  variables: /uc-hub/api/v1/providers/sys/variables
+                  variables: /data-hub/api/v1/providers/sys/variables
                 name: sys
         '400':
           description: Bad request.
@@ -88,7 +88,7 @@ paths:
                 $ref: '#/components/schemas/ResponseSingleProvider'
               example:
                 links:
-                  variables: /uc-hub/api/v1/providers/web-plc/variables
+                  variables: /data-hub/api/v1/providers/web-plc/variables
                 name: web-plc
         '400':
           description: Bad request.
