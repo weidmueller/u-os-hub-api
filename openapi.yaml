@@ -564,7 +564,7 @@ components:
       type: oauth2
       flows:
         clientCredentials:
-          tokenUrl: /hydra/oauth2/token
+          tokenUrl: /oauth2/token
           scopes:
             hub.variables.readonly: Readonly access to Data Hub variables.
             hub.variables.readwrite: Read and write access to Data Hub variables.
