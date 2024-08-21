@@ -6,14 +6,15 @@ export const PROVIDERS: Provider[] = [
     description: 'Weidmueller web-plc provider.',
     links: {
       variables:
-        'http://localhost:3000/uc-hub/api/v1/providers/web-plc/variables',
+        'http://localhost:3000/data-hub/api/v1/providers/web-plc/variables',
     },
   },
   {
     name: 'providers/sys',
     description: 'System data provider',
     links: {
-      variables: 'http://localhost:3000/uc-hub/api/v1/providers/sys/variables',
+      variables:
+        'http://localhost:3000/data-hub/api/v1/providers/sys/variables',
     },
   },
 ];

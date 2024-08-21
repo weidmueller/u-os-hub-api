@@ -9,6 +9,14 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { Transform, plainToInstance } from 'class-transformer';
+import { IsNotEmpty, IsOptional } from 'class-validator';
+import {
+  Provider,
+  ProviderWithDefinition,
+  VariableValue,
+  VariableValueWithDefinition,
+} from './dto';
 import {
   getProvider,
   getProviders,
@@ -16,14 +24,6 @@ import {
   getVariablesByPrefixes,
   hasWriteRequestReadonlyVariables,
 } from './mock-data';
-import {
-  Provider,
-  ProviderWithDefinition,
-  VariableValue,
-  VariableValueWithDefinition,
-} from './dto';
-import { IsNotEmpty, IsOptional } from 'class-validator';
-import { Transform, plainToInstance } from 'class-transformer';
 
 class VariableQueryParameters {
   @IsOptional()
@@ -56,7 +56,7 @@ class VariablePathParameter extends ProviderPathParameter {
   variableId: string;
 }
 
-@Controller('uc-hub/api/v1')
+@Controller('data-hub/api/v1')
 export class HttpApiController {
   @Get('providers')
   listProviders(): Provider[] {
