@@ -84,6 +84,10 @@ table VariableDefinition {
   data_type: VariableDataType;
   /// The access type of the variable.
   access_type: VariableAccessType;
+  /// Marker to indicate whether the variable is experimental.
+  ///
+  /// Experimental means that the variable is not stable/reliable and it is hidden in the user interface.
+  experimental: bool;
 }
 
 /// A variable associated with the provider's definition.
