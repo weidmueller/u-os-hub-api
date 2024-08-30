@@ -165,11 +165,13 @@ paths:
                   - definition:
                       access_type: READ_ONLY
                       data_type: BOOLEAN
+                      experimental: false
                     name: gvl/input-1
                     value: true
                   - definition:
                       access_type: READ_WRITE
                       data_type: BOOLEAN
+                      experimental: false
                     name: gvl/input-2
                     value: true
                 VariablesWithoutDefinition:
@@ -313,6 +315,7 @@ paths:
                     definition:
                       access_type: READ_ONLY
                       data_type: BOOLEAN
+                      experimental: false
                     name: gvl/input-1
                     value: true
                 VariableWithoutDefinition:
@@ -525,11 +528,14 @@ components:
       required:
       - data_type
       - access_type
+      - experimental
       properties:
         access_type:
           $ref: '#/components/schemas/VariableAccessType'
         data_type:
           $ref: '#/components/schemas/VariableDataType'
+        experimental:
+          type: boolean
     VariableName:
       type: string
       format: ^[a-z]([a-z0-9-]{0,61}[a-z0-9])?(\/[a-z]([a-z0-9-]{0,61}[a-z0-9])?)*$
