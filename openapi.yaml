@@ -423,24 +423,20 @@ paths:
         - hub.variables.readwrite
 components:
   schemas:
-    Duration:
-      type: object
-      required:
-      - seconds
-      - nanos
-      properties:
-        nanos:
-          type: integer
-          format: int32
-        seconds:
-          type: integer
-          format: int64
     FormatlessString:
       type: string
       format: string
       description: String without special format.
       additionalProperties: true
       maxLength: 1023
+    ISO8601Duration:
+      type: string
+      format: ^P(?!$)(\d+Y)?(\d+M)?(\d+W)?(\d+D)?(T(?=\d)(\d+H)?(\d+M)?(\d+S)?)?$
+      description: |-
+        A duration string according to ISO8601 norm (https://datatracker.ietf.org/doc/html/rfc3339#appendix-A).
+
+        Example: 'PT5H9M39.400S'
+      additionalProperties: true
     Links:
       type: object
       description: |-
@@ -495,18 +491,6 @@ components:
           maxLength: 1023
         value:
           $ref: '#/components/schemas/VariableValue'
-    Timestamp:
-      type: object
-      required:
-      - seconds
-      - nanos
-      properties:
-        nanos:
-          type: integer
-          format: int32
-        seconds:
-          type: integer
-          format: int64
     VariableAccessType:
       type: string
       enum:
@@ -563,8 +547,9 @@ components:
       - $ref: '#/components/schemas/FormatlessString'
       - type: number
         format: double
-      - $ref: '#/components/schemas/Duration'
-      - $ref: '#/components/schemas/Timestamp'
+      - $ref: '#/components/schemas/ISO8601Duration'
+      - type: string
+        format: date-time
   securitySchemes:
     OAuth2:
       type: oauth2
