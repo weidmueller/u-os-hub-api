@@ -6,8 +6,7 @@ namespace weidmueller.ucontrol.hub;
 
 /// A state of a service.
 ///
-/// The state names are based on systemd service states.
-/// The status names are based on
+/// The state names are based on
 /// [the status names of the systemd services](https://www.freedesktop.org/software/systemd/man/latest/systemctl.html#is-system-running).
 enum State: byte {
   UNSPECIFIED,

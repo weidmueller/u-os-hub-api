@@ -8,8 +8,8 @@ namespace weidmueller.ucontrol.hub;
 
 /// A provider that provides variables to consumers.
 table Provider {
-  /// The name of the provider.
-  name: string (required);
+  /// The id of the provider.
+  id: string (required);
 }
 
 /// A list of providers that provide variables to consumers.

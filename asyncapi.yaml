@@ -8,7 +8,7 @@ info:
   title: uc-hub
   version: 0.1.0
   description: |
-    The u-control data hub consists of participants.
+    The u-OS Data Hub consists of participants.
     A participant could be a consumer, provider or both.
     A consumer accesses and manipulates the data of an provider.
     A provider owns data and offers its data as variables or objects.
@@ -20,10 +20,10 @@ info:
     metadata.
     The definition elements use a flat list instead of a hierarchy structure.
     They support the folder concept as a means of grouping definitions by using
-    a shared name prefix for the grouped definitions.
-    This means that the grouped definitions have names that begin with a common
+    a shared key prefix for the grouped definitions.
+    This means that the grouped definitions have keys that begin with a common
     string.
-    This common string, or shared prefix, is the folder name, for example
+    This common string, or shared prefix, is the folder key, for example
     `module0/` is the folder of the variable `module0/input0`.
   contact:
     name: Weidmüller Interface GmbH & Co. KG
@@ -37,10 +37,10 @@ servers:
     protocol: nats
 defaultContentType: application/x-flatbuffers
 channels:
-  v1.loc.{providerName}.vars.evt.changed:
+  v1.loc.{providerId}.vars.evt.changed:
     description: An event from a provider to the consumers that describes a provider's list of variables that have just changed its value or quality.
     parameters:
-      providerName:
+      providerId:
         $ref: "#/components/parameters/ProviderName"
     publish:
       description: A provider publishes its list of variables, if they have changed its value or quality.
@@ -56,10 +56,10 @@ channels:
         - name: consumer
       message:
         $ref: "#/components/messages/VariablesChangedEvent"
-  v1.loc.{providerName}.vars.qry.read:
+  v1.loc.{providerId}.vars.qry.read:
     description: A query from a consumer to a provider requesting a list of provider variables.
     parameters:
-      providerName:
+      providerId:
         $ref: "#/components/parameters/ProviderName"
     publish:
       description: A consumer publishes a request for reading a list of provider variables.
@@ -75,10 +75,10 @@ channels:
         - name: provider
       message:
         $ref: "#/components/messages/ReadVariablesQueryRequest"
-  v1.loc.{providerName}.vars.cmd.write:
+  v1.loc.{providerId}.vars.cmd.write:
     description: A command from a consumer to a provider writing a list of provider variables.
     parameters:
-      providerName:
+      providerId:
         $ref: "#/components/parameters/ProviderName"
     publish:
       description: A consumer publishes a request for writing a list of provider variables.
@@ -94,10 +94,10 @@ channels:
         - name: provider
       message:
         $ref: "#/components/messages/WriteVariablesCommand"
-  v1.loc.{providerName}.def.evt.changed:
+  v1.loc.{providerId}.def.evt.changed:
     description: An event from a provider to the registry that describes a provider's definition that have just changed.
     parameters:
-      providerName:
+      providerId:
         $ref: "#/components/parameters/ProviderName"
     publish:
       description: A provider publishes its provider's definition, if it has changed.
@@ -106,10 +106,10 @@ channels:
         - name: provider
       message:
         $ref: "#/components/messages/ProviderDefinitionChangedEvent"
-  v1.loc.registry.providers.{providerName}.def.qry.read:
+  v1.loc.registry.providers.{providerId}.def.qry.read:
     description: A query from a consumer to the registry requesting a provider's definition.
     parameters:
-      providerName:
+      providerId:
         $ref: "#/components/parameters/ProviderName"
     publish:
       description: A consumer queries a provider's definition.
@@ -118,10 +118,10 @@ channels:
         - name: consumer
       message:
         $ref: "#/components/messages/ReadProviderDefinitionQueryRequest"
-  v1.loc.registry.providers.{providerName}.def.evt.changed:
+  v1.loc.registry.providers.{providerId}.def.evt.changed:
     description: An event from the registry to the consumers that describes a provider's definition that have just changed.
     parameters:
-      providerName:
+      providerId:
         $ref: "#/components/parameters/ProviderName"
     subscribe:
       description: A consumer subscribes to a provider's definition and get informed via an event if it has changed and receives the updated provider definition.

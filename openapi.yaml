@@ -37,12 +37,12 @@ paths:
                 items:
                   $ref: '#/components/schemas/ResponseSingleProvider'
               example:
-              - links:
+              - id: web-plc
+                links:
                   variables: /data-hub/api/v1/providers/web-plc/variables
-                name: web-plc
-              - links:
+              - id: sys
+                links:
                   variables: /data-hub/api/v1/providers/sys/variables
-                name: sys
         '400':
           description: Bad request.
           content:
@@ -65,17 +65,17 @@ paths:
       - OAuth2:
         - hub.variables.readonly
         - hub.variables.readwrite
-  /providers/{provider_name}:
+  /providers/{provider_id}:
     get:
       tags:
       - Consumer
-      summary: Get a single provider by name.
-      description: Get a single provider by name.
+      summary: Get a single provider by id.
+      description: Get a single provider by id.
       operationId: get_single_provider_handler
       parameters:
-      - name: provider_name
+      - name: provider_id
         in: path
-        description: Name of a provider
+        description: Id of a provider
         required: true
         schema:
           $ref: '#/components/schemas/ProviderName'
@@ -87,9 +87,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/ResponseSingleProvider'
               example:
+                id: web-plc
                 links:
                   variables: /data-hub/api/v1/providers/web-plc/variables
-                name: web-plc
         '400':
           description: Bad request.
           content:
@@ -118,7 +118,7 @@ paths:
       - OAuth2:
         - hub.variables.readonly
         - hub.variables.readwrite
-  /providers/{provider_name}/variables:
+  /providers/{provider_id}/variables:
     get:
       tags:
       - Consumer
@@ -126,16 +126,16 @@ paths:
       description: List all variable values or a subset of variable values of a single provider with or without variable definitions.
       operationId: get_variables_handler
       parameters:
-      - name: provider_name
+      - name: provider_id
         in: path
-        description: Name of a provider
+        description: Id of a provider
         required: true
         schema:
           $ref: '#/components/schemas/ProviderName'
       - name: prefixes
         in: query
         description: |-
-          This parameter is used to filter variables by prefixes. The parameter shall contain a comma-separated list of prefixes. The response will include all variables where the variable name matches one of the given prefixes.
+          This parameter is used to filter variables by prefixes. The parameter shall contain a comma-separated list of prefixes. The response will include all variables where the variable key matches one of the given prefixes.
                       The endpoint will filter out duplicates: Each variable will occur only once in the response array.
                       Since the names might contain '/' characters, the parameter needs to be URL-encoded.
         required: false
@@ -166,19 +166,19 @@ paths:
                       access_type: READ_ONLY
                       data_type: BOOLEAN
                       experimental: false
-                    name: gvl/input-1
+                    key: gvl/input-1
                     value: true
                   - definition:
                       access_type: READ_WRITE
                       data_type: BOOLEAN
                       experimental: false
-                    name: gvl/input-2
+                    key: gvl/input-2
                     value: true
                 VariablesWithoutDefinition:
                   value:
-                  - name: gvl/input-1
+                  - key: gvl/input-1
                     value: true
-                  - name: gvl/input-2
+                  - key: gvl/input-2
                     value: true
         '400':
           description: Bad request.
@@ -215,9 +215,9 @@ paths:
       description: Update all variable values or a subset of variable values of a single provider.
       operationId: post_multiple_variables_handler
       parameters:
-      - name: provider_name
+      - name: provider_id
         in: path
-        description: Name of a provider
+        description: Id of a provider
         required: true
         schema:
           $ref: '#/components/schemas/ProviderName'
@@ -230,9 +230,9 @@ paths:
               items:
                 $ref: '#/components/schemas/VariableUpdatePostPayload'
             example:
-            - name: gvl/input-1
+            - key: gvl/input-1
               value: true
-            - name: gvl/input-2
+            - key: gvl/input-2
               value: false
         required: true
       responses:
@@ -275,7 +275,7 @@ paths:
       security:
       - OAuth2:
         - hub.variables.readwrite
-  /providers/{provider_name}/variables/{variable_name}:
+  /providers/{provider_id}/variables/{variable_key}:
     get:
       tags:
       - Consumer
@@ -283,15 +283,15 @@ paths:
       description: Get variable value of a single provider with or without variable definition.
       operationId: get_single_variable_handler
       parameters:
-      - name: provider_name
+      - name: provider_id
         in: path
-        description: Name of a provider
+        description: Id of a provider
         required: true
         schema:
           $ref: '#/components/schemas/ProviderName'
-      - name: variable_name
+      - name: variable_key
         in: path
-        description: Name of a variable
+        description: Key of a variable
         required: true
         schema:
           $ref: '#/components/schemas/VariableName'
@@ -316,11 +316,11 @@ paths:
                       access_type: READ_ONLY
                       data_type: BOOLEAN
                       experimental: false
-                    name: gvl/input-1
+                    key: gvl/input-1
                     value: true
                 VariableWithoutDefinition:
                   value:
-                    name: gvl/input-1
+                    key: gvl/input-1
                     value: true
         '400':
           description: Bad request.
@@ -357,15 +357,15 @@ paths:
       description: Update variable value of a single provider.
       operationId: post_single_variable_handler
       parameters:
-      - name: provider_name
+      - name: provider_id
         in: path
         description: Name of a Provider
         required: true
         schema:
           $ref: '#/components/schemas/ProviderName'
-      - name: variable_name
+      - name: variable_key
         in: path
-        description: Name of a variable
+        description: Key of a variable
         required: true
         schema:
           $ref: '#/components/schemas/VariableName'
@@ -376,7 +376,7 @@ paths:
             schema:
               $ref: '#/components/schemas/VariableUpdatePostPayload'
             example:
-              name: gvl/input-1
+              key: gvl/input-1
               value: true
         required: true
       responses:
@@ -460,32 +460,32 @@ components:
     ProviderName:
       type: string
       format: ^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$
-      description: The name of a provider.
+      description: The id of a provider.
       additionalProperties: true
       maxLength: 63
     ResponseSingleProvider:
       type: object
       description: Response containing a single provider.
       required:
-      - name
+      - id
       - links
       properties:
-        links:
-          $ref: '#/components/schemas/Links'
-        name:
+        id:
           type: string
           format: ^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$
           maxLength: 63
+        links:
+          $ref: '#/components/schemas/Links'
     ResponseSingleRead:
       type: object
       description: Response object for a single variable.
       required:
-      - name
+      - key
       - value
       properties:
         definition:
           $ref: '#/components/schemas/VariableDefinition'
-        name:
+        key:
           type: string
           format: ^[a-z]([a-z0-9-]{0,61}[a-z0-9])?(\/[a-z]([a-z0-9-]{0,61}[a-z0-9])?)*$
           maxLength: 1023
@@ -523,17 +523,17 @@ components:
     VariableName:
       type: string
       format: ^[a-z]([a-z0-9-]{0,61}[a-z0-9])?(\/[a-z]([a-z0-9-]{0,61}[a-z0-9])?)*$
-      description: String that contains the name of a variable.
+      description: String that contains the key of a variable.
       additionalProperties: true
       maxLength: 1023
     VariableUpdatePostPayload:
       type: object
       description: The JSON payload of a POST request (to update a single variable) is deserialized into this struct.
       required:
-      - name
+      - key
       - value
       properties:
-        name:
+        key:
           type: string
           format: ^[a-z]([a-z0-9-]{0,61}[a-z0-9])?(\/[a-z]([a-z0-9-]{0,61}[a-z0-9])?)*$
           maxLength: 1023

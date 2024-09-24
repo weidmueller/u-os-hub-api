@@ -76,9 +76,9 @@ union VariableValue {
 
 /// A definition of a variable.
 table VariableDefinition {
-  /// The name of the variable.
-  name: string (required);
-  /// The povider's unique ID of the variable.
+  /// The provider's unique key of the variable.
+  key: string (required);
+  /// The provider's unique ID of the variable.
   id: uint;
   /// The data type of the variable.
   data_type: VariableDataType;
