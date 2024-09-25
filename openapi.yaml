@@ -437,6 +437,7 @@ components:
 
         Example: 'PT5H9M39.400S'
       additionalProperties: true
+      maxLength: 82
     Links:
       type: object
       description: |-
