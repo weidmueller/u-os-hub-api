@@ -452,7 +452,6 @@ components:
       required:
       - data_type
       - access_type
-      - experimental
       properties:
         access_type:
           $ref: '#/components/schemas/VariableAccessType'
