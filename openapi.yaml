@@ -65,59 +65,6 @@ paths:
       - OAuth2:
         - hub.variables.readonly
         - hub.variables.readwrite
-  /providers/{provider_id}:
-    get:
-      tags:
-      - Consumer
-      summary: Get a single provider by id.
-      description: Get a single provider by id.
-      operationId: get_single_provider_handler
-      parameters:
-      - name: provider_id
-        in: path
-        description: Id of a provider
-        required: true
-        schema:
-          $ref: '#/components/schemas/ProviderName'
-      responses:
-        '200':
-          description: A single provider.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ResponseSingleProvider'
-              example:
-                id: web-plc
-                links:
-                  variables: /data-hub/api/v1/providers/web-plc/variables
-        '400':
-          description: Bad request.
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/FormatlessString'
-        '401':
-          description: Unauthorized.
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/FormatlessString'
-        '404':
-          description: Provider not found.
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/FormatlessString'
-        '500':
-          description: Internal Server Error
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/FormatlessString'
-      security:
-      - OAuth2:
-        - hub.variables.readonly
-        - hub.variables.readwrite
   /providers/{provider_id}/variables:
     get:
       tags:
@@ -447,20 +394,6 @@ components:
         Example: '1970-01-01T00:20:34.000Z'
       additionalProperties: true
       maxLength: 24
-    Links:
-      type: object
-      description: |-
-        Contains URLs to further resources of a provider.
-
-        The URLs are absolute starting with a forward slash ('/').
-      required:
-      - variables
-      properties:
-        variables:
-          type: string
-          format: ^[a-z]([a-z0-9-]{0,61}[a-z0-9])?(\/[a-z]([a-z0-9-]{0,61}[a-z0-9])?)*$
-          description: URL to the variables resource.
-          maxLength: 2047
     Prefixes:
       type: string
       format: ^[a-z]([a-z0-9-]{0,61}[a-z0-9])?(\/[a-z]([a-z0-9-]{0,61}[a-z0-9])?)*$
@@ -478,14 +411,11 @@ components:
       description: Response containing a single provider.
       required:
       - id
-      - links
       properties:
         id:
           type: string
           format: ^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$
           maxLength: 63
-        links:
-          $ref: '#/components/schemas/Links'
     ResponseSingleRead:
       type: object
       description: Response object for a single variable.
