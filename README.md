@@ -40,17 +40,3 @@ npm run build
 ## Live Server
 
 Click on `Go Live` from the status bar to turn a [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) on/off and open a live view in the browser.
-
-## Mock HTTP API
-
-We implemented a mock HTTP API for testing the swagger ui and external clients. It is implemented in directory `mock-http-api` using [NestJs](https://nestjs.com/). Install dependencies using
-
-```
-npm ci
-```
-
-Start the mock using
-
-```
-npm run start:dev
-```
