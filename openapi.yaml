@@ -80,7 +80,6 @@ paths:
         description: |-
           This parameter is used to filter variables by prefixes. The parameter shall contain a comma-separated list of prefixes. The response will include all variables where the variable key matches one of the given prefixes.
                       The endpoint will filter out duplicates: Each variable will occur only once in the response array.
-                      Since the names might contain '/' characters, the parameter needs to be URL-encoded.
         required: false
         schema:
           allOf:
@@ -109,19 +108,19 @@ paths:
                       access_type: READ_ONLY
                       data_type: BOOLEAN
                       experimental: false
-                    key: gvl/input-1
+                    key: gvl.input-1
                     value: true
                   - definition:
                       access_type: READ_WRITE
                       data_type: BOOLEAN
                       experimental: false
-                    key: gvl/input-2
+                    key: gvl.input-2
                     value: true
                 VariablesWithoutDefinition:
                   value:
-                  - key: gvl/input-1
+                  - key: gvl.input-1
                     value: true
-                  - key: gvl/input-2
+                  - key: gvl.input-2
                     value: true
         '400':
           description: Bad request.
@@ -173,9 +172,9 @@ paths:
               items:
                 $ref: '#/components/schemas/VariableUpdatePostPayload'
             example:
-            - key: gvl/input-1
+            - key: gvl.input-1
               value: true
-            - key: gvl/input-2
+            - key: gvl.input-2
               value: false
         required: true
       responses:
@@ -259,11 +258,11 @@ paths:
                       access_type: READ_ONLY
                       data_type: BOOLEAN
                       experimental: false
-                    key: gvl/input-1
+                    key: gvl.input-1
                     value: true
                 VariableWithoutDefinition:
                   value:
-                    key: gvl/input-1
+                    key: gvl.input-1
                     value: true
         '400':
           description: Bad request.
@@ -319,7 +318,7 @@ paths:
             schema:
               $ref: '#/components/schemas/VariableUpdatePostPayload'
             example:
-              key: gvl/input-1
+              key: gvl.input-1
               value: true
         required: true
       responses:
@@ -392,7 +391,7 @@ components:
       maxLength: 24
     Prefixes:
       type: string
-      format: ^[a-z]([a-z0-9-]{0,61}[a-z0-9])?(\/[a-z]([a-z0-9-]{0,61}[a-z0-9])?)*$
+      format: ^[a-z]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z]([a-z0-9-]{0,61}[a-z0-9])?)*$
       description: A comma-separated list of prefixes used for listing a subset of variables.
       additionalProperties: true
       maxLength: 1023
@@ -423,7 +422,7 @@ components:
           $ref: '#/components/schemas/VariableDefinition'
         key:
           type: string
-          format: ^[a-z]([a-z0-9-]{0,61}[a-z0-9])?(\/[a-z]([a-z0-9-]{0,61}[a-z0-9])?)*$
+          format: ^[a-z]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z]([a-z0-9-]{0,61}[a-z0-9])?)*$
           maxLength: 1023
         value:
           $ref: '#/components/schemas/VariableValue'
@@ -457,7 +456,7 @@ components:
           type: boolean
     VariableName:
       type: string
-      format: ^[a-z]([a-z0-9-]{0,61}[a-z0-9])?(\/[a-z]([a-z0-9-]{0,61}[a-z0-9])?)*$
+      format: ^[a-z]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z]([a-z0-9-]{0,61}[a-z0-9])?)*$
       description: String that contains the key of a variable.
       additionalProperties: true
       maxLength: 1023
@@ -470,7 +469,7 @@ components:
       properties:
         key:
           type: string
-          format: ^[a-z]([a-z0-9-]{0,61}[a-z0-9])?(\/[a-z]([a-z0-9-]{0,61}[a-z0-9])?)*$
+          format: ^[a-z]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z]([a-z0-9-]{0,61}[a-z0-9])?)*$
           maxLength: 1023
         value:
           $ref: '#/components/schemas/VariableValue'
