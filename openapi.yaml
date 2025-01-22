@@ -37,8 +37,8 @@ paths:
                 items:
                   $ref: '#/components/schemas/ResponseSingleProvider'
               example:
-              - id: web-plc
-              - id: sys
+              - id: u-os-adm
+              - id: u-os-sbm
         '400':
           description: Bad request.
           content:
@@ -106,22 +106,22 @@ paths:
                   value:
                   - definition:
                       access_type: READ_ONLY
-                      data_type: BOOLEAN
+                      data_type: STRING
                       experimental: false
-                    key: gvl.input_1
-                    value: true
+                    key: digital_nameplate.software_version
+                    value: 2.2.0
                   - definition:
-                      access_type: READ_WRITE
-                      data_type: BOOLEAN
+                      access_type: READ_ONLY
+                      data_type: STRING
                       experimental: false
-                    key: gvl.input_2
-                    value: true
+                    key: digital_nameplate.hardware_version
+                    value: 1.23.0
                 VariablesWithoutDefinition:
                   value:
-                  - key: gvl.input_1
-                    value: true
-                  - key: gvl.input_2
-                    value: true
+                  - key: digital_nameplate.software_version
+                    value: 2.2.0
+                  - key: digital_nameplate.hardware_version
+                    value: 1.23.0
         '400':
           description: Bad request.
           content:
@@ -172,9 +172,9 @@ paths:
               items:
                 $ref: '#/components/schemas/VariableUpdatePostPayload'
             example:
-            - key: gvl.input_1
+            - key: ur20_4com_io_link_1.process_data.channel_0.di
               value: true
-            - key: gvl.input_2
+            - key: ur20_4com_io_link_1.process_data.channel_0.do
               value: false
         required: true
       responses:
@@ -256,14 +256,14 @@ paths:
                   value:
                     definition:
                       access_type: READ_ONLY
-                      data_type: BOOLEAN
+                      data_type: STRING
                       experimental: false
-                    key: gvl.input_1
-                    value: true
+                    key: digital_nameplate.software_version
+                    value: 2.2.0
                 VariableWithoutDefinition:
                   value:
-                    key: gvl.input_1
-                    value: true
+                    key: digital_nameplate.software_version
+                    value: 2.2.0
         '400':
           description: Bad request.
           content:
@@ -318,7 +318,7 @@ paths:
             schema:
               $ref: '#/components/schemas/VariableUpdatePostPayload'
             example:
-              key: gvl.input_1
+              key: ur20_4com_io_link_1.process_data.channel_0.di
               value: true
         required: true
       responses:
