@@ -6,9 +6,9 @@ include "../types/state.fbs";
 
 namespace weidmueller.ucontrol.hub;
 
-/// An event that describes a state that have just changed.
+/// An event that describes a state that has just changed.
 table StateChangedEvent {
-  /// A state that have just been changed.
+  /// A state that has just been changed.
   state: State;
 }
 

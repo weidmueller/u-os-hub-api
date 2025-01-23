@@ -6,7 +6,7 @@ include "../types/provider.fbs";
 
 namespace weidmueller.ucontrol.hub;
 
-/// A query response that response a requested list of providers.
+/// A query response that returns a requested list of providers.
 table ReadProvidersQueryResponse {
   /// A list of providers that have been requested.
   providers: ProviderList (required);

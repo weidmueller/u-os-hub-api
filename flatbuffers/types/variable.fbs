@@ -7,7 +7,7 @@ include "duration.fbs";
 
 namespace weidmueller.ucontrol.hub;
 
-/// An data type of a variable.
+/// A data type of a variable.
 enum VariableDataType: byte {
   UNSPECIFIED,
   BOOLEAN,
@@ -49,7 +49,7 @@ table VariableValueFloat64 {
   value: float64;
 }
 
-/// A 64-bit, signed intege value of a variable.
+/// A 64-bit, signed integer value of a variable.
 table VariableValueInt64 {
   value: int64;
 }
@@ -100,7 +100,7 @@ table Variable {
   ///
   /// Only set by the provider!
   timestamp: Timestamp;
-  /// The qualitiy of the variable.
+  /// The quality of the variable.
   quality: VariableQuality;
 }
 
