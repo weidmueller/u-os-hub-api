@@ -37,8 +37,8 @@ paths:
                 items:
                   $ref: '#/components/schemas/ResponseSingleProvider'
               example:
-              - id: u-os-adm
-              - id: u-os-sbm
+              - id: u_os_adm
+              - id: u_os_sbm
         '400':
           description: Bad request.
           content:
@@ -397,7 +397,7 @@ components:
       maxLength: 1023
     ProviderName:
       type: string
-      format: ^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$
+      format: ^[a-z]([a-z0-9_]{0,61}[a-z0-9])?$
       description: The id of a provider.
       additionalProperties: true
       maxLength: 63
@@ -409,7 +409,7 @@ components:
       properties:
         id:
           type: string
-          format: ^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$
+          format: ^[a-z]([a-z0-9_]{0,61}[a-z0-9])?$
           maxLength: 63
     ResponseSingleRead:
       type: object
