@@ -490,7 +490,7 @@ components:
         clientCredentials:
           tokenUrl: /oauth2/token
           scopes:
-            hub.variables.readonly: Readonly access to Data Hub variables.
+            hub.variables.readonly: Read-only access to Data Hub variables.
             hub.variables.readwrite: Read and write access to Data Hub variables.
       description: The HTTP API uses the OAuth2 client credentials flow.
 tags:
