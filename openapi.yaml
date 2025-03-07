@@ -15,7 +15,7 @@ info:
   license:
     name: MIT
     url: https://spdx.org/licenses/MIT.html
-  version: 0.1.0
+  version: 1.0.0
 servers:
 - url: /u-os-hub/api/v1
   description: A synchronous HTTP API for accessing the local u-OS Data Hub.

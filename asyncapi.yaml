@@ -6,7 +6,7 @@ asyncapi: 2.6.0
 id: https://uc-hub.u-control.weidmueller.com/
 info:
   title: uc-hub
-  version: 0.1.0
+  version: 1.0.0
   description: |
     The u-OS Data Hub consists of participants.
     A participant could be a consumer, provider or both.

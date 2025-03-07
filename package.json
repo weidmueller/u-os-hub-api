@@ -1,6 +1,6 @@
 {
   "name": "uc-hub-api",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "scripts": {
     "build": "npm run generateJsonSchemas && npm run validateAsyncApi && npm run generateAsyncApi && npm run validateOpenApi && npm run buildUi",
     "buildUi": "./tools/generate_swagger_ui.sh",
