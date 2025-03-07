@@ -7,7 +7,7 @@ include "duration.fbs";
 
 namespace weidmueller.ucontrol.hub;
 
-/// A data type of a variable.
+/// The data type of a variable.
 enum VariableDataType: byte {
   UNSPECIFIED,
   BOOLEAN,
@@ -18,14 +18,14 @@ enum VariableDataType: byte {
   TIMESTAMP
 }
 
-/// An access type of a variable.
+/// The access type of a variable.
 enum VariableAccessType: byte {
   UNSPECIFIED,
   READ_ONLY,
   READ_WRITE
 }
 
-/// A quality of a variable.
+/// The quality of a variable.
 enum VariableQuality : ubyte {
   BAD = 0,
   UNCERTAIN = 0x40,
@@ -64,7 +64,7 @@ table VariableValueTimestamp {
   value: Timestamp;
 }
 
-/// A value of a variable.
+/// The value of a variable.
 union VariableValue {
   Boolean: VariableValueBoolean,
   Duration: VariableValueDuration,
@@ -74,11 +74,11 @@ union VariableValue {
   Timestamp: VariableValueTimestamp
 }
 
-/// A definition of a variable.
+/// The definition of a variable.
 table VariableDefinition {
   /// The provider's unique key of the variable.
   key: string (required);
-  /// The provider's unique ID of the variable.
+  /// The unique ID of the variable. It is only unique via one provider.
   id: uint;
   /// The data type of the variable.
   data_type: VariableDataType;
@@ -99,8 +99,14 @@ table Variable {
   /// The individual timestamp of the variable.
   ///
   /// Only set by the provider!
+  /// Consumers can left this empty. This value is ignored by the provider in 
+  /// a write command.
   timestamp: Timestamp;
   /// The quality of the variable.
+  ///
+  /// Only set by the provider!
+  /// Consumers can set it to BAD. This value is ignored by the provider  
+  /// in a write command.
   quality: VariableQuality;
 }
 
@@ -108,9 +114,12 @@ table Variable {
 table VariableList {
   /// The fingerprint of the associated provider's definition.
   provider_definition_fingerprint: uint64;
-  /// The base timestamp as fallback for variable timestamps to minimize transfer size.
+  /// The timestamp for all changed variables. The base timestamp is the
+  /// fallback if no explicit was specified for the variable.
   ///
   /// Only set by the provider!
+  /// Consumers can set it to 0s and 0ns. This value is ignored by the 
+  /// provider in a write command.
   base_timestamp: Timestamp (required);
   /// The items of the provider's variable list.
   items: [Variable];
