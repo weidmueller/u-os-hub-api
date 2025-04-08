@@ -71,7 +71,7 @@ pipeline {
                 stage ('Build OpenAPI UI'){
                     steps {
                         gitlabCommitStatus(name:"$STAGE_NAME") {
-                            sh 'npm run buildUi'
+                            sh 'npm run generateOpenApiSite'
                         } 
                     }
                 }
