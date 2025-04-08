@@ -4,39 +4,101 @@ SPDX-FileCopyrightText: 2024 Weidmueller Interface GmbH & Co. KG <oss@weidmuelle
 SPDX-License-Identifier: MIT
 -->
 
-# uc-hub-api
+# u-os-hub-api
 
-uc-hub-api contains the flatbuffers messages and types used in uc-hub.
-The repository is integrated into uc-hub as a submodule.
+u-os-hub-api contains API specifications for the u-OS Data Hub.
 
-## Maintainers
+The u-OS Data Hub provides a standardized way of communicating variable data in u-OS.
+This repository contains the following specifications to interact with the variable APIs of the u-OS Data Hub.
 
-This project is currently maintained by:
+- AsyncAPI specification for the Variable-NATS-API
+- OpenAPI specification for the Variable-HTTP-API
 
-- Etienne Schmidt (w011279)
-- Christian Peters (w011238)
+## AsyncAPI specification for the Variable-NATS-API
 
-Please contact the persons above for merge requests or any questions regarding this repository.
+The Variable-NATS-API offers a high performance mechanism for both providing and consuming variables within the u-OS Data Hub based on [NATS](https://nats.io/).
 
-## Compile flatbuffers
+[AsyncAPI](https://www.asyncapi.com/en) is a standard to define interfaces of asynchronous APIs.
+We use AsyncAPI to specify the events and messages of the Variable-NATS-API in the file `asyncapi.yaml`.
 
-Flatbuffers schema are compiled into target source code via the flatc compiler.
-For an example, see the uc-hub repository.
+We use [FlatBuffers](https://flatbuffers.dev/) for data serialization.
+Find the FlatBuffers messages and types used in the Variable-NATS-API in the directory `flatbuffers`.
 
-## Installation
+## OpenAPI specification for the Variable-HTTP-API
 
-Install `Remote Development` and `Remote-Containers` in Visual Studio Code and start the developing environment via `Reopen in Container`.
+The Variable-HTTP-API is a JSON-based HTTP API for reading and writing variables on the u-OS Data Hub. The focus is on standards and well-known technologies.
 
-## Build
+We use [OpenAPI](https://swagger.io/specification/) to describe the Variable-HTTP-API in the file `openapi.yaml`.
 
-The developing environment installs the project's npm dependencies and executes a build command on startup.
-[Run on Save](https://marketplace.visualstudio.com/items?itemName=pucelle.run-on-save) automatically executes a build command when the asyncapi.yaml or openapi.yaml are saved.
+## Installing dependencies
+
+Execute
 
 ```
-npm ci --ignore-optional --silent
+npm ci --ignore-optional
+```
+
+to install necessary dependencies.
+
+## Building
+
+Execute
+
+```
 npm run build
 ```
 
-## Live Server
+to perform a complete build of u-os-hub-api.
+This includes the following steps:
 
-Click on `Go Live` from the status bar to turn a [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) on/off and open a live view in the browser.
+1.  Generate JSON schemas from the FlatBuffers messages.
+    They are used in the generation of the AsyncAPI site.
+2.  Validate AsyncAPI using [Spectral](https://stoplight.io/open-source/spectral). See [API validation](#api-validation) for details.
+3.  Generate AsyncAPI UI. See [Generate AsyncAPI UI](#generate-asyncapi-ui) for details.
+4.  Validate OpenAPI using [Spectral](https://stoplight.io/open-source/spectral). See [API validation](#api-validation) for details.
+5.  Generate OpenAPI UI (formerly known as Swagger UI). See [Generate OpenAPI UI](#generate-openapi-ui-swagger-ui) for details.
+
+### Generating AsyncAPI UI
+
+Execute
+
+```
+npm run generateAsyncApiSite
+```
+
+to generate the an AsyncAPI UI from `asyncapi.yaml`.
+
+Find the generated UI in directory `dist/asyncapi`.
+
+### Generating OpenAPI UI (Swagger UI)
+
+Execute
+
+```
+npm run generateOpenApiSite
+```
+
+to generate the an OpenAPI UI from `openapi.yaml`.
+
+Find the generated UI in directory `dist/openapi`.
+
+### Validating the APIs
+
+[Spectral](https://stoplight.io/open-source/spectral) is an API style guide enforcer and linter.
+
+We use Spectral for both OpenAPI and AsyncAPI linting based on a set of rules described in `tools/spectral.json`.
+
+## Compiling FlatBuffers schemata
+
+FlatBuffers schemata are compiled into target source code via the `flatc` compiler.
+Flatc is not included in this repository, but can be downloaded from [here](https://github.com/google/flatbuffers/releases).
+For an example how to use flatc, see the [Flatbuffers documentation](https://flatbuffers.dev/flatc/).
+
+## Developing in Visual Studio Code
+
+Install `Remote Development` and `Remote-Containers` and start the development container via `Reopen in Container`.
+
+The development container installs the project's npm dependencies and executes a build command on startup.
+[Run on Save](https://marketplace.visualstudio.com/items?itemName=pucelle.run-on-save) automatically executes a build command when the asyncapi.yaml or openapi.yaml are saved.
+
+You can open the OpenAPI UI and the AsyncAPI UI in the browser via the [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) extension by clicking on `Go Live`.
