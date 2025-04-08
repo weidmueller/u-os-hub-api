@@ -25,7 +25,7 @@
     "swagger-ui-dist": "^5"
   },
   "devDependencies": {
-    "@asyncapi/cli": "^1",
+    "@asyncapi/cli": "^3",
     "@stoplight/spectral-cli": "^6",
     "@stoplight/spectral-owasp-ruleset": "^2"
   }
