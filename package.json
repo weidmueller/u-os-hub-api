@@ -1,6 +1,18 @@
 {
-  "name": "uc-hub-api",
+  "name": "u-os-hub-api",
   "version": "1.0.0",
+  "description": "u-os-hub-api contains the API specifications for the u-OS Data Hub.",
+  "keywords": [
+    "u-OS Data Hub",
+    "OpenAPI spec",
+    "AsyncAPI spec"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/weidmueller/u-os-hub-api"
+  },
+  "homepage": "https://www.weidmueller.de/de/loesungen/technologien/edge_computing_u_os/index.jsp",
+  "license": "MIT",
   "scripts": {
     "build": "npm run generateJsonSchemas && npm run validateAsyncApi && npm run generateAsyncApi && npm run validateOpenApi && npm run buildUi",
     "buildUi": "./tools/generate_swagger_ui.sh",
