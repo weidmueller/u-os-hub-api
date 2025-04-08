@@ -4,5 +4,5 @@
 
 version: "3"
 services:
-  uc-hub-api:
+  u-os-hub-api:
     build: .

@@ -17,10 +17,7 @@
       ]
     }
   },
-  "dockerComposeFile": [
-    "../docker-compose.yml",
-    "docker-compose.extend.yml"
-  ],
+  "dockerComposeFile": ["../docker-compose.yml", "docker-compose.extend.yml"],
   "mounts": [
     {
       "source": "${localWorkspaceFolder}",
@@ -28,9 +25,9 @@
       "type": "bind"
     }
   ],
-  "name": "uc-hub-api",
+  "name": "u-os-hub-api",
   "postCreateCommand": "npm ci --ignore-optional && npm run build",
-  "service": "uc-hub-api",
+  "service": "u-os-hub-api",
   "shutdownAction": "stopCompose",
   "workspaceFolder": "/${localWorkspaceFolderBasename}"
 }
