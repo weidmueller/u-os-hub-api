@@ -19,7 +19,7 @@ This repository contains the following specifications to interact with the varia
 The Variable-NATS-API offers a high performance mechanism for both providing and consuming variables within the u-OS Data Hub based on [NATS](https://nats.io/).
 
 [AsyncAPI](https://www.asyncapi.com/en) is a standard to define interfaces of asynchronous APIs.
-We use AsyncAPI to specify the events and messages of the Variable-NATS-API in the file `asyncapi.yaml`.
+We use AsyncAPI to specify the events and messages of the Variable-NATS-API in the file `variable-nats-asyncapi.yaml`.
 
 We use [FlatBuffers](https://flatbuffers.dev/) for data serialization.
 Find the FlatBuffers messages and types used in the Variable-NATS-API in the directory `flatbuffers`.
@@ -28,7 +28,7 @@ Find the FlatBuffers messages and types used in the Variable-NATS-API in the dir
 
 The Variable-HTTP-API is a JSON-based HTTP API for reading and writing variables on the u-OS Data Hub. The focus is on standards and well-known technologies.
 
-We use [OpenAPI](https://swagger.io/specification/) to describe the Variable-HTTP-API in the file `openapi.yaml`.
+We use [OpenAPI](https://swagger.io/specification/) to describe the Variable-HTTP-API in the file `variable-http-openapi.yaml`.
 
 ## Installing dependencies
 
@@ -66,7 +66,7 @@ Execute
 npm run generateAsyncApiSite
 ```
 
-to generate the an AsyncAPI UI from `asyncapi.yaml`.
+to generate the an AsyncAPI UI from `variable-nats-asyncapi.yaml`.
 
 Find the generated UI in directory `dist/asyncapi`.
 
@@ -78,7 +78,7 @@ Execute
 npm run generateOpenApiSite
 ```
 
-to generate the an OpenAPI UI from `openapi.yaml`.
+to generate the an OpenAPI UI from `variable-http-openapi.yaml`.
 
 Find the generated UI in directory `dist/openapi`.
 
@@ -99,6 +99,6 @@ For an example how to use flatc, see the [Flatbuffers documentation](https://fla
 Install `Remote Development` and `Remote-Containers` and start the development container via `Reopen in Container`.
 
 The development container installs the project's npm dependencies and executes a build command on startup.
-[Run on Save](https://marketplace.visualstudio.com/items?itemName=pucelle.run-on-save) automatically executes a build command when the asyncapi.yaml or openapi.yaml are saved.
+[Run on Save](https://marketplace.visualstudio.com/items?itemName=pucelle.run-on-save) automatically executes a build command when the variable-nats-asyncapi.yaml or variable-http-openapi.yaml are saved.
 
 You can open the OpenAPI UI and the AsyncAPI UI in the browser via the [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) extension by clicking on `Go Live`.

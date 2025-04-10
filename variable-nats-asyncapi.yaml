@@ -7,7 +7,8 @@ id: https://127.0.0.1:49360
 info:
   title: u-os-hub-api
   version: 1.0.0
-  description: |
+  # TODO: Replace <ADD_DOCS_URL_HERE> in the description with the URL
+  description:
     This document describes all endpoints and payloads of the Variable-NATS-API in the u-OS Data Hub.
     The endpoints refer to NATS subjects and the payloads are encoded as FlatBuffers binary blobs.
     For this specification, the FlatBuffers were converted into json schemas via ‘flatc --jsonschema’.
@@ -65,8 +66,9 @@ channels:
       message:
         $ref: "#/components/messages/ReadVariablesQueryRequest"
     subscribe:
-      description: A provider subscribes to this subject in order to receive read variable queries for its variables.
-        It receives Nats requests on this subject and responds via the response subject supplied in the request.  
+      description:
+        A provider subscribes to this subject in order to receive read variable queries for its variables.
+        It receives Nats requests on this subject and responds via the response subject supplied in the request.
 
       operationId: receiveReadVariablesQueryRequest
       tags:

@@ -11,14 +11,14 @@ echo "Copy OpenAPI site und yaml file"
   && mkdir -p dist/openapi \
   && pathSwaggerDist=$(node tools/swagger.js) \
   && cp $pathSwaggerDist/* dist/openapi \
-  && cp openapi.yaml dist/openapi \
+  && cp variable-http-openapi.yaml dist/openapi \
 )
 
 # It is currently not possible to customize the URL with a simple command using the swagger-ui-dist-package. 
 # Therefore, the workaround with the replacement is often used.
 # https://github.com/swagger-api/swagger-ui/issues/9237
 echo "Replace url"
-sed -i 's#https://petstore.swagger.io/v2/swagger.json#openapi.yaml#g' dist/openapi/swagger-initializer.js
+sed -i 's#https://petstore.swagger.io/v2/swagger.json#variable-http-openapi.yaml#g' dist/openapi/swagger-initializer.js
 
 echo "Replace Layout"
 sed -i 's#StandaloneLayout#BaseLayout#g' dist/openapi/swagger-initializer.js
