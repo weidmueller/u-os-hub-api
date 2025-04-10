@@ -17,7 +17,7 @@ pipeline {
             ])
     }
     stages {
-        stage("uc-hub-api") {
+        stage("u-os-hub-api") {
             agent {
                 dockerfile {
                     dir './'
