@@ -44,7 +44,3 @@ RUN HADOLINT=/usr/local/bin/hadolint; \
   && curl -sL -o ${HADOLINT} \
     "https://github.com/hadolint/hadolint/releases/download/${HADOLINT_VERSION}/hadolint-$(uname -s)-$(uname -m)" \
   && chmod 0755 ${HADOLINT}
-
-# NestJS
-RUN npm install -g @nestjs/cli \
- && rm -rf ${HOME}/.npm
