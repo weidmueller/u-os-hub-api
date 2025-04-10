@@ -3,16 +3,16 @@
 # SPDX-License-Identifier: MIT
 
 asyncapi: 2.6.0
-id: https://uc-hub.u-control.weidmueller.com/
+id: https://127.0.0.1:49360
 info:
-  title: uc-hub
+  title: u-os-hub-api
   version: 1.0.0
   description: |
-    This document describes all endpoints and the payload of the Variable-NATS-API.  
-    The endpoints refer to NATS subjects and the payloads are encoded as flatbuffers binary blobs. 
-    For this specification, the flatbuffers were converted into json schemas via ‘flatc --jsonschema’.
+    This document describes all endpoints and payloads of the Variable-NATS-API in the u-OS Data Hub.
+    The endpoints refer to NATS subjects and the payloads are encoded as FlatBuffers binary blobs.
+    For this specification, the FlatBuffers were converted into json schemas via ‘flatc --jsonschema’.
 
-    To understand the following endpoints and terms, please read the u-OS Data Hub documentation beforehand. It also contains sequence diagrams that describe when to use which endpoint for what purpose.
+    Please read the u-OS Data Hub documentation <ADD_DOCS_URL_HERE> that describes when to use which endpoint for what purpose.
   contact:
     name: Weidmüller Interface GmbH & Co. KG
     url: https://www.weidmueller.com
@@ -26,7 +26,8 @@ servers:
 defaultContentType: application/x-flatbuffers
 channels:
   v1.loc.{providerId}.vars.evt.changed:
-    description: An event from a provider to the consumers. This event describes a provider's list of variables that have changed their value or quality.
+    description: An event from a provider to the consumers.
+      This event describes a provider's list of variables that have changed their value or quality.
     parameters:
       providerId:
         $ref: "#/components/parameters/ProviderName"
@@ -38,8 +39,10 @@ channels:
       message:
         $ref: "#/components/messages/VariablesChangedEvent"
     subscribe:
-      description: A consumer subscribes to this subject to be informed about variable value changes.
-        The consumer receives an event with a list of all variables whose value or quality has changed. The consumer must filter out the variable ID(s) of interest from that list.
+      description:
+        A consumer subscribes to this subject to be informed about variable value changes.
+        The consumer receives an event with a list of all variables whose value or quality has changed.
+        The consumer must filter out the variable ID(s) of interest from that list.
 
       operationId: receiveVariablesChangedEvent
       tags:
@@ -47,8 +50,10 @@ channels:
       message:
         $ref: "#/components/messages/VariablesChangedEvent"
   v1.loc.{providerId}.vars.qry.read:
-    description: A consumer sends a read variable query to this subject.
-      To do this, it sends a Nats request to this subject. Nats automatically adds a response subject to the request. The provider then uses this subject for the response.
+    description:
+      A consumer sends a query to this subject to read all variables from the provider.
+
+      NATS automatically adds a response subject to the request which the provider uses for the response.
     parameters:
       providerId:
         $ref: "#/components/parameters/ProviderName"
@@ -88,12 +93,12 @@ channels:
       message:
         $ref: "#/components/messages/WriteVariablesCommand"
   v1.loc.{providerId}.def.evt.changed:
-    description: An event from a provider to the registry saying that that provider's definition has just changed.
+    description: An event from a provider to the registry indicating that a provider's definition has changed.
     parameters:
       providerId:
         $ref: "#/components/parameters/ProviderName"
     publish:
-      description: A provider publishes its provider definition if it has changed.
+      description: A provider publishes the changed provider definition.
       operationId: emitProviderDefinitionChangedEvent
       tags:
         - name: provider
@@ -112,14 +117,17 @@ channels:
       message:
         $ref: "#/components/messages/ReadProviderDefinitionQueryRequest"
   v1.loc.registry.providers.{providerId}.def.evt.changed:
-    description: This event from the registry to the clients notifies that a provider definition has changed.
+    description:
+      Clients can subscribe to events indicating that the provider definition has changed.
       The registry checks the new provider definition before it sends the event and marks it as OK or INVALID.
     parameters:
       providerId:
         $ref: "#/components/parameters/ProviderName"
     subscribe:
-      description: A client subscribes to changes of a provider definition. If a change occurs, the client receives an event with the updated provider definition. Consumers refresh the
-        variable list therein and both consumers and the provider evaluate the provider definition's status.
+      description:
+        A client subscribes to changes of a provider definition. If a change occurs, the client receives an event with the updated provider definition.
+        Consumers shall refresh the variable list.
+        Both consumers and the provider evaluate the provider definition's status.
       operationId: receiveProviderDefinitionChangedEvent
       tags:
         - name: consumer
@@ -136,21 +144,23 @@ channels:
       message:
         $ref: "#/components/messages/ReadProvidersQueryRequest"
   v1.loc.registry.providers.evt.changed:
-    description: An event from the registry which contains a list of all currently available providers.
+    description:
+      An event from the registry which contains a list of available providers.
       The event is only triggered if a provider is removed (disconnect or deregistration) or a new one is added.
-      Providers whose definitions are INVALID also appear in the list.
+      Providers with INVALID definitions also appear in the list.
     subscribe:
-      description: A consumer subscribes to this subject in order to know which providers are available in the system.
+      description: A consumer subscribes to this subject to get notified about available providers in the system.
       operationId: receiveProvidersChangedEvent
       tags:
         - name: consumer
       message:
         $ref: "#/components/messages/ProvidersChangedEvent"
   v1.loc.registry.state.evt.changed:
-    description: This event from the Registry to the clients notifies that the state of the Registry has changed.
+    description: This event indicates that the state of the registry has changed.
     subscribe:
-      description: A client that has subscribed to this event receives a message if the state of the Registry has changed.
-        If a provider receives a 'registry up' event via this subject, it must resend its provider definition.
+      description:
+        A client that has subscribed to this event receives a message when the state of the registry has changed.
+        If a provider receives a 'registry up' event via this subject, it shall resend its provider definition.
       operationId: receiveStateChangedEvent
       tags:
         - name: consumer
@@ -158,16 +168,17 @@ channels:
       message:
         $ref: "#/components/messages/StateChangedEvent"
   _INBOX.{consumerName}.{sessionId}:
-    description:
-      The inbox subject for all queries. The NATS broker automatically forwards responses to the NATS requests via this subject.
-      It is important that the property 'custom_inbox_prefix' is set to '_INBOX.{CLIENT_NAME}' when setting up the NATS connection so that NATS can generate the subject correctly. 
+    description: The inbox subject for all queries.
+      The NATS broker automatically forwards responses to the NATS requests via this subject.
+      It is important that the property 'custom_inbox_prefix' is set to '_INBOX.{CLIENT_NAME}' when setting up the NATS connection so that NATS can generate the subject correctly.
     parameters:
       consumerName:
         $ref: "#/components/parameters/ConsumerName"
       sessionId:
         $ref: "#/components/parameters/SessionId"
     publish:
-      description: A client publishes the response to a query on this subject. The exact subject for the query is encoded in the request. 
+      description: A client publishes the response to a query on this subject.
+        The exact subject for the query is encoded in the request.
         If the client uses the NATS respond function, NATS automatically uses the correct subject.
       operationId: replyFromConsumer
       tags:
@@ -178,7 +189,9 @@ channels:
           - $ref: "#/components/messages/ReadProvidersQueryResponse"
           - $ref: "#/components/messages/ReadVariablesQueryResponse"
     subscribe:
-      description:  A client subscribes to this subject in order to receive the response to its queries. If the client uses the NATS request function, NATS takes care of subscribing to the correct subject.
+      description:
+        A client subscribes to this subject in order to receive the response to its queries.
+        If the client uses the NATS request function, NATS takes care of subscribing to the correct subject.
       operationId: replyFromProvider
       tags:
         - name: consumer
@@ -221,7 +234,6 @@ components:
       payload:
         $ref: "jsonschemas/messages/read_providers_query_response.schema.json"
     ReadVariablesQueryRequest:
-      #      messageId: ReadVariablesQueryRequest
       headers:
         $ref: "#/components/schemas/Headers"
       correlationId:
@@ -229,7 +241,6 @@ components:
       payload:
         $ref: "jsonschemas/messages/read_variables_query_request.schema.json"
     ReadVariablesQueryResponse:
-      #      messageId: ReadVariablesQueryResponse
       headers:
         $ref: "#/components/schemas/ResponseHeaders"
       payload:
@@ -239,11 +250,9 @@ components:
       payload:
         $ref: "jsonschemas/messages/state_changed_event.schema.json"
     VariablesChangedEvent:
-      #      messageId: VariablesChangedEvent
       payload:
         $ref: "jsonschemas/messages/variables_changed_event.schema.json"
     WriteVariablesCommand:
-      #      messageId: WriteVariablesCommand
       payload:
         $ref: "jsonschemas/messages/write_variables_command.schema.json"
   parameters:
