@@ -39,20 +39,8 @@ paths:
               example:
               - id: u_os_adm
               - id: u_os_sbm
-        '400':
-          description: Bad request.
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/FormatlessString'
-        '401':
-          description: Unauthorized.
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/FormatlessString'
-        '500':
-          description: Internal server error.
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for a detailed error message.
           content:
             text/plain:
               schema:
@@ -122,26 +110,8 @@ paths:
                     value: 2.2.0
                   - key: digital_nameplate.hardware_version
                     value: 1.23.0
-        '400':
-          description: Bad request.
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/FormatlessString'
-        '401':
-          description: Unauthorized.
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/FormatlessString'
-        '404':
-          description: Provider not found.
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/FormatlessString'
-        '500':
-          description: Internal Server Error
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for a detailed error message.
           content:
             text/plain:
               schema:
@@ -185,31 +155,19 @@ paths:
                         Variable write command was successfully sent.
                         The updated variables are not being returned because the provider may query the write and apply the changes asynchronously. The value write might occur later or could be overridden by another write, thus never being applied.
         '400':
-          description: Bad request.
+          description: Wrong data type written for variable.
           content:
             text/plain:
               schema:
                 $ref: '#/components/schemas/FormatlessString'
-        '401':
-          description: Unauthorized.
+        '405':
+          description: Tried to write a readonly variable.
           content:
             text/plain:
               schema:
                 $ref: '#/components/schemas/FormatlessString'
-        '404':
-          description: Provider not found.
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/FormatlessString'
-        '422':
-          description: Unprocessable entity. The variables in the request body cannot be processed.
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/FormatlessString'
-        '500':
-          description: Internal Server Error
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for a detailed error message.
           content:
             text/plain:
               schema:
@@ -264,26 +222,8 @@ paths:
                   value:
                     key: digital_nameplate.software_version
                     value: 2.2.0
-        '400':
-          description: Bad request.
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/FormatlessString'
-        '401':
-          description: Unauthorized.
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/FormatlessString'
-        '404':
-          description: Not found. The response body contains a detailed error message, e.g. provider not found or variable not found.
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/FormatlessString'
-        '500':
-          description: Internal Server Error
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for a detailed error message.
           content:
             text/plain:
               schema:
@@ -325,37 +265,19 @@ paths:
         '200':
           description: ''
         '400':
-          description: Bad request.
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/FormatlessString'
-        '401':
-          description: Unauthorized.
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/FormatlessString'
-        '404':
-          description: Not found. The response body contains a detailed error message, e.g. provider not found or variable not found.
+          description: Wrong data type written for variable, or variable key does not match request.
           content:
             text/plain:
               schema:
                 $ref: '#/components/schemas/FormatlessString'
         '405':
-          description: Method not allowed.
+          description: Tried to write a readonly variable.
           content:
             text/plain:
               schema:
                 $ref: '#/components/schemas/FormatlessString'
-        '422':
-          description: Unprocessable entity.
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/FormatlessString'
-        '500':
-          description: Internal Server Error.
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for a detailed error message.
           content:
             text/plain:
               schema:
