@@ -21,16 +21,26 @@ enum VariableDataType: byte {
 /// The access type of a variable.
 enum VariableAccessType: byte {
   UNSPECIFIED,
+  /// Consumers can only read the variable.
   READ_ONLY,
+  /// Consumers can read and write the variable.
   READ_WRITE
 }
 
 /// The quality of a variable.
+///
+/// This is set by the provider and indicates the quality of a variable value.
+/// Check the documentation of the individual values for more information.
 enum VariableQuality : ubyte {
+  /// Indicates that the value is not usable
   BAD = 0,
+  /// Variable quality is uncertain without any specific reason, but may still be usable e.g. for display or other non critical purposes
   UNCERTAIN = 0x40,
+  /// The variable has stopped updating and contains its last usable value
   UNCERTAIN_LAST_USABLE_VALUE = 0x43,
+  /// Variable has not been written yet and still contains a default initial value
   UNCERTAIN_INITIAL_VALUE = 0x44,
+  /// Indicates that the value is good and can be used without restrictions
   GOOD = 0xc0
 }
 
