@@ -6,7 +6,7 @@ asyncapi: 2.6.0
 id: https://127.0.0.1:49360
 info:
   title: u-os-hub-api
-  version: 1.0.0
+  version: 1.0.0-next
   # TODO: Replace <ADD_DOCS_URL_HERE> in the description with the URL
   description:
     This document describes all endpoints and payloads of the Variable-NATS-API in the u-OS Data Hub.

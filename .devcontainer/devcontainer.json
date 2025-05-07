@@ -1,5 +1,4 @@
 {
-  "containerUser": "node",
   "customizations": {
     "vscode": {
       "extensions": [
@@ -17,7 +16,9 @@
       ]
     }
   },
-  "dockerComposeFile": ["../docker-compose.yml", "docker-compose.extend.yml"],
+  "build": {
+    "dockerfile": "${localWorkspaceFolder}/Dockerfile"
+  },
   "mounts": [
     {
       "source": "${localWorkspaceFolder}",
@@ -25,9 +26,10 @@
       "type": "bind"
     }
   ],
+  "remoteUser": "node",
   "name": "u-os-hub-api",
-  "postCreateCommand": "npm ci --ignore-optional && npm run build",
-  "service": "u-os-hub-api",
-  "shutdownAction": "stopCompose",
-  "workspaceFolder": "/${localWorkspaceFolderBasename}"
+  "workspaceFolder": "/${localWorkspaceFolderBasename}",
+  "forwardPorts": [
+    3000
+  ]
 }
