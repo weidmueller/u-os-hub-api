@@ -30,7 +30,16 @@ The Variable-HTTP-API is a JSON-based HTTP API for reading and writing variables
 
 We use [OpenAPI](https://swagger.io/specification/) to describe the Variable-HTTP-API in the file `variable-http-openapi.yaml`.
 
-## Installing dependencies
+## Developing in Visual Studio Code
+
+Install `Remote Development` and `Remote-Containers` and start the development container via `Reopen in Container`.
+
+The development container installs the project's npm dependencies and executes a build command on startup.
+[Run on Save](https://marketplace.visualstudio.com/items?itemName=pucelle.run-on-save) automatically executes a build command when the variable-nats-asyncapi.yaml or variable-http-openapi.yaml are saved.
+
+You can open the OpenAPI UI and the AsyncAPI UI in the browser via the [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) extension by clicking on `Go Live`.
+
+### Installing dependencies
 
 Execute
 
@@ -40,7 +49,7 @@ npm ci --ignore-optional
 
 to install necessary dependencies.
 
-## Building
+### Building
 
 Execute
 
@@ -58,7 +67,7 @@ This includes the following steps:
 4.  Validate OpenAPI using [Spectral](https://stoplight.io/open-source/spectral). See [API validation](#api-validation) for details.
 5.  Generate OpenAPI UI (formerly known as Swagger UI). See [Generate OpenAPI UI](#generate-openapi-ui-swagger-ui) for details.
 
-### Generating AsyncAPI UI
+#### Generating AsyncAPI UI
 
 Execute
 
@@ -70,7 +79,7 @@ to generate the an AsyncAPI UI from `variable-nats-asyncapi.yaml`.
 
 Find the generated UI in directory `dist/asyncapi`.
 
-### Generating OpenAPI UI (Swagger UI)
+#### Generating OpenAPI UI (Swagger UI)
 
 Execute
 
@@ -88,17 +97,8 @@ Find the generated UI in directory `dist/openapi`.
 
 We use Spectral for both OpenAPI and AsyncAPI linting based on a set of rules described in `tools/spectral.json`.
 
-## Compiling FlatBuffers schemata
+### Compiling FlatBuffers schemata
 
 FlatBuffers schemata are compiled into target source code via the `flatc` compiler.
 Flatc is not included in this repository, but can be downloaded from [here](https://github.com/google/flatbuffers/releases).
 For an example how to use flatc, see the [Flatbuffers documentation](https://flatbuffers.dev/flatc/).
-
-## Developing in Visual Studio Code
-
-Install `Remote Development` and `Remote-Containers` and start the development container via `Reopen in Container`.
-
-The development container installs the project's npm dependencies and executes a build command on startup.
-[Run on Save](https://marketplace.visualstudio.com/items?itemName=pucelle.run-on-save) automatically executes a build command when the variable-nats-asyncapi.yaml or variable-http-openapi.yaml are saved.
-
-You can open the OpenAPI UI and the AsyncAPI UI in the browser via the [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) extension by clicking on `Go Live`.
