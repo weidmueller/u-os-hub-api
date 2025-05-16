@@ -340,6 +340,7 @@ components:
       - key
       - value
       - quality
+      - timestamp
       properties:
         definition:
           $ref: '#/components/schemas/VariableDefinition'
@@ -349,6 +350,8 @@ components:
           maxLength: 1023
         quality:
           $ref: '#/components/schemas/VariableQuality'
+        timestamp:
+          $ref: '#/components/schemas/ISO8601Timestamp'
         value:
           $ref: '#/components/schemas/VariableValue'
     VariableAccessType:
