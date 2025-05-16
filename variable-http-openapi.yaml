@@ -339,6 +339,7 @@ components:
       required:
       - key
       - value
+      - quality
       properties:
         definition:
           $ref: '#/components/schemas/VariableDefinition'
@@ -346,6 +347,8 @@ components:
           type: string
           format: ^[a-zA-Z_]([a-zA-Z0-9_]{0,62})?(\.[a-zA-Z_]([a-zA-Z0-9_]{0,62})?)*$
           maxLength: 1023
+        quality:
+          $ref: '#/components/schemas/VariableQuality'
         value:
           $ref: '#/components/schemas/VariableValue'
     VariableAccessType:
@@ -382,6 +385,14 @@ components:
       description: String that contains the key of a variable.
       additionalProperties: true
       maxLength: 1023
+    VariableQuality:
+      type: string
+      enum:
+      - BAD
+      - GOOD
+      - UNCERTAIN
+      - UNCERTAIN_LAST_USABLE_VALUE
+      - UNCERTAIN_INITIAL_VALUE
     VariableUpdatePostPayload:
       type: object
       description: The JSON payload of a POST request (to update a single variable) is deserialized into this struct.
