@@ -54,7 +54,9 @@ paths:
       tags:
       - Consumer
       summary: List variable values of a single provider.
-      description: List all variable values or a subset of variable values of a single provider with or without variable definitions.
+      description: |-
+        List all variable values or a subset of variable values of a single provider with or without variable definitions.
+        Variables that contain values which are incompatible with the currently used u-OS data hub API version are filtered out.
       operationId: get_variables_handler
       parameters:
       - name: provider_id
@@ -357,13 +359,11 @@ components:
     VariableAccessType:
       type: string
       enum:
-      - UNSPECIFIED
       - READ_ONLY
       - READ_WRITE
     VariableDataType:
       type: string
       enum:
-      - UNSPECIFIED
       - BOOLEAN
       - DURATION
       - FLOAT64
