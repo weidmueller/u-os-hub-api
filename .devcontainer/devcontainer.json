@@ -29,7 +29,7 @@
   "remoteUser": "node",
   "name": "u-os-hub-api",
   "workspaceFolder": "/${localWorkspaceFolderBasename}",
-  "postCreateCommand": "npm ci --ignore-optional && npm run build",
+  "postCreateCommand": ".devcontainer/postCreateCommand.sh",
   "forwardPorts": [
     3000
   ]
