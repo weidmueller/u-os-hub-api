@@ -14,15 +14,11 @@
   "homepage": "https://www.weidmueller.de/de/loesungen/technologien/edge_computing_u_os/index.jsp",
   "license": "MIT",
   "scripts": {
-    "build": "npm run generateJsonSchemas && npm run validateAsyncApi && npm run generateAsyncApiSite && npm run validateOpenApi && npm run generateOpenApiSite",
-    "generateOpenApiSite": "./tools/generate_swagger_ui.sh",
+    "build": "npm run generateJsonSchemas && npm run validateAsyncApi && npm run generateAsyncApiSite && npm run validateOpenApi",
     "generateJsonSchemas": "./tools/generate_json_schemas.sh",
     "generateAsyncApiSite": "asyncapi generate fromTemplate variable-nats-asyncapi.yaml @asyncapi/html-template@0.28.4 -o ./dist/asyncapi --force-write -p sidebarOrganization=byTags",
     "validateOpenApi": "spectral lint --fail-severity=warn variable-http-openapi.yaml --ruleset ./tools/spectral.json",
     "validateAsyncApi": "spectral lint --fail-severity=warn variable-nats-asyncapi.yaml --ruleset ./tools/spectral.json"
-  },
-  "dependencies": {
-    "swagger-ui-dist": "^5"
   },
   "devDependencies": {
     "@asyncapi/cli": "^3",
