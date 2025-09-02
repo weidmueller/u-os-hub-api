@@ -5,20 +5,25 @@
     "@stoplight/spectral-owasp-ruleset"
   ],
   "rules": {
-    "owasp:api4:2023-rate-limit": "off",
-    "owasp:api4:2023-rate-limit-responses-429": "off",
-    "owasp:api8:2023-define-cors-origin": "off",
     "owasp:api2:2023-jwt-best-practices": "off",
     "owasp:api2:2023-short-lived-access-tokens": "off",
-    "asyncapi-unused-components-schema": "off",
-    "owasp:api4:2023-array-limit": "off",
-    "owasp:api9:2023-inventory-access": "off",
-    "owasp:api4:2023-integer-limit-legacy": "off",
-    "oas3-valid-media-example": "off",
 
+    "owasp:api4:2023-array-limit": "off",
+    "owasp:api4:2023-integer-limit-legacy": "off",
+    "owasp:api4:2023-rate-limit": "off",
+    "owasp:api4:2023-rate-limit-responses-429": "off",
+    
+    "owasp:api8:2023-define-cors-origin": "off",
     "owasp:api8:2023-define-error-responses-401": "off",
     "owasp:api8:2023-define-error-responses-500": "off",
     "owasp:api8:2023-define-error-validation": "off",
+    
+    "owasp:api9:2023-inventory-access": "off",
+    "owasp:api9:2023-inventory-environment": "off",
+    
+    "oas3-valid-media-example": "off",
+    
+    "asyncapi-unused-components-schema": "off",
 
     "http-response-200": {
       "description": "HTTP responses should contain a status code of 200.",
@@ -31,7 +36,6 @@
         }
       ]
     },
-
     "http-response-default": {
       "description": "HTTP responses should contain a default error return status code.",
       "message": "HTTP response does not contain a default error return status code.",
