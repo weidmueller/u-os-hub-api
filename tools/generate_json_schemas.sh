@@ -1,8 +1,8 @@
 #!/bin/sh
 
-# SPDX-FileCopyrightText: 2024 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+# SPDX-FileCopyrightText: 2024 - 2025 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
 #
-# SPDX-License-Identifier: CC0-1.0
+# SPDX-License-Identifier: MIT
 
 script_path="$(readlink -f ${0})"
 script_dir="$(dirname ${script_path})"

@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: 2024 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+SPDX-FileCopyrightText: 2024 - 2025 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
 
 SPDX-License-Identifier: MIT
 -->
@@ -89,3 +89,7 @@ We use Spectral for both OpenAPI and AsyncAPI linting based on a set of rules de
 FlatBuffers schemata are compiled into target source code via the `flatc` compiler.
 Flatc is not included in this repository, but can be downloaded from [here](https://github.com/google/flatbuffers/releases).
 For an example how to use flatc, see the [Flatbuffers documentation](https://flatbuffers.dev/flatc/).
+
+### License
+
+This project is licensed under the [MIT license](./LICENSE).
