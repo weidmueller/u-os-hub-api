@@ -5,11 +5,12 @@
 # SPDX-License-Identifier: MIT
 
 set -euo pipefail
-set -x
 
 script_path="$(readlink -f ${0})"
 script_dir="$(dirname ${script_path})"
 project_dir="$(dirname ${script_dir})"
+
+set -x
 
 # Check copyright headers and license files
 reuse lint

@@ -28,3 +28,8 @@ RUN HADOLINT=/usr/local/bin/hadolint; \
 
 # Install oasdiff
 RUN curl -fsSL https://raw.githubusercontent.com/oasdiff/oasdiff/main/install.sh | sh
+
+USER node
+
+# Install prek for pre commit hooks
+RUN curl --proto '=https' --tlsv1.2 -LsSf https://github.com/j178/prek/releases/download/v0.2.3/prek-installer.sh | sh

@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2024 - 2025 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+#
+# SPDX-License-Identifier: MIT
+
+[general]
+ignore=body-is-missing
+contrib=contrib-body-requires-signed-off-by
+
+[title-max-length]
+line-length=72
+
+[title-match-regex]
+regex=.*: .*
+
+[body-max-line-length]
+line-length=120

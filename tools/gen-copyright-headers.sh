@@ -15,5 +15,5 @@ set -x
 
 reuse annotate --license MIT --copyright "$copyright" --year $current_year --merge-copyrights --recursive --skip-unrecognised "$project_dir"
 
-# # annotate fbs files separately with explicit C style
+# # annotate flatbuffer files separately with explicit C style
 reuse annotate --license MIT --copyright "$copyright" --year $current_year --merge-copyrights --recursive --style c "$project_dir/flatbuffers"
