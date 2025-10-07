@@ -3,9 +3,9 @@
 # SPDX-License-Identifier: MIT
 openapi: 3.0.3
 info:
-  title: u-OS Data Hub HTTP API
+  title: Variable HTTP API
   description: |-
-    The u-OS Data Hub is a standardized way of communicating for system services and apps. This document describes the HTTP API for accessing the u-OS Data Hub as a consumer.
+    The u-OS Data Hub is a standardized way of communicating for system services and apps. This document describes the HTTP API for accessing variables as a consumer.
     <br><br>
     Each participant at the Data Hub is either a consumer, a provider or both. A *consumer* can list/get available providers and list/get/update variables published by providers. A *provider* publishes variables to the Data Hub.
   contact:
@@ -15,11 +15,29 @@ info:
   license:
     name: MIT
     url: https://spdx.org/licenses/MIT.html
-  version: 1.0.0-next
+  version: 1.1.0-next
 servers:
 - url: /u-os-hub/api/v1
-  description: A synchronous HTTP API for accessing the local u-OS Data Hub.
+  description: A synchronous HTTP API for accessing variables.
 paths:
+  /openapi.json:
+    get:
+      tags:
+      - openapi
+      summary: Get the current API spec
+      description: Returns the current OpenAPI specification of the u-OS Admin API. This is useful for clients to discover the API endpoints and their parameters.
+      operationId: get_openapi
+      responses:
+        '200':
+          description: OpenAPI specification JSON
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for a detailed error message.
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/FormatlessString'
+      security:
+      - OAuth2: []
   /providers:
     get:
       tags:
@@ -436,3 +454,5 @@ tags:
 
       - list/get available providers
       - list/get/update variables published by providers.
+- name: openapi
+  description: OpenAPI specification for the Variable HTTP API.
