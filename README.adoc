@@ -22,7 +22,7 @@ To use the Variable-NATS-API, we recommend using the link:https://github.com/wei
 
 Alternatively, you can create your own library by directly using flatbuffers and nats libraries for your desired language.
 All NATS subjects are documented in the corresponding link:https://www.asyncapi.com/en[AsyncAPI] specification: `link:variable-nats-asyncapi.yaml[variable-nats-asyncapi.yaml]`.
-The FlatBuffers messages and types are located in the `link:./flatbuffers[flatbuffers]` directory.
+The FlatBuffers messages and types are located in the `link:flatbuffers[flatbuffers]` directory.
 
 ==== Compiling FlatBuffers schemata
 

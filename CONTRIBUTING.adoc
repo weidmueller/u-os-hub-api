@@ -10,11 +10,11 @@ Anything from documentation, code cleanup, issue completion, new features, you n
 
 == Conduct
 
-This project adheres to our [Code of Conduct](./COC.md). This describes the minimum behavior expected from all contributors.
+This project adheres to our link:CODE_OF_CONDUCT.md[Code of Conduct]. This describes the minimum behavior expected from all contributors.
 
 == Developer Certificate of Origin
 
-All commits must be signed off to affirm compliance with the [DCO](https://developercertificate.org/)
+All commits must be signed off to affirm compliance with the link:https://developercertificate.org/[DCO].
 
 == Setup pre-commit hooks
 
