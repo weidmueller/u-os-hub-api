@@ -5,7 +5,7 @@
 = u-OS Data Hub - API Specifications
 :toc:
 
-The `u-os-hub-api` repository contains API specifications for the u-OS Data Hub.
+The `u-os-hub-api` repository contains multiple API specifications for the u-OS Data Hub.
 
 A general explanation of what the u-OS Data Hub is can be found link:https://support.weidmueller.com/online-documentation/latest/312416/en-GB/index.html#142143243146210187[here].
 
@@ -32,7 +32,7 @@ For an example how to use flatc, see the link:https://flatbuffers.dev/flatc/[Fla
 
 === Variable-HTTP-API
 
-We use link:https://spec.openapis.org/oas/latest.html[OpenAPI] to describe the Variable-HTTP-API in the file `variable-http-openapi.yaml`.
+We use link:https://spec.openapis.org/oas/latest.html[OpenAPI] to describe the Variable-HTTP-API in the file `link:variable-http-openapi.yaml[variable-http-openapi.yaml]`.
 
 ==== Generating a client library
 
@@ -42,10 +42,10 @@ For an example how to use the OpenAPI Generator, see the link:https://openapi-ge
 
 == Questions / Issues / Contributions
 
-If you have any questions or need help, please take a look to the https://support.weidmueller.com/support-center/[Weidmueller Support Center].
+If you have any questions or need help, please visit the link:https://support.weidmueller.com/support-center/[Weidmueller Support Center].
 
-If you would like to contribute to the project, please take a look at our link:CONTRIBUTING.md[Contributing Guidelines].
+If you would like to contribute to the project, please take a look at our link:CONTRIBUTING.adoc[Contributing Guidelines].
 
 == License
 
-This project is licensed under the link:./LICENSE[MIT license].
+This project is licensed under the link:LICENSE[MIT license].
