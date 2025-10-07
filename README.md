@@ -65,7 +65,6 @@ This includes the following steps:
 2.  Validate AsyncAPI using [Spectral](https://stoplight.io/open-source/spectral). See [API validation](#api-validation) for details.
 3.  Generate AsyncAPI UI. See [Generate AsyncAPI UI](#generate-asyncapi-ui) for details.
 4.  Validate OpenAPI using [Spectral](https://stoplight.io/open-source/spectral). See [API validation](#api-validation) for details.
-5.  Generate OpenAPI UI (formerly known as Swagger UI). See [Generate OpenAPI UI](#generate-openapi-ui-swagger-ui) for details.
 
 #### Generating AsyncAPI UI
 
@@ -78,18 +77,6 @@ npm run generateAsyncApiSite
 to generate the an AsyncAPI UI from `variable-nats-asyncapi.yaml`.
 
 Find the generated UI in directory `dist/asyncapi`.
-
-#### Generating OpenAPI UI (Swagger UI)
-
-Execute
-
-```
-npm run generateOpenApiSite
-```
-
-to generate the an OpenAPI UI from `variable-http-openapi.yaml`.
-
-Find the generated UI in directory `dist/openapi`.
 
 ### Validating the APIs
 
