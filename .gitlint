@@ -4,13 +4,10 @@
 
 [general]
 ignore=body-is-missing
-contrib=contrib-body-requires-signed-off-by
+contrib=contrib-body-requires-signed-off-by,contrib-title-conventional-commits
 
-[title-max-length]
-line-length=72
-
-[title-match-regex]
-regex=.*: .*
+[contrib-title-conventional-commits]
+types = fix,feat,chore,docs,refactor,revert,ci,test
 
 [body-max-line-length]
 line-length=120
