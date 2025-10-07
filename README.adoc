@@ -1,0 +1,37 @@
+== u-OS Data Hub - API Specifications
+
+u-os-hub-api contains API specifications for the u-OS Data Hub.
+
+A general explanation of what the u-OS Data Hub is can be found link:https://support.weidmueller.com/online-documentation/latest/312416/en-GB/index.html#142143243146210187[here].
+
+The u-OS Data Hub provides a standardized way of communicating variable data in u-OS.
+This repository contains the following specifications to interact with the variable APIs of the u-OS Data Hub.
+
+- AsyncAPI specification for the Variable-NATS-API
+- OpenAPI specification for the Variable-HTTP-API
+
+== AsyncAPI specification for the Variable-NATS-API
+
+The Variable-NATS-API offers a high performance mechanism for both providing and consuming variables within the u-OS Data Hub based on [NATS](https://nats.io/).
+
+[AsyncAPI](https://www.asyncapi.com/en) is a standard to define interfaces of asynchronous APIs.
+We use AsyncAPI to specify the events and messages of the Variable-NATS-API in the file `variable-nats-asyncapi.yaml`.
+
+We use [FlatBuffers](https://flatbuffers.dev/) for data serialization.
+Find the FlatBuffers messages and types used in the Variable-NATS-API in the directory `flatbuffers`.
+
+=== Compiling FlatBuffers schemata
+
+FlatBuffers schemata are compiled into target source code via the `flatc` compiler.
+Flatc is not included in this repository, but can be downloaded from [here](https://github.com/google/flatbuffers/releases).
+For an example how to use flatc, see the [Flatbuffers documentation](https://flatbuffers.dev/flatc/).
+
+== OpenAPI specification for the Variable-HTTP-API
+
+The Variable-HTTP-API is a JSON-based HTTP API for reading and writing variables on the u-OS Data Hub. The focus is on standards and well-known technologies.
+
+We use [OpenAPI](https://swagger.io/specification/) to describe the Variable-HTTP-API in the file `variable-http-openapi.yaml`.
+
+== License
+
+This project is licensed under the [MIT license](./LICENSE).
