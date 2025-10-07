@@ -8,6 +8,10 @@ SPDX-License-Identifier: MIT
 
 Contributions are always welcome! And there is a multitude of ways in which you can help depending on what you like to do, or are good at. Anything from documentation, code cleanup, issue completion, new features, you name it, even filing issues is contributing and greatly appreciated!
 
+## Conduct
+
+This project adheres to our [Code of Conduct](./COC.md). This describes the minimum behavior expected from all contributors.
+
 ## Developer Certificate of Origin
 
 All commits must be signed off to affirm compliance with the [DCO](https://developercertificate.org/)
