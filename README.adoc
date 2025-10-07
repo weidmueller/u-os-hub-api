@@ -1,37 +1,51 @@
-== u-OS Data Hub - API Specifications
+// SPDX-FileCopyrightText: 2025 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+//
+// SPDX-License-Identifier: MIT
 
-u-os-hub-api contains API specifications for the u-OS Data Hub.
+= u-OS Data Hub - API Specifications
+:toc:
+
+The `u-os-hub-api` repository contains API specifications for the u-OS Data Hub.
 
 A general explanation of what the u-OS Data Hub is can be found link:https://support.weidmueller.com/online-documentation/latest/312416/en-GB/index.html#142143243146210187[here].
 
-The u-OS Data Hub provides a standardized way of communicating variable data in u-OS.
-This repository contains the following specifications to interact with the variable APIs of the u-OS Data Hub.
+== Variable APIs
 
-- AsyncAPI specification for the Variable-NATS-API
-- OpenAPI specification for the Variable-HTTP-API
+The u-OS Data Hub Variable APIs are compared link:https://support.weidmueller.com/online-documentation/latest/312416/en-GB/index.html#142279051[here].
 
-== AsyncAPI specification for the Variable-NATS-API
+=== Variable-NATS-API
 
-The Variable-NATS-API offers a high performance mechanism for both providing and consuming variables within the u-OS Data Hub based on [NATS](https://nats.io/).
+In the Variable-NATS-API, link:https://nats.io/[NATS] is used as the transport mechanism.
+And link:https://flatbuffers.dev/[FlatBuffers] are transmitted there as payload.
 
-[AsyncAPI](https://www.asyncapi.com/en) is a standard to define interfaces of asynchronous APIs.
-We use AsyncAPI to specify the events and messages of the Variable-NATS-API in the file `variable-nats-asyncapi.yaml`.
+To use the Variable-NATS-API, we recommend using the link:https://github.com/weidmueller/u-os-hub-client-rs[u-os-hub-client-rs library].
 
-We use [FlatBuffers](https://flatbuffers.dev/) for data serialization.
-Find the FlatBuffers messages and types used in the Variable-NATS-API in the directory `flatbuffers`.
+Alternatively, you can create your own library by directly using flatbuffers and nats libraries for your desired language.
+All NATS subjects are documented in the corresponding link:https://www.asyncapi.com/en[AsyncAPI] specification: `link:variable-nats-asyncapi.yaml[variable-nats-asyncapi.yaml]`.
+The FlatBuffers messages and types are located in the `link:./flatbuffers[flatbuffers]` directory.
 
-=== Compiling FlatBuffers schemata
+==== Compiling FlatBuffers schemata
 
 FlatBuffers schemata are compiled into target source code via the `flatc` compiler.
-Flatc is not included in this repository, but can be downloaded from [here](https://github.com/google/flatbuffers/releases).
-For an example how to use flatc, see the [Flatbuffers documentation](https://flatbuffers.dev/flatc/).
+Flatc is not included in this repository, but can be downloaded from link:https://github.com/google/flatbuffers/releases[here].
+For an example how to use flatc, see the link:https://flatbuffers.dev/flatc/[Flatbuffers documentation].
 
-== OpenAPI specification for the Variable-HTTP-API
+=== Variable-HTTP-API
 
-The Variable-HTTP-API is a JSON-based HTTP API for reading and writing variables on the u-OS Data Hub. The focus is on standards and well-known technologies.
+We use link:https://spec.openapis.org/oas/latest.html[OpenAPI] to describe the Variable-HTTP-API in the file `variable-http-openapi.yaml`.
 
-We use [OpenAPI](https://swagger.io/specification/) to describe the Variable-HTTP-API in the file `variable-http-openapi.yaml`.
+==== Generating a client library
+
+You can use the OpenAPI Generator to generate client library for your desired programming language.
+The OpenAPI Generator can be found link:https://openapi-generator.tech/[here].
+For an example how to use the OpenAPI Generator, see the link:https://openapi-generator.tech/docs/usage/[OpenAPI Generator documentation].
+
+== Questions / Issues / Contributions
+
+If you have any questions or need help, please take a look to the https://support.weidmueller.com/support-center/[Weidmueller Support Center].
+
+If you would like to contribute to the project, please take a look at our link:CONTRIBUTING.md[Contributing Guidelines].
 
 == License
 
-This project is licensed under the [MIT license](./LICENSE).
+This project is licensed under the link:./LICENSE[MIT license].
