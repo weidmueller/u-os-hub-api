@@ -18,14 +18,6 @@ RUN apt-get update \
   sudo \
   && rm -rf /var/lib/apt/lists/*
 
-ARG HADOLINT_VERSION=v2.12.0
-
-RUN HADOLINT=/usr/local/bin/hadolint; \
-  mkdir -p "$(dirname ${HADOLINT})" \
-  && curl -sL -o ${HADOLINT} \
-  "https://github.com/hadolint/hadolint/releases/download/${HADOLINT_VERSION}/hadolint-$(uname -s)-$(uname -m)" \
-  && chmod 0755 ${HADOLINT}
-
 # Install oasdiff
 RUN curl -fsSL https://raw.githubusercontent.com/oasdiff/oasdiff/main/install.sh | sh
 

@@ -2,18 +2,12 @@
   "customizations": {
     "vscode": {
       "extensions": [
-        "42Crunch.vscode-openapi",
-        "asyncapi.asyncapi-preview",
         "ban.spellright",
         "esbenp.prettier-vscode",
-        "fnando.linter",
         "ms-azuretools.vscode-docker",
-        "pucelle.run-on-save",
         "ritwickdey.LiveServer",
-        "streetsidesoftware.code-spell-checker",
-        "streetsidesoftware.code-spell-checker-british-english",
-        "tyriar.sort-lines",
-        "asciidoctor.asciidoctor-vscode"
+        "asciidoctor.asciidoctor-vscode",
+        "gaborv.flatbuffers"
       ]
     }
   },
@@ -29,9 +23,5 @@
   ],
   "remoteUser": "node",
   "name": "u-os-hub-api",
-  "workspaceFolder": "/${localWorkspaceFolderBasename}",
-  "postCreateCommand": ".devcontainer/postCreateCommand.sh",
-  "forwardPorts": [
-    3000
-  ]
+  "workspaceFolder": "/${localWorkspaceFolderBasename}"
 }
