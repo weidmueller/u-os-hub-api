@@ -32,7 +32,7 @@ table ProviderDefinition {
   ///
   /// Therefore, the fingerprint can be used by a consumer to check whether
   /// the provider's definition matches the values received.
-  /// Whenever a provider definition changed, the provider must change the 
+  /// Whenever a provider definition changed, the provider must change the
   /// fingerprint.
   fingerprint: uint64;
   /// The list of variable definitions.

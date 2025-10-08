@@ -1,0 +1,53 @@
+// SPDX-FileCopyrightText: 2025 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+//
+// SPDX-License-Identifier: MIT
+
+= u-OS Data Hub - API Specifications
+:toc:
+
+The `u-os-hub-api` repository contains multiple API specifications for the u-OS Data Hub.
+
+A general explanation of what the u-OS Data Hub is can be found link:https://support.weidmueller.com/online-documentation/latest/312416/en-GB/index.html#142143243146210187[here].
+
+== Variable APIs
+
+The u-OS Data Hub Variable APIs are compared link:https://support.weidmueller.com/online-documentation/latest/312416/en-GB/index.html#142279051[here].
+
+=== Variable-NATS-API
+
+In the Variable-NATS-API, link:https://nats.io/[NATS] is used as the transport mechanism.
+link:https://flatbuffers.dev/[FlatBuffers] is used as the payload format.
+
+To use the Variable-NATS-API, we recommend using the link:https://github.com/weidmueller/u-os-hub-client-rs[u-os-hub-client-rs library].
+
+Alternatively, you can create your own library by directly using FlatBuffers and NATS libraries for your desired language.
+All NATS subjects are documented in the corresponding link:https://www.asyncapi.com/en[AsyncAPI] specification `link:variable-nats-asyncapi.yaml[variable-nats-asyncapi.yaml]`.
+The FlatBuffers messages and types are located in the `link:flatbuffers[flatbuffers]` directory.
+
+==== Compiling FlatBuffers Schemata
+
+FlatBuffers schemata are compiled into target source code via the `flatc` compiler.
+The flatc compiler is not included in this repository, but can be downloaded from link:https://github.com/google/flatbuffers/releases[here].
+For an example of how to use flatc, see the link:https://flatbuffers.dev/flatc/[FlatBuffers documentation].
+
+=== Variable-HTTP-API
+
+We use link:https://spec.openapis.org/oas/latest.html[OpenAPI] to describe the Variable-HTTP-API in the file `link:variable-http-openapi.yaml[variable-http-openapi.yaml]`.
+
+For a more visual view of the API, you can view it inside u-OS or use any OpenAPI UI like link:https://swagger.io/tools/swagger-ui/[Swagger UI].
+
+==== Generating a Client Library
+
+You can use the OpenAPI Generator to generate a client library for your desired programming language.
+The OpenAPI Generator can be found link:https://openapi-generator.tech/[here].
+For an example of how to use the OpenAPI Generator, see the link:https://openapi-generator.tech/docs/usage/[OpenAPI Generator documentation].
+
+== Questions / Issues / Contributions
+
+If you have any questions or need help, please visit the link:https://support.weidmueller.com/support-center/[Weidmueller Support Center].
+
+If you would like to contribute to the project, please take a look at our link:CONTRIBUTING.adoc[Contributing Guidelines].
+
+== License
+
+This project is licensed under the link:LICENSE[MIT license].

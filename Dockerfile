@@ -1,6 +1,6 @@
-# SPDX-FileCopyrightText: 2024 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+# SPDX-FileCopyrightText: 2024 - 2025 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
 #
-# SPDX-License-Identifier: CC0-1.0
+# SPDX-License-Identifier: MIT
 
 FROM mcr.microsoft.com/devcontainers/typescript-node:18
 
@@ -18,13 +18,10 @@ RUN apt-get update \
   sudo \
   && rm -rf /var/lib/apt/lists/*
 
-ARG HADOLINT_VERSION=v2.12.0
-
-RUN HADOLINT=/usr/local/bin/hadolint; \
-  mkdir -p "$(dirname ${HADOLINT})" \
-  && curl -sL -o ${HADOLINT} \
-  "https://github.com/hadolint/hadolint/releases/download/${HADOLINT_VERSION}/hadolint-$(uname -s)-$(uname -m)" \
-  && chmod 0755 ${HADOLINT}
-
 # Install oasdiff
 RUN curl -fsSL https://raw.githubusercontent.com/oasdiff/oasdiff/main/install.sh | sh
+
+USER node
+
+# Install prek for pre commit hooks
+RUN curl --proto '=https' --tlsv1.2 -LsSf https://github.com/j178/prek/releases/download/v0.2.3/prek-installer.sh | sh

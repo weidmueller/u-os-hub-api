@@ -109,13 +109,13 @@ table Variable {
   /// The individual timestamp of the variable.
   ///
   /// Only set by the provider!
-  /// Consumers can left this empty. This value is ignored by the provider in 
+  /// Consumers can left this empty. This value is ignored by the provider in
   /// a write command.
   timestamp: Timestamp;
   /// The quality of the variable.
   ///
   /// Only set by the provider!
-  /// Consumers can set it to BAD. This value is ignored by the provider  
+  /// Consumers can set it to BAD. This value is ignored by the provider
   /// in a write command.
   quality: VariableQuality;
 }
@@ -128,7 +128,7 @@ table VariableList {
   /// fallback if no explicit was specified for the variable.
   ///
   /// Only set by the provider!
-  /// Consumers can set it to 0s and 0ns. This value is ignored by the 
+  /// Consumers can set it to 0s and 0ns. This value is ignored by the
   /// provider in a write command.
   base_timestamp: Timestamp (required);
   /// The items of the provider's variable list.
