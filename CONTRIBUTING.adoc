@@ -4,24 +4,95 @@
 
 = Contributing
 
-Contributions are always welcome!
-And there is a multitude of ways in which you can help depending on what you like to do, or are good at.
-Anything from documentation, code cleanup, issue completion, new features, you name it, even filing issues is contributing and greatly appreciated!
+Thank you for your interest in contributing to this project!
+
+You can contribute in many ways, including:
+* Reporting bugs
+* Suggesting features
+* Writing code or documentation
 
 == Conduct
 
-This project adheres to our link:CODE_OF_CONDUCT.md[Code of Conduct]. This describes the minimum behavior expected from all contributors.
+Please follow the link:CODE_OF_CONDUCT.md[Code of Conduct]. This describes the minimum behavior expected from all contributors.
 
-== Developer Certificate of Origin
+== Reporting bugs and suggesting features
 
-All commits must be signed off to affirm compliance with the link:https://developercertificate.org/[DCO].
+Please use the github issue tracker for reporting bugs and suggesting features.
 
-== Setup pre-commit hooks
+== Writing code or documentation
+
+For contributing source files, please fork the repository and create a pull request (PR) from your fork to the main repository.
+
+This adheres to the standard Github open source workflow. For details, see link:https://docs.github.com/en/get-started/quickstart/contributing-to-projects[Contributing to Projects on GitHub].
+
+The project is optimized for development within a VSCode devcontainer.
+
+=== Developing in Visual Studio Code
+
+Install `Remote Development` and `Remote-Containers` and start the development container via `Reopen in Container`.
+
+The development container installs the project's npm dependencies and executes a build command on startup.
+link:https://marketplace.visualstudio.com/items?itemName=pucelle.run-on-save[Run on Save] automatically executes a build command when the variable-nats-asyncapi.yaml or variable-http-openapi.yaml are saved.
+
+You can open the OpenAPI UI and the AsyncAPI UI in the browser via the link:https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer[Live Server] extension by clicking on `Go Live`.
+
+==== Setup pre-commit hooks
 
 This repository uses prek for pre-commit hooks.
 
 Run `prek install` while in the devcontainer to setup the hooks locally.
 
-== Check your changes
+==== Installing dependencies
 
-Before creating a merge request, please run `tools/check-merge-request.sh` to validate your changes.
+Execute
+
+```
+npm ci --ignore-optional
+```
+
+to install necessary dependencies.
+
+==== Building
+
+Execute
+
+```
+npm run build
+```
+
+to perform a complete build of u-os-hub-api.
+This includes the following steps:
+
+1.  Generate JSON schemas from the FlatBuffers messages.
+    They are used in the generation of the AsyncAPI site.
+2.  Validate AsyncAPI using link:https://stoplight.io/open-source/spectral[Spectral]. See <<Validating the APIs>> for details.
+3.  Generate AsyncAPI UI. See [Generate AsyncAPI UI](#generate-asyncapi-ui) for details.
+4.  Validate OpenAPI using link:https://stoplight.io/open-source/spectral[Spectral]. See <<Validating the APIs>> for details.
+
+==== Generating AsyncAPI UI
+
+Execute
+
+```
+npm run generateAsyncApiSite
+```
+
+to generate the an AsyncAPI UI from `variable-nats-asyncapi.yaml`.
+
+Find the generated UI in directory `dist/asyncapi`.
+
+==== Validating the APIs
+
+link:https://stoplight.io/open-source/spectral[Spectral] is an API style guide enforcer and linter.
+
+We use Spectral for both OpenAPI and AsyncAPI linting based on a set of rules described in `tools/spectral.json`.
+
+=== Publishing your changes
+
+==== Developer Certificate of Origin
+
+All commits must be signed off to affirm compliance with the link:https://developercertificate.org/[DCO].
+
+==== Check your changes
+
+Before creating a merge request, please run `tools/check-merge-request.sh` to validate your changes. This will prevent failures of the CI pipeline later.
