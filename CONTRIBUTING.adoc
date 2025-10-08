@@ -16,15 +16,15 @@ You can contribute in many ways, including:
 
 Please follow the link:CODE_OF_CONDUCT.md[Code of Conduct]. This describes the minimum behavior expected from all contributors.
 
-== Reporting bugs and suggesting features
+== Reporting Bugs and Suggesting Features
 
-Please use the github issue tracker for reporting bugs and suggesting features.
+Please use the GitHub issue tracker for reporting bugs and suggesting features.
 
-== Writing code or documentation
+== Writing Code or Documentation
 
 For contributing source files, please fork the repository and create a pull request (PR) from your fork to the main repository.
 
-This adheres to the standard Github open source workflow. For details, see link:https://docs.github.com/en/get-started/quickstart/contributing-to-projects[Contributing to Projects on GitHub].
+This adheres to the standard GitHub open source workflow. For details, see link:https://docs.github.com/en/get-started/quickstart/contributing-to-projects[Contributing to Projects on GitHub].
 
 The project is optimized for development within a VSCode devcontainer.
 
@@ -32,13 +32,13 @@ The project is optimized for development within a VSCode devcontainer.
 
 Install `Remote Development` and `Remote-Containers` and start the development container via `Reopen in Container`.
 
-==== Setup pre-commit hooks (optional)
+==== Set Up Pre-commit Hooks (Optional)
 
 This repository uses prek for pre-commit hooks.
 
-Run `prek install` while in the devcontainer to setup the hooks locally.
+Run `prek install` while in the devcontainer to set up the hooks locally.
 
-==== Installing dependencies
+==== Installing Dependencies
 
 Execute
 
@@ -73,11 +73,11 @@ Execute
 npm run generateAsyncApiSite
 ```
 
-to generate the an AsyncAPI UI from `variable-nats-asyncapi.yaml`.
+to generate an AsyncAPI UI from `variable-nats-asyncapi.yaml`.
 
-Find the generated UI in directory `dist/asyncapi`.
+Find the generated UI in the `dist/asyncapi` directory.
 
-After building you can open the AsyncAPI UI in the browser via the link:https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer[Live Server] extension by clicking on `Go Live`.
+After building, you can open the AsyncAPI UI in the browser via the link:https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer[Live Server] extension by clicking on `Go Live`.
 
 ==== Validating the APIs
 
@@ -85,12 +85,12 @@ link:https://stoplight.io/open-source/spectral[Spectral] is an API style guide e
 
 We use Spectral for both OpenAPI and AsyncAPI linting based on a set of rules described in `tools/spectral.json`.
 
-=== Publishing your changes
+=== Publishing Your Changes
 
 ==== Developer Certificate of Origin
 
 All commits must be signed off to affirm compliance with the link:https://developercertificate.org/[DCO].
 
-==== Check your changes
+==== Check Your Changes
 
-Before creating a merge request, please run `tools/check-merge-request.sh` to validate your changes. This will prevent failures of the CI pipeline later.
+Before creating a merge request, please run `tools/check-merge-request.sh` to validate your changes. This will prevent failures in the CI pipeline later.
