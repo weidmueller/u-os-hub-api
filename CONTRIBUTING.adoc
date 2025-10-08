@@ -7,9 +7,10 @@
 Thank you for your interest in contributing to this project!
 
 You can contribute in many ways, including:
-* Reporting bugs
-* Suggesting features
-* Writing code or documentation
+
+- Reporting bugs
+- Suggesting features
+- Writing code or documentation
 
 == Conduct
 
@@ -31,12 +32,7 @@ The project is optimized for development within a VSCode devcontainer.
 
 Install `Remote Development` and `Remote-Containers` and start the development container via `Reopen in Container`.
 
-The development container installs the project's npm dependencies and executes a build command on startup.
-link:https://marketplace.visualstudio.com/items?itemName=pucelle.run-on-save[Run on Save] automatically executes a build command when the variable-nats-asyncapi.yaml or variable-http-openapi.yaml are saved.
-
-You can open the OpenAPI UI and the AsyncAPI UI in the browser via the link:https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer[Live Server] extension by clicking on `Go Live`.
-
-==== Setup pre-commit hooks
+==== Setup pre-commit hooks (optional)
 
 This repository uses prek for pre-commit hooks.
 
@@ -66,7 +62,7 @@ This includes the following steps:
 1.  Generate JSON schemas from the FlatBuffers messages.
     They are used in the generation of the AsyncAPI site.
 2.  Validate AsyncAPI using link:https://stoplight.io/open-source/spectral[Spectral]. See <<Validating the APIs>> for details.
-3.  Generate AsyncAPI UI. See [Generate AsyncAPI UI](#generate-asyncapi-ui) for details.
+3.  Generate AsyncAPI UI. See <<Generating AsyncAPI UI>> for details.
 4.  Validate OpenAPI using link:https://stoplight.io/open-source/spectral[Spectral]. See <<Validating the APIs>> for details.
 
 ==== Generating AsyncAPI UI
@@ -80,6 +76,8 @@ npm run generateAsyncApiSite
 to generate the an AsyncAPI UI from `variable-nats-asyncapi.yaml`.
 
 Find the generated UI in directory `dist/asyncapi`.
+
+After building you can open the AsyncAPI UI in the browser via the link:https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer[Live Server] extension by clicking on `Go Live`.
 
 ==== Validating the APIs
 
