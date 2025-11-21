@@ -9,6 +9,14 @@ The `u-os-hub-api` repository contains multiple API specifications for the u-OS 
 
 A general explanation of what the u-OS Data Hub is can be found link:https://support.weidmueller.com/online-documentation/latest/312416/en-GB/index.html#142143243146210187[here].
 
+== Version compatibility
+
+In this repository, there is a release tag for each u-os release.
+For example, to obtain all API specifications for u-OS version 2.3, the tag `u-os-2.3` must be checked out.
+
+Otherwise, the individual APIs adhere to link:https://semver.org/[semver].
+Older specifications can therefore continue to be used if the major version of the API has not changed.
+
 == Variable APIs
 
 The u-OS Data Hub Variable APIs are compared link:https://support.weidmueller.com/online-documentation/latest/312416/en-GB/index.html#142279051[here].
