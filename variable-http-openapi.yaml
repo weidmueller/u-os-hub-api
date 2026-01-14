@@ -16,7 +16,7 @@ info:
   license:
     name: MIT
     url: https://spdx.org/licenses/MIT.html
-  version: 1.2.0
+  version: 1.2.1
 servers:
 - url: /u-os-hub/api/v1
   description: A synchronous HTTP API for accessing variables.
@@ -163,9 +163,9 @@ paths:
               items:
                 $ref: '#/components/schemas/VariableUpdatePostPayload'
             example:
-            - key: ur20_4com_io_link_1.process_data.channel_0.di
+            - key: ur20_4do_p_1.process_data.channel_0.do
               value: true
-            - key: ur20_4com_io_link_1.process_data.channel_0.do
+            - key: ur20_4do_p_1.process_data.channel_1.do
               value: false
         required: true
       responses:
@@ -279,7 +279,7 @@ paths:
             schema:
               $ref: '#/components/schemas/VariableUpdatePostPayload'
             example:
-              key: ur20_4com_io_link_1.process_data.channel_0.di
+              key: ur20_4do_p_1.process_data.channel_1.do
               value: true
         required: true
       responses:
