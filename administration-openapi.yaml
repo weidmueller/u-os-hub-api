@@ -11,7 +11,7 @@ info:
   license:
     name: MIT
     identifier: MIT
-  version: 0.4.1
+  version: 1.1.0
 servers:
 - url: /u-os-adm/api/v1
 paths:
@@ -502,6 +502,62 @@ paths:
       security:
       - OAuth2:
         - u-os-adm.system.readwrite
+  /update/config:
+    get:
+      tags:
+      - update
+      summary: Get the update configuration for the system.
+      description: The update configuration contains settings related to updating a u-OS device.
+      operationId: get_update_settings
+      responses:
+        '200':
+          description: Update configuration found successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateSettings'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.update.readonly
+      - OAuth2:
+        - u-os-adm.update.readwrite
+    put:
+      tags:
+      - update
+      summary: Set the update configuration for the system.
+      description: |-
+        The update configuration contains settings related to updating a u-OS device.
+        Updating the configuration will restart the update service to apply new settings.
+      operationId: set_update_settings
+      requestBody:
+        description: Update configuration to update
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSettings'
+        required: true
+      responses:
+        '200':
+          description: Update configuration updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateSettings'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.update.readwrite
 components:
   schemas:
     AddressInformation:
@@ -861,7 +917,7 @@ components:
           type: string
           format: hostname
           example: wm-uc20-m3000
-          maxLength: 253
+          maxLength: 63
           minLength: 1
         interfaces:
           type: object
@@ -1047,6 +1103,7 @@ components:
           type: string
           format: hostname
           example: wm-uc20-m3000
+          maxLength: 63
           minLength: 1
         interfaces:
           type: object
@@ -1062,6 +1119,20 @@ components:
             eth-x5:
               ipv4_config:
                 dhcp: true
+    UpdateSettings:
+      type: object
+      description: Represents the update configuration for the system used in get and put.
+      required:
+      - signed_update
+      properties:
+        signed_update:
+          type: object
+          required:
+          - enabled
+          properties:
+            enabled:
+              type: boolean
+              description: True if signed updates are enabled, false otherwise.
   securitySchemes:
     OAuth2:
       type: oauth2
@@ -1077,6 +1148,8 @@ components:
             u-os-adm.security.readwrite: Read and write access for security endpoints
             u-os-adm.system.readonly: Read access for system endpoints
             u-os-adm.system.readwrite: Read and write access for system endpoints
+            u-os-adm.update.readonly: Read access for update endpoints
+            u-os-adm.update.readwrite: Read and write access for update endpoints
       description: The HTTP API uses the OAuth2 client credentials flow.
 tags:
 - name: logging
@@ -1093,3 +1166,5 @@ tags:
   description: API for u-OS security settings
 - name: system
   description: API for general system informations & actions of u-OS
+- name: update
+  description: API for u-OS update settings
