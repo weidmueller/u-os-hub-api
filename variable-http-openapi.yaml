@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 
-openapi: 3.0.3
+openapi: 3.1.0
 info:
   title: Variable HTTP API
   description: |-
@@ -31,6 +31,8 @@ paths:
       responses:
         '200':
           description: OpenAPI specification JSON
+          content:
+            application/json: {}
         default:
           description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for a detailed error message.
           content:
@@ -67,6 +69,7 @@ paths:
       security:
       - OAuth2:
         - hub.variables.readonly
+      - OAuth2:
         - hub.variables.readwrite
   /providers/{provider_id}/variables:
     get:
@@ -91,16 +94,13 @@ paths:
                       The endpoint will filter out duplicates: Each variable will occur only once in the response array.
         required: false
         schema:
-          allOf:
-          - $ref: '#/components/schemas/Prefixes'
-          nullable: true
+          $ref: '#/components/schemas/Prefixes'
       - name: definition
         in: query
         description: If true, the response will contain variable definitions.
         required: false
         schema:
           type: boolean
-          nullable: true
       responses:
         '200':
           description: Variables of a single provider with or without variable definitions.
@@ -140,6 +140,7 @@ paths:
       security:
       - OAuth2:
         - hub.variables.readonly
+      - OAuth2:
         - hub.variables.readwrite
     post:
       tags:
@@ -222,7 +223,6 @@ paths:
         required: false
         schema:
           type: boolean
-          nullable: true
       responses:
         '200':
           description: A variable value with or without definition.
@@ -252,6 +252,7 @@ paths:
       security:
       - OAuth2:
         - hub.variables.readonly
+      - OAuth2:
         - hub.variables.readwrite
     post:
       tags:
