@@ -1,0 +1,52 @@
+// SPDX-FileCopyrightText: 2026 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+//
+// SPDX-License-Identifier: MIT
+
+= Removable Media Format
+
+To perform commissioning via u-os-lum, the removable media (e.g., USB flash drive or SD card) must contain a recipe.json inside it's root folder.
+
+The recipe.json file defines the update process and specifies the update files to be applied to the device. An update consists of one or more steps. The update files can be located anywhere on the removable media, as long as their paths are correctly specified in the recipe.json file.
+
+The `logs/` and `states/` directories are generated automatically, and `deployment_files/` is an example name for a directory containing deployment files.
+
+Example structure:
+
+[source]
+----
+recipe.json
+deployment_files/
+├── gpg_pub.key
+├── test1.swu
+├── test2.swu
+logs/
+├── SERIAL_NO-RECIPE_ID/
+│   ├── step_1.log
+│   └── step_2.log
+states/
+├── SERIAL_NO-RECIPE_ID/
+│   └── state.json
+----
+
+== Recipe
+
+The file must be named `recipe.json` and be placed on root level.
+The file content must comply with the link:./u-os-lum-recipe-v1.schema.json[recipe schema].
+
+== Logs
+
+> Logs are generated during the update process and can be reviewed subsequently, for example, to analyze failure causes.
+
+All logs generated during the deployment process are stored in this directory.
+Each device deployment is assigned a dedicated subdirectory named using a combination of its serial number and the recipe ID.
+
+== States
+
+> Generated during deployment. These files are used exclusively for internal state tracking by the service and are typically not required by the user.
+
+This directory contains state files for each device, organized into subdirectories named using the device's serial number and the recipe ID.
+
+== Deployment Files
+
+The name of this directory is not fixed.
+The directory structure is flexible, and deployment files may be located anywhere on the removable media.

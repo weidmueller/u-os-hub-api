@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Recipe",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "allowed_devices": {
+      "description": "List of serial numbers of allowed devices. If not present or empty, all devices are allowed.",
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "string"
+      }
+    },
+    "id": {
+      "description": "The ID of the recipe. It must be unique and determines the execution order.",
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0
+    },
+    "steps": {
+      "description": "The steps of the recipe, executed in order.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/RecipeStep"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "steps"
+  ],
+  "$defs": {
+    "RecipeStep": {
+      "oneOf": [
+        {
+          "description": "Installs an SWU package.",
+          "type": "object",
+          "properties": {
+            "name": {
+              "description": "The name of the step (used for logging).",
+              "type": "string"
+            },
+            "path": {
+              "description": "The path to the SWU package, relative to the root of the removable media.",
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "SWU"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "name",
+            "path"
+          ]
+        }
+      ]
+    }
+  }
+}
