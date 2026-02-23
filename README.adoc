@@ -54,6 +54,10 @@ For an example of how to use the OpenAPI Generator, see the link:https://openapi
 
 The administration API is also described using OpenAPI in the file `link:administration-openapi.yaml[administration-openapi.yaml]`.
 
+== Removable Media Update
+
+The removable media and recipe format required for the local update manager are described in `link:removable-media-update/removable-media-format.adoc[removable-media-format.adoc]`.
+
 == Questions / Issues / Contributions
 
 If you have any questions or need help, please visit the link:https://support.weidmueller.com/support-center/[Weidmueller Support Center].
