@@ -16,7 +16,7 @@ info:
   license:
     name: MIT
     url: https://spdx.org/licenses/MIT.html
-  version: 1.2.1
+  version: 1.2.1-next
 servers:
 - url: /u-os-hub/api/v1
   description: A synchronous HTTP API for accessing variables.
@@ -313,7 +313,6 @@ components:
       type: string
       format: string
       description: String without special format.
-      additionalProperties: true
       maxLength: 1023
     ISO8601Duration:
       type: string
@@ -322,7 +321,6 @@ components:
         A duration string according to ISO8601 norm (https://datatracker.ietf.org/doc/html/rfc3339#appendix-A).
 
         Example: 'PT5H9M39.400S'
-      additionalProperties: true
       maxLength: 82
     ISO8601Timestamp:
       type: string
@@ -331,19 +329,16 @@ components:
         A timestamp string according to ISO8601 norm (https://datatracker.ietf.org/doc/html/rfc3339#section-5.6).
 
         Example: '1970-01-01T00:20:34.000Z'
-      additionalProperties: true
       maxLength: 24
     Prefixes:
       type: string
       format: ^[a-zA-Z_]([a-zA-Z0-9_]{0,62})?(\.[a-zA-Z_]([a-zA-Z0-9_]{0,62})?)*$
       description: A comma-separated list of prefixes used for listing a subset of variables.
-      additionalProperties: true
       maxLength: 1023
     ProviderName:
       type: string
       format: ^[a-z]([a-z0-9_]{0,61}[a-z0-9])?$
       description: The id of a provider.
-      additionalProperties: true
       maxLength: 63
     ResponseSingleProvider:
       type: object
@@ -406,7 +401,6 @@ components:
       type: string
       format: ^[a-zA-Z_]([a-zA-Z0-9_]{0,62})?(\.[a-zA-Z_]([a-zA-Z0-9_]{0,62})?)*$
       description: String that contains the key of a variable.
-      additionalProperties: true
       maxLength: 1023
     VariableQuality:
       type: string
