@@ -1,0 +1,89 @@
+// SPDX-FileCopyrightText: 2026 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+//
+// SPDX-License-Identifier: MIT
+
+= Removable Media Format
+
+To perform commissioning via the local update manager (LUM), the removable media (e.g., USB flash drive or SD card) must contain a recipe.json inside it's root folder.
+
+The recipe.json file defines the update process and specifies the update files to be applied to the device. An update consists of one or more steps. The update files can be located anywhere on the removable media, as long as their paths are correctly specified in the recipe.json file.
+
+The `logs/` and `states/` directories are generated automatically, and `deployment_files/` is an example name for a directory containing deployment files.
+
+Example structure:
+
+[source]
+----
+recipe.json
+deployment_files/
+├── gpg_pub.key
+├── test1.swu
+├── test2.swu
+logs/
+├── SERIAL_NO-RECIPE_ID/
+│   ├── step_1.log
+│   └── step_2.log
+states/
+├── SERIAL_NO-RECIPE_ID/
+│   └── state.json
+----
+
+== Recipe
+
+The file must be named `recipe.json` and be placed on root level.
+The file content must comply with the link:./u-os-lum-recipe-v1.schema.json[recipe schema].
+
+== Logs
+
+> Logs are generated during the update process and can be reviewed subsequently, for example, to analyze failure causes.
+
+All logs generated during the deployment process are stored in this directory.
+Each device deployment is assigned a dedicated subdirectory named using a combination of its serial number and the recipe ID.
+
+== States
+
+> Generated during deployment. These files are used exclusively for internal state tracking by the service and are typically not required by the user.
+
+This directory contains state files for each device, organized into subdirectories named using the device's serial number and the recipe ID.
+
+== Deployment Files
+
+The name of this directory is not fixed.
+The directory structure is flexible, and deployment files may be located anywhere on the removable media.
+
+== Signed Recipes
+
+The LUM supports the use of signed recipes, which include a signature to verify the authenticity and integrity of the recipe. When a signed recipe is used, the LUM will verify the signature before executing the update steps. This ensures that the update process is secure and that only authorized updates are applied to the device.
+
+While a device is in its factory settings and no initial user has been created, the LUM accepts unsigned recipes and will not check for a signature .sig file.
+
+After the first user has been created, the LUM will require signed recipes and will check for the presence of a .sig file containing the signature of the recipe. If the .sig file is missing or if the signature verification fails, the LUM will reject the recipe and will not execute any update steps.
+
+You may enable/disable the requirement for signed recipes on the device using the OpenAPI update endpoints or GUI.
+
+Note that this is separate from the signature verification of the update files (SWUs) themselves, which is performed by swupdate itself and uses a separate keyring on the device for verification.
+
+=== Creating a signed recipe and preparing the device
+
+To create a signed recipe, use the following steps:
+
+1. Create your recipe.json file according to the recipe schema.
+* For signed recipes, a sha256 hash must be added to all recipe steps that refer to a file. This is required for signature verification and ensures the integrity of the update files. You can calculate the sha256 hash using the `sha256sum` command-line tool, e.g.: `sha256sum <myfile.swu>`. See the recipe schema file for details.
+2. Generate a GPG key pair if you don't already have one. You can do this using the `gpg` command-line tool: `gpg --gen-key`
+* Write down the GPG key fingerprint of the generated key
+3. Sign the recipe.json file with the generated private key: `gpg -u <GPG_KEY_FINGERPRINT> -b recipe.json`
+* This will create a file named `recipe.json.sig` containing the signature of the recipe.
+4. Export the generated public key to a file: `gpg --export -a <GPG_KEY_FINGERPRINT> > gpg_pub.key`
+* This will create a file named `gpg_pub.key` containing the public key in ASCII armor format.
+5. Add the exported public key (gpg_pub.key) to the LUM keyring on the device by using the u-os-adm update API. Please refer to the OpenAPI documentation for details on how to do this.
+* Important: For recipe signing, the public key must be uploaded to the "LUM Keyring" of the device, which is separate from the "SWU Verification Keyring" used for verifying the signatures of the update files (SWUs). Look for the entries under `recipe_signing` in the OpenAPI update endpoints.
+6. Now you should be able to install your signed recipe on the device using the LUM.
+
+=== Troubleshooting
+
+If you encounter issues with signed recipes, check the following:
+
+1. Did you include a sha256 hash for each file in the recipe steps? This is required for signature verification.
+2. Is the sha still up to date for all steps? Did you maybe change a file after adding/calculating the sha?
+3. Is the recipe.json.sig file up to date and added to the removable media? Did you maybe change the recipe.json file after signing it?
+4. Did you check the log output of the u-os-lum for errors related to signature verification? This can provide clues on what went wrong.
