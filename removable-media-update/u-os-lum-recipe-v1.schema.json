@@ -53,6 +53,13 @@
               "description": "The path to the SWU package, relative to the root of the removable media.",
               "type": "string"
             },
+            "sha256": {
+              "description": "The SHA-256 of the SWU package, used for integrity verification.\nThis is mandatory for signed deployments, but optional for unsigned deployments.\n\nFor unsigned deployments, deployment will fail if a sha is specified but does not match the actual sha of the SWU package.\nIf no sha is specified, no check will be performed.\n\nFor signed deployments, all SWU steps must have a sha specified, and the sha must match the actual sha of the SWU package.\nThis is to prevent tampering with the SWU packages, as the signature only covers the recipe file itself, but not the SWU packages on the media device.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
             "type": {
               "type": "string",
               "const": "SWU"

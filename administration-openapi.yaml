@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2025 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+# SPDX-FileCopyrightText: 2025-2026 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
 #
 # SPDX-License-Identifier: MIT
 
@@ -11,7 +11,7 @@ info:
   license:
     name: MIT
     identifier: MIT
-  version: 1.1.0
+  version: 1.1.0-next
 servers:
 - url: /u-os-adm/api/v1
 paths:
@@ -406,6 +406,202 @@ paths:
       security:
       - OAuth2:
         - u-os-adm.security.readwrite
+  /syslog/certificates:
+    get:
+      tags:
+      - syslog
+      summary: Get all uploaded certificates.
+      description: |-
+        Returns all certificates organized by type (server-ca, client-cert, client-key)
+        with their PEM-encoded content.
+      operationId: get_certificates
+      responses:
+        '200':
+          description: Certificate store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Certificates'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.syslog.readonly
+      - OAuth2:
+        - u-os-adm.syslog.readwrite
+    put:
+      tags:
+      - syslog
+      summary: Set all certificates
+      description: |-
+        Replaces the entire certificate store. Any previously uploaded
+        certificate not included in the request will be deleted.
+
+        To ensure that certificates are unused after deletion, please reboot the device.
+        Deleting a currently used certificate results in an invalid syslog configuration.
+
+        **Certificate types:**
+        - `server-ca`: CA certificate to verify the syslog server
+        - `client-cert`: Client certificate for mTLS authentication
+        - `client-key`: Client private key for mTLS authentication
+      operationId: set_certificates
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Certificates'
+        required: true
+      responses:
+        '200':
+          description: Certificates applied successfully
+        '400':
+          description: Invalid certificate data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.syslog.readwrite
+    patch:
+      tags:
+      - syslog
+      summary: Partially update certificates
+      description: |-
+        Applies a patch to the certificate store using JSON Merge Patch semantics:
+        - **Absent type**: no changes to that category
+        - **Entry with content**: add or overwrite that certificate
+        - **Entry set to `null`**: delete that certificate
+
+        To ensure that certificates are unused after deletion, please reboot the device.
+        Deleting a currently used certificate results in an invalid syslog configuration.
+
+        Example — add a new server CA and delete an old one:
+        ```json
+        {
+            "server-ca": {
+                "new-ca.pem": { "content": "-----BEGIN CERTIFICATE-----\n..." },
+                "old-ca.pem": null
+            }
+        }
+        ```
+      operationId: patch_certificates
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CertificatesPatch'
+        required: true
+      responses:
+        '200':
+          description: Certificates updated successfully
+        '400':
+          description: Invalid certificate data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.syslog.readwrite
+  /syslog/config:
+    get:
+      tags:
+      - syslog
+      summary: Get syslog forwarding configuration.
+      description: Returns the current configuration for syslog forwarding.
+      operationId: get_config
+      responses:
+        '200':
+          description: Syslog forwarding configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyslogConfig'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.syslog.readonly
+      - OAuth2:
+        - u-os-adm.syslog.readwrite
+    put:
+      tags:
+      - syslog
+      summary: Set syslog forwarding configuration.
+      description: Updates the syslog forwarding configuration with the provided settings.
+      operationId: set_config
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SyslogConfig'
+        required: true
+      responses:
+        '200':
+          description: Configuration applied successfully
+        '400':
+          description: Invalid configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.syslog.readwrite
+  /syslog/state:
+    get:
+      tags:
+      - syslog
+      summary: Get syslog forwarding service state.
+      description: |-
+        Returns the runtime status of the syslog forwarding service
+        and summary information about the current configuration.
+      operationId: get_state
+      responses:
+        '200':
+          description: Syslog forwarding service state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyslogState'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.syslog.readonly
+      - OAuth2:
+        - u-os-adm.syslog.readwrite
   /system/disks:
     get:
       tags:
@@ -558,6 +754,37 @@ paths:
       security:
       - OAuth2:
         - u-os-adm.update.readwrite
+    patch:
+      tags:
+      - update
+      summary: Modify the update configuration of the device.
+      description: |-
+        This endpoint modifies the update configuration of the device by applying a JSON merge patch (<https://datatracker.ietf.org/doc/html/rfc7396>)
+        to the current configuration.
+        Will return the updated configuration after applying the patch on success.
+      operationId: update_update_settings
+      requestBody:
+        content:
+          application/merge-patch+json:
+            schema:
+              $ref: '#/components/schemas/PartialUpdateSettings'
+        required: true
+      responses:
+        '200':
+          description: The updated configuration after applying the merge patch
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateSettings'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.update.readwrite
 components:
   schemas:
     AddressInformation:
@@ -577,6 +804,106 @@ components:
           type: string
         Zipcode:
           type: string
+    CertificateEntry:
+      type: object
+      description: A single certificate entry.
+      required:
+      - content
+      properties:
+        content:
+          type: string
+          description: PEM-encoded certificate or key content.
+    Certificates:
+      type: object
+      description: |-
+        All certificates organized by type.
+
+        Each certificate type maps certificate names (keys) to their entries.
+      required:
+      - server-ca
+      - client-cert
+      - client-key
+      properties:
+        client-cert:
+          type: object
+          description: Client certificates for mutual TLS authentication.
+          additionalProperties:
+            $ref: '#/components/schemas/CertificateEntry'
+          propertyNames:
+            type: string
+        client-key:
+          type: object
+          description: Client private keys for mutual TLS authentication.
+          additionalProperties:
+            $ref: '#/components/schemas/CertificateEntry'
+          propertyNames:
+            type: string
+        server-ca:
+          type: object
+          description: CA certificates for verifying the syslog server's identity.
+          additionalProperties:
+            $ref: '#/components/schemas/CertificateEntry'
+          propertyNames:
+            type: string
+      example:
+        client-cert:
+          device.pem:
+            content: |-
+              -----BEGIN CERTIFICATE-----
+              ...
+              -----END CERTIFICATE-----
+        client-key:
+          device-key.pem:
+            content: M15UP3RS5CR3T
+        server-ca:
+          my-ca.pem:
+            content: |-
+              -----BEGIN CERTIFICATE-----
+              ...
+              -----END CERTIFICATE-----
+    CertificatesPatch:
+      type: object
+      description: |-
+        Patch body for partial certificate updates (JSON Merge Patch semantics).
+
+        - Absent type: no changes to that certificate type.
+        - Present type with entries:
+          - `"name": { "content": "..." }` → add or overwrite certificate
+          - `"name": null` → delete certificate
+      properties:
+        client-cert:
+          type:
+          - object
+          - 'null'
+          description: |-
+            Changes to client certificates.
+            Map entries with value `null` will be deleted.
+          additionalProperties:
+            $ref: '#/components/schemas/CertificateEntry'
+          propertyNames:
+            type: string
+        client-key:
+          type:
+          - object
+          - 'null'
+          description: |-
+            Changes to client private keys.
+            Map entries with value `null` will be deleted.
+          additionalProperties:
+            $ref: '#/components/schemas/CertificateEntry'
+          propertyNames:
+            type: string
+        server-ca:
+          type:
+          - object
+          - 'null'
+          description: |-
+            Changes to server CA certificates.
+            Map entries with value `null` will be deleted.
+          additionalProperties:
+            $ref: '#/components/schemas/CertificateEntry'
+          propertyNames:
+            type: string
     CreateLogReportResponse:
       type: object
       required:
@@ -695,6 +1022,20 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Ipv4String'
+    GpgKey:
+      type: object
+      description: The content of a GPG public key file in ASCII armor format.
+      required:
+      - content
+      properties:
+        content:
+          type: string
+          description: 'Hint: Newlines are forbidden in JSON strings, so you need to escape them.'
+          example: |-
+            -----BEGIN PGP PUBLIC KEY BLOCK-----
+
+            ...
+            -----END PGP PUBLIC KEY BLOCK-----
     HttpErrorPayload:
       type: object
       description: |-
@@ -1037,6 +1378,109 @@ components:
           type: string
           enum:
           - PENDING
+    PartialUpdateSettings:
+      type: object
+      description: Represents the update configuration for the system used in patch.
+      properties:
+        removable_media_update:
+          oneOf:
+          - type: object
+            properties:
+              enabled:
+                type: boolean
+                description: |-
+                  True if removable media updates are enabled, false otherwise.
+
+                  Note: Removable media updates are always enabled before initial setup is complete.
+                  This value shows only the state after the initial setup.
+              recipe_signing:
+                oneOf:
+                - type: object
+                  properties:
+                    enabled:
+                      type: boolean
+                      description: |-
+                        True if removable media update signing is enabled, false otherwise.
+
+                        If enabled, the recipe file of the removable media update must be signed with a GPG key that
+                        is added to the `user_gpg_keys` list in order to be accepted by the system.
+
+                        Note: Removable media update signing is always disabled before initial setup is complete.
+                    user_gpg_keys:
+                      type: object
+                      description: User specific GPG public keys that are used to verify removable media updates.
+                      additionalProperties: true
+                      example:
+                        another-gpg-key:
+                          content: |-
+                            -----BEGIN PGP PUBLIC KEY BLOCK-----
+
+                            ...
+                            -----END PGP PUBLIC KEY BLOCK-----
+                        delete-me: null
+                description: Settings related to signing of removable media updates.
+        signed_update:
+          oneOf:
+          - type: object
+            properties:
+              enabled:
+                type: boolean
+                description: True if signed updates are enabled, false otherwise.
+              preinstalled_gpg_keys:
+                oneOf:
+                - type: object
+                  properties:
+                    enabled:
+                      type: boolean
+                      description: |-
+                        True if Preinstalled GPG keys are enabled, false otherwise.
+
+                        All devices come with preinstalled preinstalled GPG keys to verify updates.
+                        If this is set to false, those keys will be ignored during update verification.
+                        User must upload their own GPG keys to verify updates in this case.
+                description: |-
+                  Can be used to enable or disable preinstalled Preinstalled GPG keys.
+                  This can be useful e.g. to only allow custom, self signed updates to the device.
+              user_gpg_keys:
+                type: object
+                additionalProperties: true
+                example:
+                  another-gpg-key:
+                    content: |-
+                      -----BEGIN PGP PUBLIC KEY BLOCK-----
+
+                      ...
+                      -----END PGP PUBLIC KEY BLOCK-----
+                  delete-me: null
+    RecipeSigning:
+      type: object
+      required:
+      - enabled
+      - user_gpg_keys
+      properties:
+        enabled:
+          type: boolean
+          description: |-
+            True if removable media update signing is enabled, false otherwise.
+
+            If enabled, the recipe file of the removable media update must be signed with a GPG key that
+            is added to the `user_gpg_keys` list in order to be accepted by the system.
+
+            Note: Removable media update signing is always disabled before initial setup is complete.
+        user_gpg_keys:
+          type: object
+          description: User specific GPG public keys that are used to verify removable media updates.
+          additionalProperties:
+            $ref: '#/components/schemas/GpgKey'
+          propertyNames:
+            type: string
+          example:
+            another-gpg-key:
+              content: |-
+                -----BEGIN PGP PUBLIC KEY BLOCK-----
+
+                ...
+                -----END PGP PUBLIC KEY BLOCK-----
     SecuritySettings:
       type: object
       required:
@@ -1049,11 +1493,266 @@ components:
           properties:
             enabled:
               type: boolean
+    ServerCa:
+      oneOf:
+      - type: object
+        description: Verify the server's certificate using the system's CA certificate store.
+        required:
+        - mode
+        properties:
+          mode:
+            type: string
+            enum:
+            - verify
+      - type: object
+        description: |-
+          Verify the server's certificate using a custom CA certificate.
+          The CA certificate must be uploaded via POST /syslog/certificates/server-ca.
+        required:
+        - ca
+        - mode
+        properties:
+          ca:
+            type: string
+            description: Name of the CA certificate file.
+            example: my-corp-ca.pem
+          mode:
+            type: string
+            enum:
+            - verify_with_ca
+      - type: object
+        description: Do not verify the server's certificate (insecure, use only for testing).
+        required:
+        - mode
+        properties:
+          mode:
+            type: string
+            enum:
+            - no_verify
+      description: Server certificate verification configuration.
+    ServiceStatus:
+      type: string
+      description: Systemd service status.
+      enum:
+      - active
+      - inactive
+      - failed
+      - activating
+      - deactivating
+      - unknown
     StorageType:
       type: string
       enum:
       - Internal
       - Removable
+    SyslogConfig:
+      type: object
+      description: Main configuration for syslog forwarding.
+      required:
+      - enabled
+      - outputs
+      properties:
+        enabled:
+          type: boolean
+          description: Whether syslog forwarding is enabled. If false, the service is stopped.
+        outputs:
+          type: object
+          description: |-
+            Map of output name to output configuration.
+            Output names must be 1-32 characters, containing only lowercase letters, numbers, and hyphens.
+            Cannot start or end with a hyphen.
+          additionalProperties:
+            $ref: '#/components/schemas/SyslogOutputConfig'
+          propertyNames:
+            type: string
+          example:
+            my-log-server:
+              destination:
+                format: rfc5424
+                host: 192.168.1.123
+                port: 6514
+                tls:
+                  mode: ENABLED
+                  server_ca:
+                    ca: my-corp-ca.pem
+                    mode: verify_with_ca
+                transport: tcp
+              filter:
+                facilities:
+                - auth
+                identifiers:
+                - sudo
+                - kernel
+                levels:
+                - err
+                - warning
+                units:
+                - nginx.service
+    SyslogDestination:
+      type: object
+      description: Destination server configuration.
+      required:
+      - host
+      - port
+      - transport
+      - tls
+      - format
+      properties:
+        format:
+          $ref: '#/components/schemas/SyslogFormat'
+          description: Syslog message format.
+        host:
+          type: string
+          description: Server hostname or IP address.
+          example: 192.168.1.100
+        port:
+          type: integer
+          format: int32
+          description: Server port number (514 for plain syslog, 6514 for TLS is common).
+          example: 6514
+          minimum: 0
+        tls:
+          $ref: '#/components/schemas/TlsConfig'
+          description: TLS configuration. Determines whether TLS encryption is used (TCP only).
+        transport:
+          $ref: '#/components/schemas/Transport'
+          description: 'Transport protocol: TCP or UDP.'
+    SyslogFacility:
+      type: string
+      description: Standard syslog facilities as defined in RFC 5424.
+      enum:
+      - kern
+      - user
+      - mail
+      - daemon
+      - auth
+      - syslog
+      - lpr
+      - news
+      - uucp
+      - cron
+      - authpriv
+      - ftp
+      - ntp
+      - audit
+      - alert
+      - clock
+      - local0
+      - local1
+      - local2
+      - local3
+      - local4
+      - local5
+      - local6
+      - local7
+    SyslogFilter:
+      type: object
+      description: |-
+        Syslog filter criteria.
+
+        Filtering uses systemd journal's native logic:
+        - Within a field: values are OR'd (e.g., level=err OR level=warning)
+        - Across fields: conditions are AND'd (e.g., level=err AND facility=auth)
+        - Empty fields match everything
+      required:
+      - levels
+      - facilities
+      - units
+      - identifiers
+      properties:
+        facilities:
+          type: array
+          items:
+            $ref: '#/components/schemas/SyslogFacility'
+          description: |-
+            Syslog facilities to include. Standard RFC 5424 facility codes.
+            If empty, logs from all facilities are included.
+            Your services can use local0-local7 for custom categorization.
+        identifiers:
+          type: array
+          items:
+            type: string
+          description: |-
+            Specific `SYSLOG_IDENTIFIER` values to include (e.g. 'kernel').
+
+            Each identifier must:
+            - Be at most 128 characters
+            - Contain only: ASCII letters (a-z, A-Z), digits (0-9), '-', '_', '.'
+            - Not be empty
+
+            If empty, logs from all identifiers are included.
+          example:
+          - sudo
+          - kernel
+        levels:
+          type: array
+          items:
+            $ref: '#/components/schemas/SyslogLevel'
+          description: |-
+            Log severity levels to include. Only logs with these exact levels are forwarded.
+            If empty, logs of all severity levels are included.
+        units:
+          type: array
+          items:
+            type: string
+          description: |-
+            Specific systemd units to include.
+
+            Each unit name must:
+            - Be at most 255 characters
+            - Contain only: ASCII letters (a-z, A-Z), digits (0-9), ':', '-', '_', '.', '@'
+            - End with a valid unit suffix: .service, .socket, .device, .mount,
+              .automount, .swap, .target, .path, .timer, .slice, or .scope
+
+            Examples: "nginx.service", "sshd.socket", "user@1000.service"
+
+            If empty, logs from all units are included.
+          example:
+          - nginx.service
+          - fluent-bit.service
+    SyslogFormat:
+      type: string
+      description: Syslog message format standard.
+      enum:
+      - rfc5424
+      - rfc3164
+    SyslogLevel:
+      type: string
+      description: Syslog severity levels as defined in RFC 5424.
+      enum:
+      - emerg
+      - alert
+      - crit
+      - err
+      - warning
+      - notice
+      - info
+      - debug
+    SyslogOutputConfig:
+      type: object
+      description: |-
+        A single syslog output destination with its filter criteria.
+        The output name (map key) must be 1-32 characters, containing only lowercase letters,
+        numbers, and hyphens. Cannot start or end with a hyphen.
+      required:
+      - destination
+      - filter
+      properties:
+        destination:
+          $ref: '#/components/schemas/SyslogDestination'
+          description: The destination server configuration.
+        filter:
+          $ref: '#/components/schemas/SyslogFilter'
+          description: Filter criteria - which logs to send to this output.
+    SyslogState:
+      type: object
+      description: Runtime state of the syslog forwarding service.
+      required:
+      - status
+      properties:
+        status:
+          $ref: '#/components/schemas/ServiceStatus'
+          description: Current service status from systemd.
     SystemInformation:
       type: object
       required:
@@ -1067,6 +1766,64 @@ components:
           $ref: '#/components/schemas/Firmware'
         memory:
           $ref: '#/components/schemas/Memory'
+    TlsConfig:
+      oneOf:
+      - type: object
+        description: TLS is disabled (plain-text transport).
+        required:
+        - mode
+        properties:
+          mode:
+            type: string
+            enum:
+            - DISABLED
+      - type: object
+        description: TLS is enabled with the given settings.
+        required:
+        - server_ca
+        - mode
+        properties:
+          mode:
+            type: string
+            enum:
+            - ENABLED
+          server_ca:
+            $ref: '#/components/schemas/ServerCa'
+            description: Server certificate verification mode.
+      - type: object
+        required:
+        - server_ca
+        - client_cert
+        - client_key
+        - mode
+        properties:
+          client_cert:
+            type: string
+            description: |-
+              Name of the client certificate file.
+              Must be uploaded via the certificates endpoint.
+            example: device.pem
+          client_key:
+            type: string
+            description: |-
+              Name of the client private key file.
+              Must be uploaded via the certificates endpoint.
+            example: device-key.pem
+          mode:
+            type: string
+            enum:
+            - ENABLED_WITH_MTLS
+          server_ca:
+            $ref: '#/components/schemas/ServerCa'
+      description: |-
+        TLS configuration for encrypted syslog transport.
+        Certificates are managed separately via the certificates endpoint.
+    Transport:
+      type: string
+      description: Transport protocol for syslog. TLS is configured separately.
+      enum:
+      - tcp
+      - udp
     UpdateInterfaceConfig:
       type: object
       description: Represents the configuration of a single network interface, used for patching.
@@ -1125,6 +1882,23 @@ components:
       required:
       - signed_update
       properties:
+        removable_media_update:
+          oneOf:
+          - type: object
+            required:
+            - enabled
+            - recipe_signing
+            properties:
+              enabled:
+                type: boolean
+                description: |-
+                  True if removable media updates are enabled, false otherwise.
+
+                  Note: Removable media updates are always enabled before initial setup is complete.
+                  This value shows only the state after the initial setup.
+              recipe_signing:
+                $ref: '#/components/schemas/RecipeSigning'
+                description: Settings related to signing of removable media updates.
         signed_update:
           type: object
           required:
@@ -1133,6 +1907,37 @@ components:
             enabled:
               type: boolean
               description: True if signed updates are enabled, false otherwise.
+            preinstalled_gpg_keys:
+              oneOf:
+              - type: object
+                required:
+                - enabled
+                properties:
+                  enabled:
+                    type: boolean
+                    description: |-
+                      True if Preinstalled GPG keys are enabled, false otherwise.
+
+                      All devices come with preinstalled preinstalled GPG keys to verify updates.
+                      If this is set to false, those keys will be ignored during update verification.
+                      User must upload their own GPG keys to verify updates in this case.
+              description: |-
+                Can be used to enable or disable preinstalled Preinstalled GPG keys.
+                This can be useful e.g. to only allow custom, self signed updates to the device.
+            user_gpg_keys:
+              type: object
+              description: User specific GPG public keys that are used to verify software updates.
+              additionalProperties:
+                $ref: '#/components/schemas/GpgKey'
+              propertyNames:
+                type: string
+              example:
+                another-gpg-key:
+                  content: |-
+                    -----BEGIN PGP PUBLIC KEY BLOCK-----
+
+                    ...
+                    -----END PGP PUBLIC KEY BLOCK-----
   securitySchemes:
     OAuth2:
       type: oauth2
@@ -1146,6 +1951,8 @@ components:
             u-os-adm.recovery.readwrite: Read and write access for recovery endpoints
             u-os-adm.security.readonly: Read access for security endpoints
             u-os-adm.security.readwrite: Read and write access for security endpoints
+            u-os-adm.syslog.readonly: Read access for syslog endpoints
+            u-os-adm.syslog.readwrite: Read and write access for syslog endpoints
             u-os-adm.system.readonly: Read access for system endpoints
             u-os-adm.system.readwrite: Read and write access for system endpoints
             u-os-adm.update.readonly: Read access for update endpoints
@@ -1154,6 +1961,8 @@ components:
 tags:
 - name: logging
   description: Centralized system logging, capture and reporting API for u-OS
+- name: syslog
+  description: API for syslog forwarding configuration
 - name: network
   description: API for network settings and state of u-OS
 - name: openapi
