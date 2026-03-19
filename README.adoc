@@ -7,7 +7,7 @@
 
 The `u-os-hub-api` repository contains multiple API specifications for the u-OS Data Hub.
 
-A general explanation of what the u-OS Data Hub is can be found link:https://support.weidmueller.com/online-documentation/latest/312416/en-GB/index.html#142143243146210187[here].
+A general explanation of what the u-OS Data Hub is can be found link:https://support.weidmueller.com/online-documentation/latest/312416/en-GB/index.html[here].
 
 == Version compatibility
 
@@ -56,7 +56,7 @@ The administration API is also described using OpenAPI in the file `link:adminis
 
 == Removable Media Update
 
-The removable media and recipe format required for the local update manager are described in `link:removable-media-update/removable-media-format.adoc[removable-media-format.adoc]`.
+The removable media and recipe format required for the local update manager are described `link:removable-media-update/README.adoc[here]`.
 
 == Questions / Issues / Contributions
 
