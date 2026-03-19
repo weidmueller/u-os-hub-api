@@ -12,7 +12,7 @@
     }
   },
   "build": {
-    "dockerfile": "${localWorkspaceFolder}/Dockerfile"
+    "dockerfile": "${localWorkspaceFolder}/.devcontainer/Dockerfile"
   },
   "mounts": [
     {

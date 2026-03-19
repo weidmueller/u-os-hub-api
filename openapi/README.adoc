@@ -1,0 +1,12 @@
+= u-OS Data Hub - HTTP APIs
+
+We use link:https://spec.openapis.org/oas/latest.html[OpenAPI] to describe our HTTP APIs.
+All u-OS Data Hub openapi specifications can be found in this directory.
+
+For a more visual view of the API, you can view it inside u-OS or use any OpenAPI UI like link:https://swagger.io/tools/swagger-ui/[Swagger UI].
+
+== Generating a Client Library
+
+You can use the OpenAPI Generator to generate a client library for your desired programming language.
+The OpenAPI Generator can be found link:https://openapi-generator.tech/[here].
+For an example of how to use the OpenAPI Generator, see the link:https://openapi-generator.tech/docs/usage/[OpenAPI Generator documentation].
