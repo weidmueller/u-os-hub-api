@@ -1,0 +1,24 @@
+{
+    "extends": [
+        "spectral:oas",
+        "@stoplight/spectral-owasp-ruleset"
+    ],
+    "rules": {
+        "owasp:api4:2023-string-limit": "off",
+        "owasp:api4:2023-string-restricted": "off",
+        "owasp:api4:2023-integer-limit": "off",
+        "owasp:api2:2023-jwt-best-practices": "off",
+        "owasp:api2:2023-short-lived-access-tokens": "off",
+        "owasp:api4:2023-array-limit": "off",
+        "owasp:api4:2023-integer-limit-legacy": "off",
+        "owasp:api4:2023-rate-limit": "off",
+        "owasp:api4:2023-rate-limit-responses-429": "off",
+        "owasp:api8:2023-define-cors-origin": "off",
+        "owasp:api8:2023-define-error-responses-401": "off",
+        "owasp:api8:2023-define-error-responses-500": "off",
+        "owasp:api8:2023-define-error-validation": "off",
+        "owasp:api9:2023-inventory-access": "off",
+        "owasp:api9:2023-inventory-environment": "off",
+        "oas3-valid-media-example": "off"
+    }
+}

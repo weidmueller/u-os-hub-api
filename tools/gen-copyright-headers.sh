@@ -13,7 +13,7 @@ copyright="Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>"
 set -x
 
 # Only check modified files, ignore deleted files and files with less than 4 lines changed
-files=$(git diff --diff-filter=dcr -w --numstat origin/main..HEAD | awk '{if ($1+$2 > 3) print $3}')
+files=$(git diff --diff-filter=AM -w --numstat origin/main | awk '{if ($1+$2 > 3) print $3}')
 
 reuse annotate --license MIT --copyright "$copyright" --merge-copyrights --recursive --skip-unrecognised $files
 

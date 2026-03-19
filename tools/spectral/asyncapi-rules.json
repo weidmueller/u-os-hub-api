@@ -1,0 +1,9 @@
+{
+    "extends": [
+        "spectral:asyncapi",
+        "./global-rules.json"
+    ],
+    "rules": {
+        "asyncapi-unused-components-schema": "off"
+    }
+}
