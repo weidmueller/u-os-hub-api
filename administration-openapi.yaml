@@ -411,9 +411,7 @@ paths:
       tags:
       - syslog
       summary: Get all uploaded certificates.
-      description: |-
-        Returns all certificates organized by type (server-ca, client-cert, client-key)
-        with their PEM-encoded content.
+      description: Returns all certificates organized by type with their content.
       operationId: get_certificates
       responses:
         '200':
@@ -820,25 +818,25 @@ components:
 
         Each certificate type maps certificate names (keys) to their entries.
       required:
-      - server-ca
-      - client-cert
-      - client-key
+      - server_ca
+      - client_cert
+      - client_key
       properties:
-        client-cert:
+        client_cert:
           type: object
           description: Client certificates for mutual TLS authentication.
           additionalProperties:
             $ref: '#/components/schemas/CertificateEntry'
           propertyNames:
             type: string
-        client-key:
+        client_key:
           type: object
           description: Client private keys for mutual TLS authentication.
           additionalProperties:
             $ref: '#/components/schemas/CertificateEntry'
           propertyNames:
             type: string
-        server-ca:
+        server_ca:
           type: object
           description: CA certificates for verifying the syslog server's identity.
           additionalProperties:
@@ -846,16 +844,16 @@ components:
           propertyNames:
             type: string
       example:
-        client-cert:
+        client_cert:
           device.pem:
             content: |-
               -----BEGIN CERTIFICATE-----
               ...
               -----END CERTIFICATE-----
-        client-key:
+        client_key:
           device-key.pem:
             content: M15UP3RS5CR3T
-        server-ca:
+        server_ca:
           my-ca.pem:
             content: |-
               -----BEGIN CERTIFICATE-----
@@ -871,7 +869,7 @@ components:
           - `"name": { "content": "..." }` → add or overwrite certificate
           - `"name": null` → delete certificate
       properties:
-        client-cert:
+        client_cert:
           type:
           - object
           - 'null'
@@ -882,7 +880,7 @@ components:
             $ref: '#/components/schemas/CertificateEntry'
           propertyNames:
             type: string
-        client-key:
+        client_key:
           type:
           - object
           - 'null'
@@ -893,7 +891,7 @@ components:
             $ref: '#/components/schemas/CertificateEntry'
           propertyNames:
             type: string
-        server-ca:
+        server_ca:
           type:
           - object
           - 'null'
@@ -1077,7 +1075,7 @@ components:
           description: |-
             A URI reference that identifies the problem type
 
-            The last part of the URI is always a [ErrorId]
+            The last part of the URI is always a `ErrorId`
           example: /u-os-adm/api/v1/errors/set-security-settings
     InterfaceConfig:
       type: object
@@ -1361,6 +1359,9 @@ components:
         failed_at:
           type: string
           format: date-time
+        resource_url:
+          type: string
+          format: url
         status:
           type: string
           enum:
@@ -1378,80 +1379,101 @@ components:
           type: string
           enum:
           - PENDING
+    OutputReachability:
+      type: string
+      description: Reachability status of a syslog output destination.
+      enum:
+      - CONNECTED
+      - ERROR
+      - PENDING
+    OutputState:
+      type: object
+      description: Health information for a single syslog output.
+      required:
+      - reachable
+      properties:
+        reachable:
+          $ref: '#/components/schemas/OutputReachability'
+          description: |-
+            Reachability status of the output destination.
+
+            - `connected` — The output has successfully sent its most recent batch of logs.
+            - `error` — The output is experiencing delivery failures and is currently retrying.
+            - `pending` — Reachability cannot be determined yet, because no logs have been
+              attempted to be sent so far (e.g. just started or filter-config filtered out all logs).
+    PartialRecipeSigning:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          description: |-
+            True if removable media update signing is enabled, false otherwise.
+
+            If enabled, the recipe file of the removable media update must be signed with a GPG key that
+            is added to the `user_gpg_keys` list in order to be accepted by the system.
+
+            Note: Removable media update signing is always disabled before initial setup is complete.
+        user_gpg_keys:
+          type: object
+          description: User specific GPG public keys that are used to verify removable media updates.
+          additionalProperties: true
+          example:
+            another-gpg-key:
+              content: |-
+                -----BEGIN PGP PUBLIC KEY BLOCK-----
+
+                ...
+                -----END PGP PUBLIC KEY BLOCK-----
+            delete-me: null
     PartialUpdateSettings:
       type: object
       description: Represents the update configuration for the system used in patch.
       properties:
         removable_media_update:
-          oneOf:
-          - type: object
-            properties:
-              enabled:
-                type: boolean
-                description: |-
-                  True if removable media updates are enabled, false otherwise.
+          type: object
+          properties:
+            enabled:
+              type: boolean
+              description: |-
+                True if removable media updates are enabled, false otherwise.
 
-                  Note: Removable media updates are always enabled before initial setup is complete.
-                  This value shows only the state after the initial setup.
-              recipe_signing:
-                oneOf:
-                - type: object
-                  properties:
-                    enabled:
-                      type: boolean
-                      description: |-
-                        True if removable media update signing is enabled, false otherwise.
-
-                        If enabled, the recipe file of the removable media update must be signed with a GPG key that
-                        is added to the `user_gpg_keys` list in order to be accepted by the system.
-
-                        Note: Removable media update signing is always disabled before initial setup is complete.
-                    user_gpg_keys:
-                      type: object
-                      description: User specific GPG public keys that are used to verify removable media updates.
-                      additionalProperties: true
-                      example:
-                        another-gpg-key:
-                          content: |-
-                            -----BEGIN PGP PUBLIC KEY BLOCK-----
-
-                            ...
-                            -----END PGP PUBLIC KEY BLOCK-----
-                        delete-me: null
-                description: Settings related to signing of removable media updates.
+                Note: Removable media updates are always enabled before initial setup is complete.
+                This value shows only the state after the initial setup.
+            recipe_signing:
+              $ref: '#/components/schemas/PartialRecipeSigning'
+              description: Settings related to signing of removable media updates.
         signed_update:
-          oneOf:
-          - type: object
-            properties:
-              enabled:
-                type: boolean
-                description: True if signed updates are enabled, false otherwise.
-              preinstalled_gpg_keys:
-                oneOf:
-                - type: object
-                  properties:
-                    enabled:
-                      type: boolean
-                      description: |-
-                        True if Preinstalled GPG keys are enabled, false otherwise.
+          type: object
+          properties:
+            enabled:
+              type: boolean
+              description: True if signed updates are enabled, false otherwise.
+            preinstalled_gpg_keys:
+              oneOf:
+              - type: object
+                properties:
+                  enabled:
+                    type: boolean
+                    description: |-
+                      True if Preinstalled GPG keys are enabled, false otherwise.
 
-                        All devices come with preinstalled preinstalled GPG keys to verify updates.
-                        If this is set to false, those keys will be ignored during update verification.
-                        User must upload their own GPG keys to verify updates in this case.
-                description: |-
-                  Can be used to enable or disable preinstalled Preinstalled GPG keys.
-                  This can be useful e.g. to only allow custom, self signed updates to the device.
-              user_gpg_keys:
-                type: object
-                additionalProperties: true
-                example:
-                  another-gpg-key:
-                    content: |-
-                      -----BEGIN PGP PUBLIC KEY BLOCK-----
+                      All devices come with preinstalled preinstalled GPG keys to verify updates.
+                      If this is set to false, those keys will be ignored during update verification.
+                      User must upload their own GPG keys to verify updates in this case.
+              description: |-
+                Can be used to enable or disable preinstalled Preinstalled GPG keys.
+                This can be useful e.g. to only allow custom, self signed updates to the device.
+            user_gpg_keys:
+              type: object
+              additionalProperties: true
+              example:
+                another-gpg-key:
+                  content: |-
+                    -----BEGIN PGP PUBLIC KEY BLOCK-----
 
-                      ...
-                      -----END PGP PUBLIC KEY BLOCK-----
-                  delete-me: null
+                    ...
+                    -----END PGP PUBLIC KEY BLOCK-----
+                delete-me: null
     RecipeSigning:
       type: object
       required:
@@ -1495,51 +1517,57 @@ components:
               type: boolean
     ServerCa:
       oneOf:
-      - type: object
-        description: Verify the server's certificate using the system's CA certificate store.
-        required:
-        - mode
-        properties:
-          mode:
-            type: string
-            enum:
-            - verify
-      - type: object
-        description: |-
-          Verify the server's certificate using a custom CA certificate.
-          The CA certificate must be uploaded via POST /syslog/certificates/server-ca.
-        required:
-        - ca
-        - mode
-        properties:
-          ca:
-            type: string
-            description: Name of the CA certificate file.
-            example: my-corp-ca.pem
-          mode:
-            type: string
-            enum:
-            - verify_with_ca
-      - type: object
-        description: Do not verify the server's certificate (insecure, use only for testing).
-        required:
-        - mode
-        properties:
-          mode:
-            type: string
-            enum:
-            - no_verify
+      - $ref: '#/components/schemas/ServerCaVerify'
+      - $ref: '#/components/schemas/ServerCaVerifyWithCa'
+      - $ref: '#/components/schemas/ServerCaNoVerify'
       description: Server certificate verification configuration.
+    ServerCaNoVerify:
+      type: object
+      description: Do not verify the server's certificate (insecure, use only for testing).
+      required:
+      - mode
+      properties:
+        mode:
+          type: string
+          enum:
+          - NO_VERIFY
+    ServerCaVerify:
+      type: object
+      description: Verify the server's certificate using the system's CA certificate store.
+      required:
+      - mode
+      properties:
+        mode:
+          type: string
+          enum:
+          - VERIFY
+    ServerCaVerifyWithCa:
+      type: object
+      description: |-
+        Verify the server's certificate using a custom CA certificate.
+        The CA certificate must be uploaded via PUT /syslog/certificates.
+      required:
+      - mode
+      - ca
+      properties:
+        ca:
+          type: string
+          description: Name of the CA certificate file.
+          example: my-corp-ca.pem
+        mode:
+          type: string
+          enum:
+          - VERIFY_WITH_CA
     ServiceStatus:
       type: string
       description: Systemd service status.
       enum:
-      - active
-      - inactive
-      - failed
-      - activating
-      - deactivating
-      - unknown
+      - ACTIVE
+      - INACTIVE
+      - FAILED
+      - ACTIVATING
+      - DEACTIVATING
+      - UNKNOWN
     StorageType:
       type: string
       enum:
@@ -1568,24 +1596,24 @@ components:
           example:
             my-log-server:
               destination:
-                format: rfc5424
+                format: RFC5424
                 host: 192.168.1.123
                 port: 6514
                 tls:
                   mode: ENABLED
                   server_ca:
                     ca: my-corp-ca.pem
-                    mode: verify_with_ca
-                transport: tcp
+                    mode: VERIFY_WITH_CA
+                transport: TCP
               filter:
                 facilities:
-                - auth
+                - AUTH
                 identifiers:
                 - sudo
                 - kernel
                 levels:
-                - err
-                - warning
+                - ERR
+                - WARNING
                 units:
                 - nginx.service
     SyslogDestination:
@@ -1621,30 +1649,30 @@ components:
       type: string
       description: Standard syslog facilities as defined in RFC 5424.
       enum:
-      - kern
-      - user
-      - mail
-      - daemon
-      - auth
-      - syslog
-      - lpr
-      - news
-      - uucp
-      - cron
-      - authpriv
-      - ftp
-      - ntp
-      - audit
-      - alert
-      - clock
-      - local0
-      - local1
-      - local2
-      - local3
-      - local4
-      - local5
-      - local6
-      - local7
+      - KERN
+      - USER
+      - MAIL
+      - DAEMON
+      - AUTH
+      - SYSLOG
+      - LPR
+      - NEWS
+      - UUCP
+      - CRON
+      - AUTHPRIV
+      - FTP
+      - NTP
+      - AUDIT
+      - ALERT
+      - CLOCK
+      - LOCAL0
+      - LOCAL1
+      - LOCAL2
+      - LOCAL3
+      - LOCAL4
+      - LOCAL5
+      - LOCAL6
+      - LOCAL7
     SyslogFilter:
       type: object
       description: |-
@@ -1714,20 +1742,20 @@ components:
       type: string
       description: Syslog message format standard.
       enum:
-      - rfc5424
-      - rfc3164
+      - RFC5424
+      - RFC3164
     SyslogLevel:
       type: string
       description: Syslog severity levels as defined in RFC 5424.
       enum:
-      - emerg
-      - alert
-      - crit
-      - err
-      - warning
-      - notice
-      - info
-      - debug
+      - EMERG
+      - ALERT
+      - CRIT
+      - ERR
+      - WARNING
+      - NOTICE
+      - INFO
+      - DEBUG
     SyslogOutputConfig:
       type: object
       description: |-
@@ -1750,9 +1778,27 @@ components:
       required:
       - status
       properties:
+        outputs:
+          type: object
+          description: |-
+            Per-output health information.
+            Only populated when the service is active and the monitoring API is reachable.
+          additionalProperties:
+            $ref: '#/components/schemas/OutputState'
+          propertyNames:
+            type: string
         status:
           $ref: '#/components/schemas/ServiceStatus'
           description: Current service status from systemd.
+      example:
+        outputs:
+          audit-logs:
+            reachable: CONNECTED
+          kernel-logs:
+            reachable: ERROR
+          my-app-logs:
+            reachable: PENDING
+        status: ACTIVE
     SystemInformation:
       type: object
       required:
@@ -1768,62 +1814,68 @@ components:
           $ref: '#/components/schemas/Memory'
     TlsConfig:
       oneOf:
-      - type: object
-        description: TLS is disabled (plain-text transport).
-        required:
-        - mode
-        properties:
-          mode:
-            type: string
-            enum:
-            - DISABLED
-      - type: object
-        description: TLS is enabled with the given settings.
-        required:
-        - server_ca
-        - mode
-        properties:
-          mode:
-            type: string
-            enum:
-            - ENABLED
-          server_ca:
-            $ref: '#/components/schemas/ServerCa'
-            description: Server certificate verification mode.
-      - type: object
-        required:
-        - server_ca
-        - client_cert
-        - client_key
-        - mode
-        properties:
-          client_cert:
-            type: string
-            description: |-
-              Name of the client certificate file.
-              Must be uploaded via the certificates endpoint.
-            example: device.pem
-          client_key:
-            type: string
-            description: |-
-              Name of the client private key file.
-              Must be uploaded via the certificates endpoint.
-            example: device-key.pem
-          mode:
-            type: string
-            enum:
-            - ENABLED_WITH_MTLS
-          server_ca:
-            $ref: '#/components/schemas/ServerCa'
+      - $ref: '#/components/schemas/TlsDisabled'
+      - $ref: '#/components/schemas/TlsEnabled'
+      - $ref: '#/components/schemas/TlsEnabledWithMtls'
       description: |-
         TLS configuration for encrypted syslog transport.
         Certificates are managed separately via the certificates endpoint.
+    TlsDisabled:
+      type: object
+      description: TLS is disabled (plain-text transport).
+      required:
+      - mode
+      properties:
+        mode:
+          type: string
+          enum:
+          - DISABLED
+    TlsEnabled:
+      type: object
+      description: TLS is enabled with the given settings.
+      required:
+      - mode
+      - server_ca
+      properties:
+        mode:
+          type: string
+          enum:
+          - ENABLED
+        server_ca:
+          $ref: '#/components/schemas/ServerCa'
+          description: Server certificate verification mode.
+    TlsEnabledWithMtls:
+      type: object
+      required:
+      - mode
+      - server_ca
+      - client_cert
+      - client_key
+      properties:
+        client_cert:
+          type: string
+          description: |-
+            Name of the client certificate file.
+            Must be uploaded via the certificates endpoint.
+          example: device.pem
+        client_key:
+          type: string
+          description: |-
+            Name of the client private key file.
+            Must be uploaded via the certificates endpoint.
+          example: device-key.pem
+        mode:
+          type: string
+          enum:
+          - ENABLED_WITH_MTLS
+        server_ca:
+          $ref: '#/components/schemas/ServerCa'
     Transport:
       type: string
       description: Transport protocol for syslog. TLS is configured separately.
       enum:
-      - tcp
-      - udp
+      - TCP
+      - UDP
     UpdateInterfaceConfig:
       type: object
       description: Represents the configuration of a single network interface, used for patching.
@@ -1883,22 +1935,21 @@ components:
       - signed_update
       properties:
         removable_media_update:
-          oneOf:
-          - type: object
-            required:
-            - enabled
-            - recipe_signing
-            properties:
-              enabled:
-                type: boolean
-                description: |-
-                  True if removable media updates are enabled, false otherwise.
+          type: object
+          required:
+          - enabled
+          - recipe_signing
+          properties:
+            enabled:
+              type: boolean
+              description: |-
+                True if removable media updates are enabled, false otherwise.
 
-                  Note: Removable media updates are always enabled before initial setup is complete.
-                  This value shows only the state after the initial setup.
-              recipe_signing:
-                $ref: '#/components/schemas/RecipeSigning'
-                description: Settings related to signing of removable media updates.
+                Note: Removable media updates are always enabled before initial setup is complete.
+                This value shows only the state after the initial setup.
+            recipe_signing:
+              $ref: '#/components/schemas/RecipeSigning'
+              description: Settings related to signing of removable media updates.
         signed_update:
           type: object
           required:
