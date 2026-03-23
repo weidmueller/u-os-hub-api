@@ -71,6 +71,37 @@
             "name",
             "path"
           ]
+        },
+        {
+          "description": "Executes a task by forwarding the payload to the task runner.",
+          "type": "object",
+          "properties": {
+            "name": {
+              "description": "The name of the step (used for logging).",
+              "type": "string"
+            },
+            "path": {
+              "description": "The path to the task runner payload. This can be any file that the task runner can handle, for example:\n\n* A tar archive containing a task-description.json and payloads\n* A task-description.json file that directly describes the task to be executed, including any necessary payloads\n\nIf the path ends with .json, it will be treated as a task-description.json file. Otherwise, it will be treated as a tar archive.",
+              "type": "string"
+            },
+            "sha256": {
+              "description": "The SHA-256 of the task runner payload, used for integrity verification.\nThis is mandatory for signed deployments, but optional for unsigned deployments.\n\nFor unsigned deployments, deployment will fail if a sha is specified but does not match the actual sha of the task runner payload.\nIf no sha is specified, no check will be performed.\n\nFor signed deployments, all task steps must have a sha specified, and the sha must match the actual sha of the task runner payload.\nThis is to prevent tampering with the task runner payloads, as the signature only covers the recipe file itself, but not the task runner payloads on the media device.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "type": "string",
+              "const": "TASK"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "name",
+            "path"
+          ]
         }
       ]
     }

@@ -8,6 +8,11 @@
             "path": "UC20-M3000-M4000-FW-2.8.0.swu"
         },
         {
+            "name": "Install custom swupdate GPG Key",
+            "type": "TASK",
+            "path": "my-task-description.json"
+        },
+        {
             "name": "Install the CoDeSys App",
             "type": "SWU",
             "path": "u-os-app-codesys-UC20-M3000-4.12.0.0-3.swu"
