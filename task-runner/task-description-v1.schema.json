@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TaskDescription",
+  "type": "object",
+  "properties": {
+    "metadata": {
+      "description": "Metadata for this task",
+      "$ref": "#/$defs/TaskMetadata"
+    },
+    "subtasks": {
+      "description": "A list of subtasks that will be executed as part of this task.\nThey will be executed in the order they are defined in this list.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/SubtaskDescription"
+      }
+    }
+  },
+  "required": [
+    "metadata",
+    "subtasks"
+  ],
+  "$defs": {
+    "HttpMethod": {
+      "type": "string",
+      "enum": [
+        "PUT",
+        "POST",
+        "PATCH"
+      ]
+    },
+    "RequestBody": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/RequestBodyJson"
+        },
+        {
+          "$ref": "#/$defs/RequestBodyPlainText"
+        },
+        {
+          "$ref": "#/$defs/RequestBodyFileContent"
+        }
+      ]
+    },
+    "RequestBodyFileContent": {
+      "type": "object",
+      "properties": {
+        "file_path": {
+          "description": "The path to the file inside the tar-archive whose content will be sent as the body of the request",
+          "type": "string"
+        }
+      },
+      "required": [
+        "file_path"
+      ]
+    },
+    "RequestBodyJson": {
+      "type": "object",
+      "properties": {
+        "json": {
+          "description": "The JSON value that will be sent as the body of the request."
+        }
+      },
+      "required": [
+        "json"
+      ]
+    },
+    "RequestBodyPlainText": {
+      "type": "object",
+      "properties": {
+        "plain_text": {
+          "description": "The plain text that will be sent as the body of the request.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "plain_text"
+      ]
+    },
+    "RequestDescription": {
+      "type": "object",
+      "properties": {
+        "body": {
+          "description": "An body that will be sent with this request.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RequestBody"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "endpoint": {
+          "description": "The endpoint that will be called for this request.\nOnly localhost (127.0.0.1) endpoints are allowed,\nso you can just enter the path like `/u-os-adm/api/v1/network/config`.",
+          "type": "string"
+        },
+        "headers": {
+          "description": "Additional headers that will be sent with this request.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "method": {
+          "description": "The HTTP method that will be used for this request.",
+          "$ref": "#/$defs/HttpMethod"
+        }
+      },
+      "required": [
+        "endpoint",
+        "method"
+      ]
+    },
+    "SubtaskDescription": {
+      "type": "object",
+      "properties": {
+        "abort_on_failure": {
+          "description": "If true, the task runner will abort the whole task if this subtask fails.\nA subtask fails when the request returns a non-success status code.",
+          "type": "boolean",
+          "default": false
+        },
+        "name": {
+          "description": "An optional name for this subtask, used for better readability in the task result and logs.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "request": {
+          "description": "The request that will be executed as part of this subtask.",
+          "$ref": "#/$defs/RequestDescription"
+        },
+        "wait_for_reboot_to_continue": {
+          "description": "After executing this subtask, the task runner will wait for a reboot\nand only continue with the next subtask after the system has rebooted.\nIt is very important to set this flag for subtasks that reboot the system.\n\nThe task runner will only wait for a reboot if the request returns a success status code (2xx).\nIf the request fails, the task runner will not wait for a reboot and will continue with the next subtask immediately.\n(This behavior can be changed with the `abort_on_failure` flag.)",
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "required": [
+        "request"
+      ]
+    },
+    "TaskMetadata": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "A name for this task, used for better readability in the task result and logs.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ]
+    }
+  }
+}
