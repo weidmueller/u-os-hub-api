@@ -1,0 +1,26 @@
+// SPDX-FileCopyrightText: 2026 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+//
+// SPDX-License-Identifier: MIT
+
+= u-OS Task Runner
+
+> The task runner is currently only available via the removable media update mechanism ("type": "TASK"). It is not yet available via HTTP.
+
+The task runner can be used to configure a u-OS device, e.g. to set up the network configuration or to roll out new GPG keys.
+To do this, the task runner allows you to run a sequence of HTTP calls on the device.
+
+A `task` is defined by a `task-description.json` file, which contains a list of `subtasks`. Each subtask describes one HTTP call, including the endpoint, method, headers and body.
+
+== Features
+
+- A task can be defined in two different ways:
+  * A JSON file containing the task description.
+  * A tar archive that contains a `task-description.json` at the root and the referenced files. (Only .tar is supported)
+- POST, PUT and PATCH are supported
+- All HTTP locations available via `127.0.0.1:443` can be used
+- Automatic authentication for u-OS Data Hub HTTP APIs (including u-OS Administration API, u-OS Variable HTTP API)
+- A `task-result.json` including the HTTP responses and headers of all subtasks will be created after the task execution.
+  (It can be found inside the log folder of the removable media device)
+- Critical subtask marker (abort on failure); if not defined, the next subtask will be executed even if the previous fails.
+
+Please take a look at our link:./examples/[examples] and the link:./task-description-v1.schema.json[json schema for the `task-description.json`] for more details.

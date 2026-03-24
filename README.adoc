@@ -58,6 +58,10 @@ The administration API is also described using OpenAPI in the file `link:adminis
 
 The removable media and recipe format required for the local update manager are described `link:removable-media-update/README.adoc[here]`.
 
+== Task runner
+
+The task runner and it's schema is described link:task-runner/README.adoc[here].
+
 == Questions / Issues / Contributions
 
 If you have any questions or need help, please visit the link:https://support.weidmueller.com/support-center/[Weidmueller Support Center].
