@@ -1,12 +1,36 @@
 {
-    "$schema": "https://raw.githubusercontent.com/weidmueller/u-os-hub-api/refs/heads/main/removable-media-update/u-os-lum-recipe-v1.schema.json",
-    "id": 150,
-    "steps": [
-        {
-            "name": "Install a new u-OS Version and Reboot",
-            "type": "SWU",
-            "path": "UC20-M3000-M4000-FW-2.7.0.swu",
-            "sha256": "74896b994017a6cc8d1a79344e2f3520c1d3d6f8222a727635d569abf83ef064"
-        }
-    ]
+  "$schema": "https://raw.githubusercontent.com/weidmueller/u-os-hub-api/refs/heads/main/removable-media-update/u-os-lum-recipe-v1.schema.json",
+  "id": 150,
+  "steps": [
+    {
+      "name": "Network Setup",
+      "type": "TASK",
+      "path": "./task_examples/setup_network_task.json",
+      "sha256": "c06a43431ccef02523f58b80a5e216f4f150db273888fd4435c00dad60eb16bf"
+    },
+    {
+      "name": "Network Setup",
+      "type": "TASK",
+      "path": "./task_examples/setup_network_task.json",
+      "sha256": "c06a43431ccef02523f58b80a5e216f4f150db273888fd4435c00dad60eb16bf"
+    },
+    {
+      "name": "Enable SSH Access",
+      "type": "TASK",
+      "path": "./task_examples/enable_ssh_access_task.json",
+      "sha256": "c06a43431ccef02523f58b80a5e216f4f150db273888fd4435c00dad60eb16bf"
+    },
+    {
+      "name": "Enable SSH Access",
+      "type": "TASK",
+      "path": "./task_examples/enable_ssh_access_task.json",
+      "sha256": "c06a43431ccef02523f58b80a5e216f4f150db273888fd4435c00dad60eb16bf"
+    },
+    {
+      "name": "Network Setup",
+      "type": "TASK",
+      "path": "./task_examples/setup_network_task.json",
+      "sha256": "c06a43431ccef02523f58b80a5e216f4f150db273888fd4435c00dad60eb16bf"
+    }
+  ]
 }

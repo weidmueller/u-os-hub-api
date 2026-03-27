@@ -1,0 +1,76 @@
+{
+    "$schema": "https://raw.githubusercontent.com/weidmueller/u-os-hub-api/refs/heads/main/task-runner/task-description-v1.schema.json",
+    "metadata": {
+        "name": "My Example Task 1 - Disable Signed Updates, Reboot and Setup Network"
+    },
+    "subtasks": [
+        {
+            "name": "Disable signed updates",
+            "request": {
+                "endpoint": "/u-os-adm/api/v1/update/config",
+                "method": "PUT",
+                "body": {
+                    "json": {
+                        "removable_media_update": {
+                            "enabled": false
+                        },
+                        "signed_update": {
+                            "enabled": false,
+                            "preinstalled_gpg_keys": {
+                                "enabled": false
+                            },
+                            "user_gpg_keys": {}
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "name": "Reboot the device",
+            "request": {
+                "endpoint": "/u-os-adm/api/v1/system:reboot",
+                "method": "POST"
+            }
+        },
+        {
+            "name": "Update network config",
+            "request": {
+                "endpoint": "/u-os-adm/api/v1/network/config",
+                "method": "PUT",
+                "body": {
+                    "json": {
+                        "hostname": "wm-uc20-wl2000-ac-as8t40pc7500502",
+                        "interfaces": {
+                            "eth0": {
+                                "ipv4_config": {
+                                    "dhcp": true,
+                                    "addresses": [
+                                        {
+                                            "ip": "192.168.0.101",
+                                            "prefix_length": 24
+                                        }
+                                    ],
+                                    "gateway": null,
+                                    "dns": []
+                                }
+                            },
+                            "eth1": {
+                                "ipv4_config": {
+                                    "dhcp": false,
+                                    "addresses": [
+                                        {
+                                            "ip": "192.168.1.123",
+                                            "prefix_length": 24
+                                        }
+                                    ],
+                                    "gateway": null,
+                                    "dns": []
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ]
+}

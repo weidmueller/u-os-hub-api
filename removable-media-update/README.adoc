@@ -68,16 +68,40 @@ Note that this is separate from the signature verification of the update files (
 To create a signed recipe, use the following steps:
 
 1. Create your recipe.json file according to the recipe schema.
-* For signed recipes, a sha256 hash must be added to all recipe steps that refer to a file. This is required for signature verification and ensures the integrity of the update files. You can calculate the sha256 hash using the `sha256sum` command-line tool, e.g.: `sha256sum <myfile.swu>`. See the recipe schema file for details.
+* For signed recipes, a sha256 hash must be added to all recipe steps that refer to a file. This is required for signature verification and ensures the integrity of the update files. Use the provided link:./tools/update_hashes.sh[update_hashes.sh] script to calculate and update the hashes automatically (see <<Using the update_hashes.sh script>>).
 2. Generate a GPG key pair if you don't already have one. You can do this using the `gpg` command-line tool: `gpg --gen-key`
 * Write down the GPG key fingerprint of the generated key
 3. Sign the recipe.json file with the generated private key: `gpg -u <GPG_KEY_FINGERPRINT> -b recipe.json`
 * This will create a file named `recipe.json.sig` containing the signature of the recipe.
+* Alternatively, you can pass the GPG key fingerprint to the `update_hashes.sh` script to calculate hashes and sign the recipe in one step (see <<Using the update_hashes.sh script>>).
 4. Export the generated public key to a file: `gpg --export -a <GPG_KEY_FINGERPRINT> > gpg_pub.key`
 * This will create a file named `gpg_pub.key` containing the public key in ASCII armor format.
 5. Add the exported public key (gpg_pub.key) to the LUM keyring on the device by using the u-os-adm update API. Please refer to the OpenAPI documentation for details on how to do this.
 * Important: For recipe signing, the public key must be uploaded to the "LUM Keyring" of the device, which is separate from the "SWU Verification Keyring" used for verifying the signatures of the update files (SWUs). Look for the entries under `recipe_signing` in the OpenAPI update endpoints.
 6. Now you should be able to install your signed recipe on the device using the LUM.
+
+=== Using the update_hashes.sh script
+
+The link:./tools/update_hashes.sh[update_hashes.sh] script calculates SHA256 hashes for all steps in a recipe and optionally signs it with a GPG key.
+
+[source,bash]
+----
+./tools/update_hashes.sh <path_to_recipe.json> [gpg_key_fingerprint]
+----
+
+Update hashes only:
+
+[source,bash]
+----
+./tools/update_hashes.sh ./examples/signed_recipe/recipe.json
+----
+
+Update hashes and sign the recipe:
+
+[source,bash]
+----
+./tools/update_hashes.sh ./examples/signed_recipe/recipe.json AB12CD34EF56
+----
 
 === Troubleshooting
 
