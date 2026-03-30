@@ -23,14 +23,16 @@
                         }
                     }
                 }
-            }
+            },
+            "abort_on_failure": true
         },
         {
             "name": "Reboot the device",
             "request": {
                 "endpoint": "/u-os-adm/api/v1/system:reboot",
                 "method": "POST"
-            }
+            },
+            "wait_for_reboot_to_continue": true
         },
         {
             "name": "Update network config",
@@ -70,7 +72,8 @@
                         }
                     }
                 }
-            }
+            },
+            "abort_on_failure": true
         }
     ]
 }
