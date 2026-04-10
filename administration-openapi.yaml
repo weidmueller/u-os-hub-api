@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2025-2026 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+# SPDX-FileCopyrightText: 2024 - 2026 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
 #
 # SPDX-License-Identifier: MIT
 
@@ -1083,6 +1083,8 @@ components:
       required:
       - ipv4_config
       properties:
+        enabled:
+          type: boolean
         ipv4_config:
           $ref: '#/components/schemas/Ipv4Config'
     InterfaceState:
@@ -1266,6 +1268,7 @@ components:
             type: string
           example:
             eth-x4:
+              enabled: true
               ipv4_config:
                 addresses:
                 - ip: 192.168.1.102
@@ -1275,11 +1278,16 @@ components:
                 - 8.8.8.8
                 gateway: 192.168.1.1
             eth-x5:
+              enabled: false
               ipv4_config:
                 addresses: []
                 dhcp: true
                 dns: []
                 gateway: null
+        service_interface:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/ServiceInterfaceConfig'
     NetworkState:
       type: object
       description: |-
@@ -1558,6 +1566,14 @@ components:
           type: string
           enum:
           - VERIFY_WITH_CA
+    ServiceInterfaceConfig:
+      type: object
+      description: Represents the configuration of the service interface, used for putting.
+      required:
+      - enabled
+      properties:
+        enabled:
+          type: boolean
     ServiceStatus:
       type: string
       description: Systemd service status.
@@ -1882,6 +1898,8 @@ components:
       required:
       - ipv4_config
       properties:
+        enabled:
+          type: boolean
         ipv4_config:
           $ref: '#/components/schemas/UpdateIpv4Config'
     UpdateIpv4Config:
@@ -1926,8 +1944,19 @@ components:
                 dhcp: false
                 gateway: null
             eth-x5:
+              enabled: true
               ipv4_config:
                 dhcp: true
+        service_interface:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/UpdateServiceInterfaceConfig'
+    UpdateServiceInterfaceConfig:
+      type: object
+      description: Represents the configuration of the service network interface, used for patching.
+      properties:
+        enabled:
+          type: boolean
     UpdateSettings:
       type: object
       description: Represents the update configuration for the system used in get and put.
