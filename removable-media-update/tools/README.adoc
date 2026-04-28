@@ -1,0 +1,93 @@
+// SPDX-FileCopyrightText: 2026 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+//
+// SPDX-License-Identifier: MIT
+
+
+= Tools & Examples
+
+== recipe_tool.sh
+
+
+The link:./recipe_tool.sh[recipe_tool.sh] script validates, updates SHA256 hashes, and optionally signs a recipe file for the removable-media-update feature. The script is intended to be used via Docker for a consistent and dependency-free environment.
+
+A Dockerfile is provided so you can run the script without installing any dependencies on your host system.
+
+==== Prerequisites
+
+* Docker is installed on your system.
+* All referenced files exists (e.g. `.swu` files, task JSONs).
+
+
+==== Building the Docker Image
+
+Run this once from the `removable-media-update/tools` directory:
+
+[source,bash]
+----
+docker build -t lum-tool .
+----
+
+
+==== Usage via Docker
+
+Navigate to the directory containing your `recipe.json` and run:
+
+[source,bash]
+----
+docker run --rm -it -v $(pwd):/workspace -v ~/.gnupg:/root/.gnupg lum-tool ./recipe.json <GPG_KEY_FINGERPRINT>
+----
+
+This will validate your `recipe.json` against the schema and update the SHA256 hashes for all steps.
+The GPG key fingerprint is optional. If provided, the script will create a detached signature file `recipe.json.sig` using the specified GPG key.
+
+The `-v ~/.gnupg:/root/.gnupg` flag mounts the host's GPG keyring directory into the container so that GPG can find the private key for signing. `~/.gnupg` is the default keyring location on most systems. If your keyring is stored at a different path (e.g. on a USB token or a custom directory), replace `~/.gnupg` with that path.
+
+==== Don't have a GPG Key yet?
+
+===== 1. Generate a GPG Key (One-Time Setup)
+
+[source,bash]
+----
+gpg --gen-key
+----
+
+You will be prompted to enter your name and email address. After confirming, the key pair will be generated.
+
+===== 2. Find Your Key Fingerprint
+
+[source,bash]
+----
+gpg --list-keys --keyid-format long
+----
+
+Example output:
+
+[source]
+----
+pub   ed25519/2474D3A97B6890F1 2026-04-17 [SCA]
+      728FFD6D3D0C29FE468F31FE2474D3A97B6890F1
+uid                 [ultimate] Your Name <your@email.com>
+----
+
+The fingerprint is the long string on the second line (e.g. `728FFD6D3D0C29FE468F31FE2474D3A97B6890F1`).
+
+
+===== Result
+
+After a successful run, your directory will contain:
+
+[cols="1,2", options="header"]
+|===
+| File | Description
+
+| `recipe.json`
+| Recipe with updated SHA256 hashes.
+
+| `recipe.json.sig`
+| Detached GPG signature (only when signing is enabled).
+|===
+
+== Examples
+
+The link:../examples/README.adoc[examples/README.adoc] directory contains complete examples of a typical commissioning recipe. It demonstrates how to configure a freshly deployed device using a combination of tasks and software updates.
+
