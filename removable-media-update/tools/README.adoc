@@ -3,10 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 
-= Tools & Examples
-
-== recipe_tool.sh
-
+= Removable Media Update Recipe Creation Tool
 
 The link:./recipe_tool.sh[recipe_tool.sh] script validates, updates SHA256 hashes, and optionally signs a recipe file for the removable-media-update feature. The script is intended to be used via Docker for a consistent and dependency-free environment.
 

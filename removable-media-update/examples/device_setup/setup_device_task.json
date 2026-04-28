@@ -1,0 +1,75 @@
+{
+    "$schema": "https://raw.githubusercontent.com/weidmueller/u-os-hub-api/refs/heads/main/task-runner/task-description-v1.schema.json",
+    "metadata": {
+        "name": "Setup Device via u-OS Data Hub APIs"
+    },
+    "subtasks": [
+        {
+            "name": "Enable removable media update & Add custom GPG keys",
+            "abort_on_failure": true,
+            "request": {
+                "endpoint": "/u-os-adm/api/v1/update/config",
+                "method": "PATCH",
+                "body": {
+                    "json": {
+                        "removable_media_update": {
+                            "enabled": true,
+                            "recipe_signing": {
+                                "user_gpg_keys": {
+                                    "my-gpg-key-for-removable-media-update": {
+                                        "content": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\n<insert_public_key_data>\n-----END PGP PUBLIC KEY BLOCK-----"
+                                    }
+                                }
+                            }
+                        },
+                        "signed_update": {
+                            "user_gpg_keys": {
+                                "my-gpg-key-for-signed-update": {
+                                    "content": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\n<insert_public_key_data>\n-----END PGP PUBLIC KEY BLOCK-----"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "name": "Update network config",
+            "abort_on_failure": true,
+            "request": {
+                "endpoint": "/u-os-adm/api/v1/network/config",
+                "method": "PUT",
+                "body": {
+                    "json": {
+                        "hostname": "New-Device",
+                        "interfaces": {
+                            "eth0": {
+                                "ipv4_config": {
+                                    "addresses": [
+                                        {
+                                            "ip": "192.168.1.102",
+                                            "prefix_length": 24
+                                        }
+                                    ],
+                                    "dhcp": false,
+                                    "dns": [
+                                        "8.8.8.8"
+                                    ],
+                                    "gateway": "192.168.1.1"
+                                }
+                            },
+                            "eth1": {
+                                "ipv4_config": {
+                                    "addresses": [],
+                                    "dhcp": true,
+                                    "dns": [],
+                                    "gateway": null
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ]
+}
