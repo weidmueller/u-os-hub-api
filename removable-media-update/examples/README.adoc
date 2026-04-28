@@ -1,0 +1,31 @@
+// SPDX-FileCopyrightText: 2026 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+//
+// SPDX-License-Identifier: MIT
+
+=== Removable Media Update Examples
+
+This folder contains examples of recipes and task runner task description files.
+
+Each folder represents the contents of a removable media device that can be used with the removable media update feature. The recipes are designed to be used as templates and can be modified to fit specific use cases.
+
+Note that all examples contain placeholders and will not work out of the box.
+All references to .swu files need to be replaced with proper file paths and the hashes need to be updated afterwards.
+
+You can obtain SWU files from the following sources:
+
+* Weidmüller Support Center: https://support.weidmueller.com/support-center/
+* For more SWU files, please contact Weidmüller support directly. Alternatively, you can create custom SWU files and add them to the recipe.
+
+If your device enforces signed updates and recipes, you will have to sign the recipe and the SWU files with your own GPG key. You can find more information about signing in the documentation.
+
+The following examples are provided:
+
+[cols="1,2", options="header"]
+|===
+|Example |Description
+
+|link:device_setup/recipe.json[device_setup]
+|Firmware update, Codesys installation, and device configuration via Task Runner. Shows how to enable removable media update, install custom GPG keys and change network settings.
+|===
+
+

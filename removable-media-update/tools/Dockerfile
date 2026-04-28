@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+#
+# SPDX-License-Identifier: MIT
+
 FROM debian:trixie-slim
 
 RUN apt-get update && \

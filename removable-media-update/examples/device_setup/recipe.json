@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/weidmueller/u-os-hub-api/refs/heads/main/removable-media-update/u-os-lum-recipe-v1.schema.json",
+  "id": 153,
+  "steps": [
+    {
+      "name": "Update Firmware",
+      "type": "SWU",
+      "path": "./firmware_update_placeholder.swu",
+      "sha256": "<update_me_after_removing_placeholder>"
+    },
+    {
+      "name": "Install Codesys",
+      "type": "SWU",
+      "path": "./codesys_placeholder.swu",
+      "sha256": "<update_me_after_removing_placeholder>"
+    },
+    {
+      "name": "Configure Device",
+      "type": "TASK",
+      "path": "./setup_device_task.json",
+      "sha256": "<update_me_after_removing_placeholder>"
+    }
+  ]
+}

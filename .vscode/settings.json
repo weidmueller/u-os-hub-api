@@ -1,4 +1,7 @@
 {
+  "json.schemaDownload.trustedDomains": {
+    "https://raw.githubusercontent.com/weidmueller": true
+  },
   "liveServer": {
     "settings": {
       "root": "/dist"
