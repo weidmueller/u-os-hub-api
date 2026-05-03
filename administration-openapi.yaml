@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2025-2026 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+# SPDX-FileCopyrightText: 2025 - 2026 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
 #
 # SPDX-License-Identifier: MIT
 
@@ -197,8 +197,11 @@ paths:
       - network
       summary: Set the full network configuration of the device.
       description: |-
-        This endpoint sets the network configuration of the device. Must include all settings and interfaces.
+        This endpoint sets the network configuration of the device. Must include all supported settings and interfaces.
         Will return the updated configuration on success.
+
+        Note that some network properties are not yet supported by the API.
+        These properties will be unaffected when applying the changes, thus preserving any manual changes.
       operationId: set_network_config
       requestBody:
         content:
@@ -230,6 +233,9 @@ paths:
         This endpoint modifies the network configuration of the device by applying a JSON merge patch (https://datatracker.ietf.org/doc/html/rfc7396)
         to the current configuration.
         Will return the updated configuration after applying the patch on success.
+
+        Note that some network properties are not yet supported by the API.
+        These properties will be unaffected when applying the changes, thus preserving any manual changes.
       operationId: update_network_config
       requestBody:
         content:
@@ -1083,6 +1089,8 @@ components:
       required:
       - ipv4_config
       properties:
+        enabled:
+          type: boolean
         ipv4_config:
           $ref: '#/components/schemas/Ipv4Config'
     InterfaceState:
@@ -1266,6 +1274,7 @@ components:
             type: string
           example:
             eth-x4:
+              enabled: true
               ipv4_config:
                 addresses:
                 - ip: 192.168.1.102
@@ -1275,11 +1284,16 @@ components:
                 - 8.8.8.8
                 gateway: 192.168.1.1
             eth-x5:
+              enabled: false
               ipv4_config:
                 addresses: []
                 dhcp: true
                 dns: []
                 gateway: null
+        service_interface:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/ServiceInterfaceConfig'
     NetworkState:
       type: object
       description: |-
@@ -1496,6 +1510,12 @@ components:
             $ref: '#/components/schemas/GpgKey'
           propertyNames:
             type: string
+            description: A GPG key ID that acts as a unique identifier for the key
+            examples:
+            - custom-gpg-key
+            maxLength: 255
+            minLength: 1
+            pattern: ^[a-z][a-z\-0-9]*$
           example:
             another-gpg-key:
               content: |-
@@ -1558,6 +1578,14 @@ components:
           type: string
           enum:
           - VERIFY_WITH_CA
+    ServiceInterfaceConfig:
+      type: object
+      description: Represents the configuration of the service interface, used for putting.
+      required:
+      - enabled
+      properties:
+        enabled:
+          type: boolean
     ServiceStatus:
       type: string
       description: Systemd service status.
@@ -1882,6 +1910,8 @@ components:
       required:
       - ipv4_config
       properties:
+        enabled:
+          type: boolean
         ipv4_config:
           $ref: '#/components/schemas/UpdateIpv4Config'
     UpdateIpv4Config:
@@ -1926,8 +1956,19 @@ components:
                 dhcp: false
                 gateway: null
             eth-x5:
+              enabled: true
               ipv4_config:
                 dhcp: true
+        service_interface:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/UpdateServiceInterfaceConfig'
+    UpdateServiceInterfaceConfig:
+      type: object
+      description: Represents the configuration of the service network interface, used for patching.
+      properties:
+        enabled:
+          type: boolean
     UpdateSettings:
       type: object
       description: Represents the update configuration for the system used in get and put.
@@ -1982,6 +2023,12 @@ components:
                 $ref: '#/components/schemas/GpgKey'
               propertyNames:
                 type: string
+                description: A GPG key ID that acts as a unique identifier for the key
+                examples:
+                - custom-gpg-key
+                maxLength: 255
+                minLength: 1
+                pattern: ^[a-z][a-z\-0-9]*$
               example:
                 another-gpg-key:
                   content: |-
