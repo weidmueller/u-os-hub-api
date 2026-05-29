@@ -41,8 +41,8 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ vars.GH_USERNAME }}
-          password: ${{ secrets.GH_ACCESS_TOKEN }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and run dev container task
         uses: devcontainers/ci@v0.3
@@ -50,7 +50,6 @@ jobs:
           GITHUB_ACTIONS: "true"
         with:
           imageName: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/devcontainer
-          push: always
           cacheFrom: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/devcontainer
           runCmd: |
             ./tools/check-merge-request.sh
