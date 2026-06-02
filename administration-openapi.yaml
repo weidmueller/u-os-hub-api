@@ -11,7 +11,7 @@ info:
   license:
     name: MIT
     identifier: MIT
-  version: 1.2.0
+  version: 1.3.0
 servers:
 - url: /u-os-adm/api/v1
 paths:
@@ -197,8 +197,11 @@ paths:
       - network
       summary: Set the full network configuration of the device.
       description: |-
-        This endpoint sets the network configuration of the device. Must include all settings and interfaces.
+        This endpoint sets the network configuration of the device. Must include all supported settings and interfaces.
         Will return the updated configuration on success.
+
+        Note that some network properties are not yet supported by the API.
+        These properties will be unaffected when applying the changes, thus preserving any manual changes.
       operationId: set_network_config
       requestBody:
         content:
@@ -230,6 +233,9 @@ paths:
         This endpoint modifies the network configuration of the device by applying a JSON merge patch (https://datatracker.ietf.org/doc/html/rfc7396)
         to the current configuration.
         Will return the updated configuration after applying the patch on success.
+
+        Note that some network properties are not yet supported by the API.
+        These properties will be unaffected when applying the changes, thus preserving any manual changes.
       operationId: update_network_config
       requestBody:
         content:
