@@ -11,7 +11,7 @@ info:
   license:
     name: MIT
     identifier: MIT
-  version: 1.3.0
+  version: 1.3.0-next
 servers:
 - url: /u-os-adm/api/v1
 paths:
@@ -959,6 +959,19 @@ components:
           type:
           - string
           - 'null'
+    DhcpIpv4Range:
+      type: object
+      description: Represents a range of IPv4 addresses
+      required:
+      - start
+      - end
+      properties:
+        end:
+          $ref: '#/components/schemas/Ipv4String'
+          description: End of the range (inclusive)
+        start:
+          $ref: '#/components/schemas/Ipv4String'
+          description: Start of the range (inclusive)
     Disk:
       type: object
       required:
@@ -1135,6 +1148,8 @@ components:
           - type: string
             format: ipv4
             description: Represents an IPv4 address in a string format.
+        shared_mode:
+          $ref: '#/components/schemas/SharedModeConfig'
     Ipv4PrefixLength:
       type: integer
       format: int32
@@ -1283,6 +1298,12 @@ components:
                 dns:
                 - 8.8.8.8
                 gateway: 192.168.1.1
+                shared_mode:
+                  dhcp_ip_range:
+                    end: 192.168.1.150
+                    start: 192.168.1.103
+                  dhcp_lease_time_sec: 3600
+                  enabled: true
             eth-x5:
               enabled: false
               ipv4_config:
@@ -1290,6 +1311,10 @@ components:
                 dhcp: true
                 dns: []
                 gateway: null
+                shared_mode:
+                  dhcp_ip_range: null
+                  dhcp_lease_time_sec: null
+                  enabled: false
         service_interface:
           oneOf:
           - type: 'null'
@@ -1596,6 +1621,45 @@ components:
       - ACTIVATING
       - DEACTIVATING
       - UNKNOWN
+    SharedModeConfig:
+      type: object
+      description: Configuration options for interface sharing
+      required:
+      - enabled
+      properties:
+        dhcp_ip_range:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/DhcpIpv4Range'
+            description: |-
+              Configure the DHCP server IP range.
+
+              The IP range must be in the same subnet as the server address, otherwise an error will be returned.
+              If not set, an IP range adjacent to the server address will be used.
+              Should not contain network address or broadcast address.
+        dhcp_lease_time_sec:
+          type:
+          - integer
+          - 'null'
+          format: int32
+          description: |-
+            Configure the DHCP server lease time in seconds.
+
+            Allowed values:
+
+            - 0 or empty: Default lease time (1h)
+            - 2147483647 (max int32): Infinite lease time
+            - 120-31536000: Valid range between 2 minutes and 1 year
+          minimum: 0
+        enabled:
+          type: boolean
+          description: |-
+            If enabled, this device acts as a mini router and may provide internet access to other devices connected to it.
+            This includes enabling a DHCP server on the device, which will assign IP addresses to connected devices, as well as hosting a DNS server.
+            Traffic will be forwarded through the outbound interface with the highest priority (lowest route metric).
+
+            If enabled, all other properties of the interface are ignored, except for the first IP address in the addresses list,
+            which is used as the server address for the DHCP server.
     StorageType:
       type: string
       enum:
@@ -1904,6 +1968,16 @@ components:
       enum:
       - TCP
       - UDP
+    UpdateDhcpIpv4Range:
+      type: object
+      description: Represents a range of IPv4 addresses
+      properties:
+        end:
+          $ref: '#/components/schemas/Ipv4String'
+          description: End of the range (inclusive)
+        start:
+          $ref: '#/components/schemas/Ipv4String'
+          description: Start of the range (inclusive)
     UpdateInterfaceConfig:
       type: object
       description: Represents the configuration of a single network interface, used for patching.
@@ -1934,6 +2008,8 @@ components:
           - type: string
             format: ipv4
             description: Represents an IPv4 address in a string format.
+        shared_mode:
+          $ref: '#/components/schemas/UpdateSharedModeConfig'
     UpdateNetworkConfig:
       type: object
       description: Allows partial updates to the network configuration via patch requests.
@@ -1955,6 +2031,8 @@ components:
               ipv4_config:
                 dhcp: false
                 gateway: null
+                shared_mode:
+                  enabled: true
             eth-x5:
               enabled: true
               ipv4_config:
@@ -2036,6 +2114,43 @@ components:
 
                     ...
                     -----END PGP PUBLIC KEY BLOCK-----
+    UpdateSharedModeConfig:
+      type: object
+      description: Configuration options for interface sharing
+      properties:
+        dhcp_ip_range:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/UpdateDhcpIpv4Range'
+            description: |-
+              Configure the DHCP server IP range.
+
+              The IP range must be in the same subnet as the server address, otherwise an error will be returned.
+              If not set, an IP range adjacent to the server address will be used.
+              Should not contain network address or broadcast address.
+        dhcp_lease_time_sec:
+          type:
+          - integer
+          - 'null'
+          format: int32
+          description: |-
+            Configure the DHCP server lease time in seconds.
+
+            Allowed values:
+
+            - 0 or empty: Default lease time (1h)
+            - 2147483647 (max int32): Infinite lease time
+            - 120-31536000: Valid range between 2 minutes and 1 year
+          minimum: 0
+        enabled:
+          type: boolean
+          description: |-
+            If enabled, this device acts as a mini router and may provide internet access to other devices connected to it.
+            This includes enabling a DHCP server on the device, which will assign IP addresses to connected devices, as well as hosting a DNS server.
+            Traffic will be forwarded through the outbound interface with the highest priority (lowest route metric).
+
+            If enabled, all other properties of the interface are ignored, except for the first IP address in the addresses list,
+            which is used as the server address for the DHCP server.
   securitySchemes:
     OAuth2:
       type: oauth2
