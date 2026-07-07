@@ -15,6 +15,397 @@ info:
 servers:
 - url: /u-os-adm/api/v1
 paths:
+  /firewall/active-config:
+    get:
+      tags:
+      - firewall
+      summary: Get the currently active firewall configuration.
+      description: |-
+        Check the `Persistence`- and `Rollback-At`-Header for the status of the configuration (persistent, temporary, time until rollback).
+
+        The response carries an `ETag` header derived from the configuration. Use its value in an
+        `If-Match` header when calling `PUT`/`PATCH` to guard against lost updates.
+
+        The `Persistence` header indicates whether the active configuration is persistent or a temporary test configuration.
+
+        The `Rollback-At` header (if present) specifies when the automatic rollback will occur.
+        The timestamp is expressed in the device's system time.
+        Clients should compare it with the `Date` header rather than their local clock when calculating the time remaining until the rollback.
+      operationId: get_firewall_active_config
+      responses:
+        '200':
+          description: The currently active firewall configuration
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: Opaque token identifying the current resource version. Return it unchanged in the `If-Match` header on subsequent `PUT`/`PATCH` requests to prevent lost updates (optimistic locking).
+            Persistence:
+              schema:
+                type: string
+              description: 'Persistence state of the configuration: `Persistent` (persisted across reboots) or `Temporary`.'
+            Rollback-At:
+              schema:
+                type: string
+              description: Only present when a `Temporary` configuration has a scheduled rollback. The time at which the configuration will automatically revert to the persistent configuration, represented as an HTTP-date (for example, `Sun, 06 Nov 2025 08:49:37 GMT`). The timestamp is expressed in the device's system time. Clients SHOULD compare it with the HTTP `Date` response header rather than their local clock when calculating the time remaining until the rollback.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FirewallConfig'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.firewall.readonly
+      - OAuth2:
+        - u-os-adm.firewall.readwrite
+    put:
+      tags:
+      - firewall
+      summary: Set a temporary override on the active firewall configuration.
+      description: |-
+        This endpoint is intended to test a configuration before applying it persistently to prevent
+        misconfigurations that could lock the user out of the system.
+
+        The config will be applied directly and temporarily.
+        Please use `/firewall/config` to apply a configuration persistently.
+
+        By default the temporary config will be rolled back after reboot or `/firewall:reload`,
+        but you can also set a timeout for the automatic rollback to the persistent configuration with the "timeout" query parameter (in seconds).
+
+        Provide an `If-Match` header with the `ETag` of the currently active configuration to apply the
+        change only if the active configuration has not been modified in the meantime (optimistic locking).
+      operationId: set_firewall_active_config
+      parameters:
+      - name: timeout
+        in: query
+        description: |-
+          Number of seconds after which the temporary configuration
+          is automatically rolled back to the persistent configuration.
+        required: false
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      - name: If-Match
+        in: header
+        description: Apply the request only if the current resource version matches this `ETag` (optimistic locking). If no match is found, 412 is returned.
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FirewallConfig'
+        required: true
+      responses:
+        '200':
+          description: The firewall config has been applied temporarily
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: Opaque token identifying the current resource version. Return it unchanged in the `If-Match` header on subsequent `PUT`/`PATCH` requests to prevent lost updates (optimistic locking).
+            Persistence:
+              schema:
+                type: string
+              description: 'Persistence state of the configuration: `Persistent` (persisted across reboots) or `Temporary`.'
+            Rollback-At:
+              schema:
+                type: string
+              description: Only present when a `Temporary` configuration has a scheduled rollback. The time at which the configuration will automatically revert to the persistent configuration, represented as an HTTP-date (for example, `Sun, 06 Nov 2025 08:49:37 GMT`). The timestamp is expressed in the device's system time. Clients SHOULD compare it with the HTTP `Date` response header rather than their local clock when calculating the time remaining until the rollback.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FirewallConfig'
+        '412':
+          description: The supplied `If-Match` precondition did not match the current resource version. The resource was modified by someone else in the meantime. Re-fetch the resource to obtain the current `ETag` and retry.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.firewall.readwrite
+    head:
+      tags:
+      - firewall
+      summary: |-
+        Check active firewall configuration metadata.
+        Returns `ETag`, persistence state, and scheduled rollback time without transferring the configuration body.
+      description: |-
+        Returns the same `ETag`, `Persistence` and `Rollback-At` headers as `GET /firewall/active-config`
+        but without a response body. Useful for cheaply polling the configuration's entity tag and
+        rollback state.
+      operationId: head_firewall_active_config
+      responses:
+        '200':
+          description: Headers describing the active firewall configuration
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: Opaque token identifying the current resource version. Return it unchanged in the `If-Match` header on subsequent `PUT`/`PATCH` requests to prevent lost updates (optimistic locking).
+            Persistence:
+              schema:
+                type: string
+              description: 'Persistence state of the configuration: `Persistent` (persisted across reboots) or `Temporary`.'
+            Rollback-At:
+              schema:
+                type: string
+              description: Only present when a `Temporary` configuration has a scheduled rollback. The time at which the configuration will automatically revert to the persistent configuration, represented as an HTTP-date (for example, `Sun, 06 Nov 2025 08:49:37 GMT`). The timestamp is expressed in the device's system time. Clients SHOULD compare it with the HTTP `Date` response header rather than their local clock when calculating the time remaining until the rollback.
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.firewall.readonly
+      - OAuth2:
+        - u-os-adm.firewall.readwrite
+    patch:
+      tags:
+      - firewall
+      summary: Modify the active firewall configuration with a temporary override.
+      description: |-
+        Same as the `PUT /firewall/active-config` endpoint but allows partial updates.
+        If no temporary configuration is active, the persistent configuration is used as
+        the basis for the PATCH and rolled out temporarily along with the change.
+
+        By default the temporary config will be rolled back after reboot or `/firewall:reload`,
+        but you can also set a timeout for the automatic rollback to the persistent configuration with the "timeout" query parameter (in seconds).
+
+        Provide an `If-Match` header with the `ETag` of the currently active configuration to apply the
+        change only if the active configuration has not been modified in the meantime (optimistic locking).
+      operationId: update_firewall_active_config
+      parameters:
+      - name: timeout
+        in: query
+        description: |-
+          Number of seconds after which the temporary configuration
+          is automatically rolled back to the persistent configuration.
+        required: false
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      - name: If-Match
+        in: header
+        description: Apply the request only if the current resource version matches this `ETag` (optimistic locking). If no match is found, 412 is returned.
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PartialFirewallConfig'
+        required: true
+      responses:
+        '200':
+          description: The new active firewall config has been applied temporary
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: Opaque token identifying the current resource version. Return it unchanged in the `If-Match` header on subsequent `PUT`/`PATCH` requests to prevent lost updates (optimistic locking).
+            Persistence:
+              schema:
+                type: string
+              description: 'Persistence state of the configuration: `Persistent` (persisted across reboots) or `Temporary`.'
+            Rollback-At:
+              schema:
+                type: string
+              description: Only present when a `Temporary` configuration has a scheduled rollback. The time at which the configuration will automatically revert to the persistent configuration, represented as an HTTP-date (for example, `Sun, 06 Nov 2025 08:49:37 GMT`). The timestamp is expressed in the device's system time. Clients SHOULD compare it with the HTTP `Date` response header rather than their local clock when calculating the time remaining until the rollback.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FirewallConfig'
+        '412':
+          description: The supplied `If-Match` precondition did not match the current resource version. The resource was modified by someone else in the meantime. Re-fetch the resource to obtain the current `ETag` and retry.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.firewall.readwrite
+  /firewall/config:
+    get:
+      tags:
+      - firewall
+      summary: Get the persistent firewall configuration.
+      description: |-
+        The persistent firewall configuration is permanently stored on the device and applied after each boot.
+
+        The firewall configuration may have been overridden by a temporary configuration.
+        Use the `/firewall/active-config` endpoint to get the currently active config.
+
+        The response carries an `ETag` header derived from the persistent configuration. Use its value
+        in an `If-Match` header on `PUT`/`PATCH` to guard against lost updates.
+      operationId: get_firewall_config
+      responses:
+        '200':
+          description: The current persistent firewall config
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: Opaque token identifying the current resource version. Return it unchanged in the `If-Match` header on subsequent `PUT`/`PATCH` requests to prevent lost updates (optimistic locking).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FirewallConfig'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.firewall.readonly
+      - OAuth2:
+        - u-os-adm.firewall.readwrite
+    put:
+      tags:
+      - firewall
+      summary: Set the persistent firewall configuration.
+      description: |-
+        This will be applied directly and persistently. Please use `/firewall/active-config` beforehand to test a configuration without applying it persistently.
+        A call to this endpoint also removes the temporary configuration if it exists.
+      operationId: set_firewall_config
+      parameters:
+      - name: If-Match
+        in: header
+        description: Apply the request only if the current resource version matches this `ETag` (optimistic locking). If no match is found, 412 is returned.
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FirewallConfig'
+        required: true
+      responses:
+        '200':
+          description: The new persistent firewall config has been applied
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: Opaque token identifying the current resource version. Return it unchanged in the `If-Match` header on subsequent `PUT`/`PATCH` requests to prevent lost updates (optimistic locking).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FirewallConfig'
+        '412':
+          description: The supplied `If-Match` precondition did not match the current resource version. The resource was modified by someone else in the meantime. Re-fetch the resource to obtain the current `ETag` and retry.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.firewall.readwrite
+    patch:
+      tags:
+      - firewall
+      summary: Modify the persistent firewall configuration.
+      description: Same as the `PUT /firewall/config` endpoint but allows partial updates.
+      operationId: update_firewall_config
+      parameters:
+      - name: If-Match
+        in: header
+        description: Apply the request only if the current resource version matches this `ETag` (optimistic locking). If no match is found, 412 is returned.
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PartialFirewallConfig'
+        required: true
+      responses:
+        '200':
+          description: The new persistent firewall config has been applied
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: Opaque token identifying the current resource version. Return it unchanged in the `If-Match` header on subsequent `PUT`/`PATCH` requests to prevent lost updates (optimistic locking).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FirewallConfig'
+        '412':
+          description: The supplied `If-Match` precondition did not match the current resource version. The resource was modified by someone else in the meantime. Re-fetch the resource to obtain the current `ETag` and retry.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.firewall.readwrite
+  /firewall:reload:
+    post:
+      tags:
+      - firewall
+      summary: Reloads the firewall configuration, which deletes the temporary config and rolls back to the persistent config.
+      description: |-
+        But does nothing if no temporary firewall configuration is active.
+
+        The temporary config will be deleted! Use `/firewall/config` to persist the temporary config if you want to keep the changes.
+      operationId: reload_firewall_config
+      responses:
+        '200':
+          description: The temporary firewall config has been deleted and the persistent config has been applied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FirewallConfig'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.firewall.readwrite
   /logging/entries:
     get:
       tags:
@@ -241,7 +632,7 @@ paths:
         content:
           application/merge-patch+json:
             schema:
-              $ref: '#/components/schemas/UpdateNetworkConfig'
+              $ref: '#/components/schemas/PartialNetworkConfig'
         required: true
       responses:
         '200':
@@ -504,7 +895,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CertificatesPatch'
+              $ref: '#/components/schemas/PartialCertificates'
         required: true
       responses:
         '200':
@@ -865,49 +1256,6 @@ components:
               -----BEGIN CERTIFICATE-----
               ...
               -----END CERTIFICATE-----
-    CertificatesPatch:
-      type: object
-      description: |-
-        Patch body for partial certificate updates (JSON Merge Patch semantics).
-
-        - Absent type: no changes to that certificate type.
-        - Present type with entries:
-          - `"name": { "content": "..." }` → add or overwrite certificate
-          - `"name": null` → delete certificate
-      properties:
-        client_cert:
-          type:
-          - object
-          - 'null'
-          description: |-
-            Changes to client certificates.
-            Map entries with value `null` will be deleted.
-          additionalProperties:
-            $ref: '#/components/schemas/CertificateEntry'
-          propertyNames:
-            type: string
-        client_key:
-          type:
-          - object
-          - 'null'
-          description: |-
-            Changes to client private keys.
-            Map entries with value `null` will be deleted.
-          additionalProperties:
-            $ref: '#/components/schemas/CertificateEntry'
-          propertyNames:
-            type: string
-        server_ca:
-          type:
-          - object
-          - 'null'
-          description: |-
-            Changes to server CA certificates.
-            Map entries with value `null` will be deleted.
-          additionalProperties:
-            $ref: '#/components/schemas/CertificateEntry'
-          propertyNames:
-            type: string
     CreateLogReportResponse:
       type: object
       required:
@@ -1009,6 +1357,235 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Disk'
+    DnatAction:
+      oneOf:
+      - $ref: '#/components/schemas/DnatActionForward'
+      - $ref: '#/components/schemas/DnatActionRedirect'
+    DnatActionForward:
+      type: object
+      description: Forward to another host/port.
+      required:
+      - mode
+      - new_destination
+      properties:
+        mode:
+          type: string
+          enum:
+          - FORWARD
+        new_destination:
+          type: string
+          description: IPv4 address only. Accepts 'A.B.C.D'.
+        new_dport:
+          type:
+          - integer
+          - 'null'
+          format: int32
+          maximum: 65535
+          minimum: 0
+    DnatActionRedirect:
+      type: object
+      description: Redirect to the firewall host itself
+      required:
+      - mode
+      - local_dport
+      properties:
+        local_dport:
+          type: integer
+          format: int32
+          maximum: 65535
+          minimum: 0
+        mode:
+          type: string
+          description: Redirect to the firewall host itself
+          enum:
+          - REDIRECT
+    FailoverGlobalConfig:
+      type: object
+      description: |-
+        Global failover configuration.
+
+        Controls the probe loop that monitors all configured interfaces and adjusts
+        their route metrics based on connectivity probe results.
+      required:
+      - probe_interval_seconds
+      - failure_threshold
+      - success_threshold
+      properties:
+        failure_threshold:
+          type: integer
+          format: int32
+          description: Number of consecutive failed probes before an interface is considered failed and penalised.
+          example: 3
+          minimum: 1
+        probe_interval_seconds:
+          type: integer
+          format: int64
+          description: Interval between failover probes in seconds.
+          example: 10
+          minimum: 1
+        success_threshold:
+          type: integer
+          format: int32
+          description: Number of consecutive successful probes before an interface is considered healthy and unpenalised.
+          example: 3
+          minimum: 1
+    FailoverInterfaceConfig:
+      type: object
+      description: |-
+        Failover configuration for a single monitored interface.
+
+        When enabled, the probe loop checks connectivity on this interface. If
+        `failure_threshold` consecutive probes fail the interface is penalised by
+        settings its active metric to `failed_metric`. Once `success_threshold`
+        consecutive probes succeed the metric is restored to the interface's
+        configured `metric` value.
+      required:
+      - enabled
+      - probe_target
+      - failed_metric
+      properties:
+        enabled:
+          type: boolean
+          description: Whether failover probing is enabled for this interface.
+        failed_metric:
+          type: integer
+          format: int32
+          description: |-
+            Network interface metric (priority) that is applied when the interface has failed probing.
+            Should be higher than all normal interface metrics to ensure traffic is routed through healthy interfaces.
+          example: 20000
+          minimum: 1
+        probe_target:
+          $ref: '#/components/schemas/ProbeTarget'
+          description: Probe target for connectivity checks (IPv4 address or hostname, optionally with port e.g. "1.1.1.1:5000").
+    FilterRules:
+      type: object
+      required:
+      - policy
+      - input
+      - output
+      - forward
+      properties:
+        forward:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ForwardRule'
+          propertyNames:
+            type: string
+            description: Identifier of a firewall rule. Used as the map key and to reference it in patch operations.
+            pattern: ^[A-Za-z0-9:._-]{1,63}$
+        input:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/InputRule'
+          propertyNames:
+            type: string
+            description: Identifier of a firewall rule. Used as the map key and to reference it in patch operations.
+            pattern: ^[A-Za-z0-9:._-]{1,63}$
+        output:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/OutputRule'
+          propertyNames:
+            type: string
+            description: Identifier of a firewall rule. Used as the map key and to reference it in patch operations.
+            pattern: ^[A-Za-z0-9:._-]{1,63}$
+        policy:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/InterfacePolicy'
+          propertyNames:
+            type: string
+    FirewallConfig:
+      type: object
+      description: |-
+        Custom firewall configuration. Contains filter and nat rules.
+
+        If an array is empty, it means "match all".
+        For example, an `InputRule` with an empty `source` matches packets from any source address.
+
+        Connections in the established or related conntrack state are accepted automatically. Therefore, no explicit rules are required for the return path.
+      required:
+      - filter
+      - nat
+      properties:
+        filter:
+          $ref: '#/components/schemas/FilterRules'
+        nat:
+          $ref: '#/components/schemas/NatRules'
+      example:
+        filter:
+          forward: {}
+          input:
+            allow-192.168.1.120:
+              action: ACCEPT
+              description: Allow packets from '192.168.1.120'
+              match:
+                destination: []
+                dport: []
+                in_interface:
+                - eth-x4
+                protocol: ANY
+                source:
+                - 192.168.1.120
+                sport: []
+              priority: 100
+          output:
+            allow-192.168.1.120:
+              action: ACCEPT
+              description: Allow packets to '192.168.1.120
+              match:
+                destination:
+                - 192.168.1.120
+                dport: []
+                out_interface:
+                - eth-x4
+                protocol: ANY
+                source: []
+                sport: []
+              priority: 100
+          policy:
+            eth-x4:
+              forward: DROP
+              input: DROP
+              output: DROP
+            eth-x5:
+              forward: OS_DEFAULT
+              input: OS_DEFAULT
+              output: OS_DEFAULT
+        nat:
+          postrouting:
+            masquerade-to-192.168.3.122:
+              action:
+                mode: MASQUERADE
+              description: Masquerade forwarded packets so replies return via the firewall
+              match:
+                destination:
+                - 192.168.3.122
+                dport: []
+                out_interface:
+                - eth-x5
+                protocol: ANY
+                source: []
+                sport: []
+              priority: 100
+          prerouting:
+            forward-8080-to-192.168.3.122:
+              action:
+                mode: FORWARD
+                new_destination: 192.168.3.122
+                new_dport: 80
+              description: Forward incoming TCP port 8080 to '192.168.3.122:80'
+              match:
+                destination: []
+                dport:
+                - '8080'
+                in_interface:
+                - eth-x4
+                protocol: TCP
+                source: []
+                sport: []
+              priority: 100
     Firmware:
       type: object
       required:
@@ -1019,6 +1596,88 @@ components:
           type: string
         version:
           type: string
+    ForwardMatch:
+      allOf:
+      - type: object
+        required:
+        - protocol
+        - dport
+        - sport
+        - source
+        - destination
+        properties:
+          destination:
+            type: array
+            items:
+              type: string
+              description: |-
+                IPv4 address, CIDR subnet, or address range. Accepts 'A.B.C.D', 'A.B.C.D/N',
+                or 'A.B.C.D-A.B.C.D'.
+          dport:
+            type: array
+            items:
+              type: string
+              description: TCP/UDP port (0..=65535) or inclusive port range. Accepts 'PORT' or 'START-END'.
+          protocol:
+            type: string
+            description: |-
+              Specifying `sport` or `dport` with the protocol set to `ANY` implicitly limits protocol matching
+              to TCP, UDP, SCTP, and DCCP, as only these protocols support port numbers.
+              Otherwise, `ANY` matches all protocols.
+            enum:
+            - ANY
+            - TCP
+            - UDP
+          source:
+            type: array
+            items:
+              type: string
+              description: |-
+                IPv4 address, CIDR subnet, or address range. Accepts 'A.B.C.D', 'A.B.C.D/N',
+                or 'A.B.C.D-A.B.C.D'.
+          sport:
+            type: array
+            items:
+              type: string
+              description: TCP/UDP port (0..=65535) or inclusive port range. Accepts 'PORT' or 'START-END'.
+      - type: object
+        required:
+        - in_interface
+        - out_interface
+        properties:
+          in_interface:
+            type: array
+            items:
+              type: string
+              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard, or a bare '*'.
+              pattern: ^(?:\*|[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?)$
+          out_interface:
+            type: array
+            items:
+              type: string
+              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard, or a bare '*'.
+              pattern: ^(?:\*|[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?)$
+    ForwardRule:
+      type: object
+      required:
+      - description
+      - priority
+      - match
+      - action
+      properties:
+        action:
+          $ref: '#/components/schemas/RuleAction'
+        description:
+          type: string
+          description: Human-readable comment for a firewall rule. The value is restricted to printable ASCII without quotes or backslashes.
+          pattern: ^[ -!#-\[\]-~]{0,128}$
+        match:
+          $ref: '#/components/schemas/ForwardMatch'
+        priority:
+          type: integer
+          format: int32
+          description: Sort order of the rule. Lower values are evaluated first.
+          minimum: 0
     GlobalDnsServers:
       type: object
       description: |-
@@ -1096,9 +1755,84 @@ components:
 
             The last part of the URI is always a `ErrorId`
           example: /u-os-adm/api/v1/errors/set-security-settings
+    InboundMatch:
+      allOf:
+      - type: object
+        required:
+        - protocol
+        - dport
+        - sport
+        - source
+        - destination
+        properties:
+          destination:
+            type: array
+            items:
+              type: string
+              description: |-
+                IPv4 address, CIDR subnet, or address range. Accepts 'A.B.C.D', 'A.B.C.D/N',
+                or 'A.B.C.D-A.B.C.D'.
+          dport:
+            type: array
+            items:
+              type: string
+              description: TCP/UDP port (0..=65535) or inclusive port range. Accepts 'PORT' or 'START-END'.
+          protocol:
+            type: string
+            description: |-
+              Specifying `sport` or `dport` with the protocol set to `ANY` implicitly limits protocol matching
+              to TCP, UDP, SCTP, and DCCP, as only these protocols support port numbers.
+              Otherwise, `ANY` matches all protocols.
+            enum:
+            - ANY
+            - TCP
+            - UDP
+          source:
+            type: array
+            items:
+              type: string
+              description: |-
+                IPv4 address, CIDR subnet, or address range. Accepts 'A.B.C.D', 'A.B.C.D/N',
+                or 'A.B.C.D-A.B.C.D'.
+          sport:
+            type: array
+            items:
+              type: string
+              description: TCP/UDP port (0..=65535) or inclusive port range. Accepts 'PORT' or 'START-END'.
+      - type: object
+        required:
+        - in_interface
+        properties:
+          in_interface:
+            type: array
+            items:
+              type: string
+              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard, or a bare '*'.
+              pattern: ^(?:\*|[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?)$
+    InputRule:
+      type: object
+      required:
+      - description
+      - priority
+      - match
+      - action
+      properties:
+        action:
+          $ref: '#/components/schemas/RuleAction'
+        description:
+          type: string
+          description: Human-readable comment for a firewall rule. The value is restricted to printable ASCII without quotes or backslashes.
+          pattern: ^[ -!#-\[\]-~]{0,128}$
+        match:
+          $ref: '#/components/schemas/InboundMatch'
+        priority:
+          type: integer
+          format: int32
+          description: Sort order of the rule. Lower values are evaluated first.
+          minimum: 0
     InterfaceConfig:
       type: object
-      description: Represents the configuration of a single network interface, used for putting.
+      description: Represents the configuration of a single network interface.
       required:
       - ipv4_config
       properties:
@@ -1106,6 +1840,56 @@ components:
           type: boolean
         ipv4_config:
           $ref: '#/components/schemas/Ipv4Config'
+    InterfaceFailoverState:
+      type: object
+      description: Failover state of a single interface exposed via the network state endpoint.
+      required:
+      - state
+      - fail_count
+      - success_count
+      properties:
+        fail_count:
+          type: integer
+          format: int32
+          description: Number of consecutive failed probes since the last success.
+          minimum: 0
+        state:
+          $ref: '#/components/schemas/InterfaceProbeState'
+          description: Current probe state of this interface.
+        success_count:
+          type: integer
+          format: int32
+          description: Number of consecutive successful probes since the last failure.
+          minimum: 0
+    InterfacePolicy:
+      type: object
+      description: |-
+        Specifies the default action for packets that do not match any rule on a specific interface.
+
+        This allows you to configure whether the rules are an allowlist or a blocklist.
+      required:
+      - input
+      - output
+      - forward
+      properties:
+        forward:
+          $ref: '#/components/schemas/PolicyType'
+        input:
+          $ref: '#/components/schemas/PolicyType'
+        output:
+          $ref: '#/components/schemas/PolicyType'
+    InterfaceProbeState:
+      type: string
+      description: |-
+        The current failover probe state of a monitored interface.
+
+        - `HEALTHY`: Enabled and passing probes.
+        - `PROBING`: Transitional state on the path to failure or recovery.
+        - `FAILED`: Penalised — using an elevated metric because probes are failing.
+      enum:
+      - HEALTHY
+      - PROBING
+      - FAILED
     InterfaceState:
       type: object
       description: Represents the current state of a network interface.
@@ -1113,6 +1897,11 @@ components:
       - type
       - ipv4
       properties:
+        failover:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/InterfaceFailoverState'
+            description: Failover state, present only when failover is configured globally.
         ipv4:
           $ref: '#/components/schemas/Ipv4State'
         type:
@@ -1125,7 +1914,7 @@ components:
       - USB
     Ipv4Config:
       type: object
-      description: Represents the IPv4 configuration of a network interface, used for putting.
+      description: Represents the IPv4 configuration of a network interface.
       required:
       - dhcp
       - addresses
@@ -1142,12 +1931,25 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Ipv4String'
+        failover:
+          $ref: '#/components/schemas/FailoverInterfaceConfig'
         gateway:
           oneOf:
           - type: 'null'
           - type: string
             format: ipv4
             description: Represents an IPv4 address in a string format.
+        metric:
+          type: integer
+          format: int32
+          description: |-
+            Normal route metric (priority) for this interface. Lower values have higher priority.
+            If a value of -1 is specified, the system will choose the metric automatically.
+
+            If failover is enabled, the actual metric of the interface is
+            dynamic and may change between metric and `failed_metric` depending on the probe state.
+          example: 100
+          minimum: -1
         shared_mode:
           $ref: '#/components/schemas/SharedModeConfig'
     Ipv4PrefixLength:
@@ -1254,6 +2056,18 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/LogSource'
+    MasqueradeAction:
+      type: object
+      description: |-
+        The source address is replaced depending on the routing destination
+        (e.g. with the outgoing interface's IP address).
+      required:
+      - mode
+      properties:
+        mode:
+          type: string
+          enum:
+          - MASQUERADE
     Memory:
       type: object
       required:
@@ -1268,6 +2082,30 @@ components:
           type: integer
           format: int64
           minimum: 0
+    NatRules:
+      type: object
+      required:
+      - prerouting
+      - postrouting
+      properties:
+        postrouting:
+          type: object
+          description: Postrouting masquerade and snat rules
+          additionalProperties:
+            $ref: '#/components/schemas/PostroutingRule'
+          propertyNames:
+            type: string
+            description: Identifier of a firewall rule. Used as the map key and to reference it in patch operations.
+            pattern: ^[A-Za-z0-9:._-]{1,63}$
+        prerouting:
+          type: object
+          description: Prerouting DNAT rules
+          additionalProperties:
+            $ref: '#/components/schemas/PreroutingRule'
+          propertyNames:
+            type: string
+            description: Identifier of a firewall rule. Used as the map key and to reference it in patch operations.
+            pattern: ^[A-Za-z0-9:._-]{1,63}$
     NetworkConfig:
       type: object
       description: Used for writing the network configuration. All fields are required to be present, but can be empty in some cases.
@@ -1275,6 +2113,9 @@ components:
       - hostname
       - interfaces
       properties:
+        failover:
+          $ref: '#/components/schemas/FailoverGlobalConfig'
+          description: Global failover probe settings.
         hostname:
           type: string
           format: hostname
@@ -1297,7 +2138,12 @@ components:
                 dhcp: false
                 dns:
                 - 8.8.8.8
+                failover:
+                  enabled: true
+                  failed_metric: 20000
+                  probe_target: dns.google
                 gateway: 192.168.1.1
+                metric: 200
                 shared_mode:
                   dhcp_ip_range:
                     end: 192.168.1.150
@@ -1310,7 +2156,12 @@ components:
                 addresses: []
                 dhcp: true
                 dns: []
+                failover:
+                  enabled: true
+                  failed_metric: 20001
+                  probe_target: 1.1.1.1
                 gateway: null
+                metric: 100
                 shared_mode:
                   dhcp_ip_range: null
                   dhcp_lease_time_sec: null
@@ -1418,6 +2269,60 @@ components:
           type: string
           enum:
           - PENDING
+    OutboundMatch:
+      allOf:
+      - type: object
+        required:
+        - protocol
+        - dport
+        - sport
+        - source
+        - destination
+        properties:
+          destination:
+            type: array
+            items:
+              type: string
+              description: |-
+                IPv4 address, CIDR subnet, or address range. Accepts 'A.B.C.D', 'A.B.C.D/N',
+                or 'A.B.C.D-A.B.C.D'.
+          dport:
+            type: array
+            items:
+              type: string
+              description: TCP/UDP port (0..=65535) or inclusive port range. Accepts 'PORT' or 'START-END'.
+          protocol:
+            type: string
+            description: |-
+              Specifying `sport` or `dport` with the protocol set to `ANY` implicitly limits protocol matching
+              to TCP, UDP, SCTP, and DCCP, as only these protocols support port numbers.
+              Otherwise, `ANY` matches all protocols.
+            enum:
+            - ANY
+            - TCP
+            - UDP
+          source:
+            type: array
+            items:
+              type: string
+              description: |-
+                IPv4 address, CIDR subnet, or address range. Accepts 'A.B.C.D', 'A.B.C.D/N',
+                or 'A.B.C.D-A.B.C.D'.
+          sport:
+            type: array
+            items:
+              type: string
+              description: TCP/UDP port (0..=65535) or inclusive port range. Accepts 'PORT' or 'START-END'.
+      - type: object
+        required:
+        - out_interface
+        properties:
+          out_interface:
+            type: array
+            items:
+              type: string
+              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard, or a bare '*'.
+              pattern: ^(?:\*|[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?)$
     OutputReachability:
       type: string
       description: Reachability status of a syslog output destination.
@@ -1425,6 +2330,27 @@ components:
       - CONNECTED
       - ERROR
       - PENDING
+    OutputRule:
+      type: object
+      required:
+      - description
+      - priority
+      - match
+      - action
+      properties:
+        action:
+          $ref: '#/components/schemas/RuleAction'
+        description:
+          type: string
+          description: Human-readable comment for a firewall rule. The value is restricted to printable ASCII without quotes or backslashes.
+          pattern: ^[ -!#-\[\]-~]{0,128}$
+        match:
+          $ref: '#/components/schemas/OutboundMatch'
+        priority:
+          type: integer
+          format: int32
+          description: Sort order of the rule. Lower values are evaluated first.
+          minimum: 0
     OutputState:
       type: object
       description: Health information for a single syslog output.
@@ -1440,6 +2366,203 @@ components:
             - `error` — The output is experiencing delivery failures and is currently retrying.
             - `pending` — Reachability cannot be determined yet, because no logs have been
               attempted to be sent so far (e.g. just started or filter-config filtered out all logs).
+    PartialCertificates:
+      type: object
+      description: |-
+        All certificates organized by type.
+
+         Each certificate type maps certificate names (keys) to their entries. (PATCH)
+      properties:
+        client_cert:
+          type: object
+          description: Client certificates for mutual TLS authentication.
+          additionalProperties: true
+        client_key:
+          type: object
+          description: Client private keys for mutual TLS authentication.
+          additionalProperties: true
+        server_ca:
+          type: object
+          description: CA certificates for verifying the syslog server's identity.
+          additionalProperties: true
+    PartialDhcpIpv4Range:
+      type: object
+      description: Represents a range of IPv4 addresses (PATCH)
+      properties:
+        end:
+          $ref: '#/components/schemas/Ipv4String'
+          description: End of the range (inclusive)
+        start:
+          $ref: '#/components/schemas/Ipv4String'
+          description: Start of the range (inclusive)
+    PartialFailoverGlobalConfig:
+      type: object
+      description: |-
+        Global failover configuration.
+
+         Controls the probe loop that monitors all configured interfaces and adjusts
+         their route metrics based on connectivity probe results. (PATCH)
+      properties:
+        failure_threshold:
+          type: integer
+          format: int32
+          description: Number of consecutive failed probes before an interface is considered failed and penalised.
+          example: 3
+          minimum: 1
+        probe_interval_seconds:
+          type: integer
+          format: int64
+          description: Interval between failover probes in seconds.
+          example: 10
+          minimum: 1
+        success_threshold:
+          type: integer
+          format: int32
+          description: Number of consecutive successful probes before an interface is considered healthy and unpenalised.
+          example: 3
+          minimum: 1
+    PartialFailoverInterfaceConfig:
+      type: object
+      description: |-
+        Failover configuration for a single monitored interface.
+
+         When enabled, the probe loop checks connectivity on this interface. If
+         `failure_threshold` consecutive probes fail the interface is penalised by
+         settings its active metric to `failed_metric`. Once `success_threshold`
+         consecutive probes succeed the metric is restored to the interface's
+         configured `metric` value. (PATCH)
+      properties:
+        enabled:
+          type: boolean
+          description: Whether failover probing is enabled for this interface.
+        failed_metric:
+          type: integer
+          format: int32
+          description: |-
+            Network interface metric (priority) that is applied when the interface has failed probing.
+            Should be higher than all normal interface metrics to ensure traffic is routed through healthy interfaces.
+          example: 20000
+          minimum: 1
+        probe_target:
+          $ref: '#/components/schemas/ProbeTarget'
+          description: Probe target for connectivity checks (IPv4 address or hostname, optionally with port e.g. "1.1.1.1:5000").
+    PartialFilterRules:
+      type: object
+      properties:
+        forward:
+          type: object
+          additionalProperties: true
+        input:
+          type: object
+          additionalProperties: true
+        output:
+          type: object
+          additionalProperties: true
+        policy:
+          type: object
+          additionalProperties: true
+    PartialFirewallConfig:
+      type: object
+      description: |-
+        Custom firewall configuration. Contains filter and nat rules.
+
+         If an array is empty, it means "match all".
+         For example, an `InputRule` with an empty `source` matches packets from any source address.
+
+         Connections in the established or related conntrack state are accepted automatically. Therefore, no explicit rules are required for the return path. (PATCH)
+      properties:
+        filter:
+          $ref: '#/components/schemas/PartialFilterRules'
+        nat:
+          $ref: '#/components/schemas/PartialNatRules'
+    PartialInterfaceConfig:
+      type: object
+      description: Represents the configuration of a single network interface. (PATCH)
+      properties:
+        enabled:
+          type: boolean
+        ipv4_config:
+          $ref: '#/components/schemas/PartialIpv4Config'
+    PartialIpv4Config:
+      type: object
+      description: Represents the IPv4 configuration of a network interface. (PATCH)
+      properties:
+        addresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ipv4Subnet'
+        dhcp:
+          type: boolean
+        dns:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ipv4String'
+        failover:
+          $ref: '#/components/schemas/PartialFailoverInterfaceConfig'
+        gateway:
+          oneOf:
+          - type: 'null'
+          - type: string
+            format: ipv4
+            description: Represents an IPv4 address in a string format.
+        metric:
+          type: integer
+          format: int32
+          description: |-
+            Normal route metric (priority) for this interface. Lower values have higher priority.
+            If a value of -1 is specified, the system will choose the metric automatically.
+
+            If failover is enabled, the actual metric of the interface is
+            dynamic and may change between metric and `failed_metric` depending on the probe state.
+          example: 100
+          minimum: -1
+        shared_mode:
+          $ref: '#/components/schemas/PartialSharedModeConfig'
+    PartialNatRules:
+      type: object
+      properties:
+        postrouting:
+          type: object
+          description: Postrouting masquerade and snat rules
+          additionalProperties: true
+        prerouting:
+          type: object
+          description: Prerouting DNAT rules
+          additionalProperties: true
+    PartialNetworkConfig:
+      type: object
+      description: Used for writing the network configuration. All fields are required to be present, but can be empty in some cases. (PATCH)
+      properties:
+        failover:
+          $ref: '#/components/schemas/PartialFailoverGlobalConfig'
+          description: Global failover probe settings.
+        hostname:
+          type: string
+          format: hostname
+          example: wm-uc20-m3000
+          maxLength: 63
+          minLength: 1
+        interfaces:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/PartialInterfaceConfig'
+          propertyNames:
+            type: string
+          example:
+            eth-x4:
+              ipv4_config:
+                dhcp: false
+                gateway: null
+                shared_mode:
+                  enabled: true
+            eth-x5:
+              enabled: true
+              ipv4_config:
+                dhcp: true
+        service_interface:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/PartialServiceInterfaceConfig'
     PartialRecipeSigning:
       type: object
       properties:
@@ -1464,9 +2587,52 @@ components:
                 ...
                 -----END PGP PUBLIC KEY BLOCK-----
             delete-me: null
+    PartialServiceInterfaceConfig:
+      type: object
+      description: Represents the configuration of the service interface. (PATCH)
+      properties:
+        enabled:
+          type: boolean
+    PartialSharedModeConfig:
+      type: object
+      description: Configuration options for interface sharing (PATCH)
+      properties:
+        dhcp_ip_range:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/PartialDhcpIpv4Range'
+            description: |-
+              Configure the DHCP server IP range.
+
+              The IP range must be in the same subnet as the server address, otherwise an error will be returned.
+              If not set, an IP range adjacent to the server address will be used.
+              Should not contain network address or broadcast address.
+        dhcp_lease_time_sec:
+          type:
+          - integer
+          - 'null'
+          format: int32
+          description: |-
+            Configure the DHCP server lease time in seconds.
+
+            Allowed values:
+
+            - 0 or empty: Default lease time (1h)
+            - 2147483647 (max int32): Infinite lease time
+            - 120-31536000: Valid range between 2 minutes and 1 year
+          minimum: 0
+        enabled:
+          type: boolean
+          description: |-
+            If enabled, this device acts as a mini router and may provide internet access to other devices connected to it.
+            This includes enabling a DHCP server on the device, which will assign IP addresses to connected devices, as well as hosting a DNS server.
+            Traffic will be forwarded through the outbound interface with the highest priority (lowest route metric).
+
+            If enabled, all other properties of the interface are ignored, except for the first IP address in the addresses list,
+            which is used as the server address for the DHCP server.
     PartialUpdateSettings:
       type: object
-      description: Represents the update configuration for the system used in patch.
+      description: Represents the update configuration for the system used in get and put. (PATCH)
       properties:
         removable_media_update:
           type: object
@@ -1504,6 +2670,7 @@ components:
                 This can be useful e.g. to only allow custom, self signed updates to the device.
             user_gpg_keys:
               type: object
+              description: User specific GPG public keys that are used to verify software updates.
               additionalProperties: true
               example:
                 another-gpg-key:
@@ -1513,6 +2680,80 @@ components:
                     ...
                     -----END PGP PUBLIC KEY BLOCK-----
                 delete-me: null
+    PolicyType:
+      type: string
+      description: |-
+        `Drop` - By default, the firewall blocks all packets, unless there is an explicit rule added that allows the packet.
+        Allows to build an 'Allow List' by adding new firewall filter rules. Be careful, this may lock you out of your system unless you add an explicit allow rule!
+
+        `Accept` - By default, all packets are accepted by the firewall. If packets should be blocked, rules with DROP action need to be explicitly added.
+        Allows to build a 'Block List' by adding new firewall filter rules.
+
+        `OSDefault` - Uses the default policy of u-OS. Currently, this means input=Accept, output=Accept, forward=Drop but this may change in the future.
+      enum:
+      - DROP
+      - ACCEPT
+      - OS_DEFAULT
+    PostroutingAction:
+      oneOf:
+      - $ref: '#/components/schemas/MasqueradeAction'
+      - $ref: '#/components/schemas/SnatAction'
+      description: |-
+        Specifies the action to take for packets that match a postrouting rule.
+
+        Masquerade replaces the source address with the outgoing interface's IP address.
+        Snat replaces the source address with a specific IP address and optional port.
+    PostroutingRule:
+      type: object
+      required:
+      - description
+      - priority
+      - match
+      - action
+      properties:
+        action:
+          $ref: '#/components/schemas/PostroutingAction'
+        description:
+          type: string
+          description: Human-readable comment for a firewall rule. The value is restricted to printable ASCII without quotes or backslashes.
+          pattern: ^[ -!#-\[\]-~]{0,128}$
+        match:
+          $ref: '#/components/schemas/OutboundMatch'
+        priority:
+          type: integer
+          format: int32
+          description: Sort order of the rule. Lower values are evaluated first.
+          minimum: 0
+    PreroutingRule:
+      type: object
+      required:
+      - description
+      - priority
+      - match
+      - action
+      properties:
+        action:
+          $ref: '#/components/schemas/DnatAction'
+        description:
+          type: string
+          description: Human-readable comment for a firewall rule. The value is restricted to printable ASCII without quotes or backslashes.
+          pattern: ^[ -!#-\[\]-~]{0,128}$
+        match:
+          $ref: '#/components/schemas/InboundMatch'
+        priority:
+          type: integer
+          format: int32
+          description: Sort order of the rule. Lower values are evaluated first.
+          minimum: 0
+    ProbeTarget:
+      type: string
+      description: IPv4 address or hostname used as the probe target, optionally with a port (e.g. "1.1.1.1:5000"). If no port is specified, port 443 is used. IPv4 addresses are recommended for deterministic failover behavior. Hostname targets require DNS resolution before probing; DNS failures cause the probe to fail.
+      examples:
+      - 8.8.8.8
+      - 1.1.1.1:5000
+      - example.com
+      maxLength: 253
+      minLength: 1
     RecipeSigning:
       type: object
       required:
@@ -1548,6 +2789,15 @@ components:
 
                 ...
                 -----END PGP PUBLIC KEY BLOCK-----
+    RuleAction:
+      type: string
+      description: |-
+        Specifies if the matching packets should be dropped, accepted.
+        If a packet is accepted or dropped, no further rules are evaluated for that packet.
+        You can use the rule priority to control the order of rule evaluation. Lower values are evaluated first.
+      enum:
+      - DROP
+      - ACCEPT
     SecuritySettings:
       type: object
       required:
@@ -1605,7 +2855,7 @@ components:
           - VERIFY_WITH_CA
     ServiceInterfaceConfig:
       type: object
-      description: Represents the configuration of the service interface, used for putting.
+      description: Represents the configuration of the service interface.
       required:
       - enabled
       properties:
@@ -1660,6 +2910,26 @@ components:
 
             If enabled, all other properties of the interface are ignored, except for the first IP address in the addresses list,
             which is used as the server address for the DHCP server.
+    SnatAction:
+      type: object
+      description: Write a specific source address to the packet.
+      required:
+      - mode
+      - new_source
+      properties:
+        mode:
+          type: string
+          enum:
+          - SNAT
+        new_source:
+          type: string
+          description: IPv4 address only. Accepts 'A.B.C.D'.
+        new_sport:
+          type:
+          - integer
+          - 'null'
+          format: int32
+          minimum: 0
     StorageType:
       type: string
       enum:
@@ -1968,85 +3238,6 @@ components:
       enum:
       - TCP
       - UDP
-    UpdateDhcpIpv4Range:
-      type: object
-      description: Represents a range of IPv4 addresses
-      properties:
-        end:
-          $ref: '#/components/schemas/Ipv4String'
-          description: End of the range (inclusive)
-        start:
-          $ref: '#/components/schemas/Ipv4String'
-          description: Start of the range (inclusive)
-    UpdateInterfaceConfig:
-      type: object
-      description: Represents the configuration of a single network interface, used for patching.
-      required:
-      - ipv4_config
-      properties:
-        enabled:
-          type: boolean
-        ipv4_config:
-          $ref: '#/components/schemas/UpdateIpv4Config'
-    UpdateIpv4Config:
-      type: object
-      description: Represents the IPv4 configuration of a network interface, used for patching.
-      properties:
-        addresses:
-          type: array
-          items:
-            $ref: '#/components/schemas/Ipv4Subnet'
-        dhcp:
-          type: boolean
-        dns:
-          type: array
-          items:
-            $ref: '#/components/schemas/Ipv4String'
-        gateway:
-          oneOf:
-          - type: 'null'
-          - type: string
-            format: ipv4
-            description: Represents an IPv4 address in a string format.
-        shared_mode:
-          $ref: '#/components/schemas/UpdateSharedModeConfig'
-    UpdateNetworkConfig:
-      type: object
-      description: Allows partial updates to the network configuration via patch requests.
-      properties:
-        hostname:
-          type: string
-          format: hostname
-          example: wm-uc20-m3000
-          maxLength: 63
-          minLength: 1
-        interfaces:
-          type: object
-          additionalProperties:
-            $ref: '#/components/schemas/UpdateInterfaceConfig'
-          propertyNames:
-            type: string
-          example:
-            eth-x4:
-              ipv4_config:
-                dhcp: false
-                gateway: null
-                shared_mode:
-                  enabled: true
-            eth-x5:
-              enabled: true
-              ipv4_config:
-                dhcp: true
-        service_interface:
-          oneOf:
-          - type: 'null'
-          - $ref: '#/components/schemas/UpdateServiceInterfaceConfig'
-    UpdateServiceInterfaceConfig:
-      type: object
-      description: Represents the configuration of the service network interface, used for patching.
-      properties:
-        enabled:
-          type: boolean
     UpdateSettings:
       type: object
       description: Represents the update configuration for the system used in get and put.
@@ -2114,43 +3305,6 @@ components:
 
                     ...
                     -----END PGP PUBLIC KEY BLOCK-----
-    UpdateSharedModeConfig:
-      type: object
-      description: Configuration options for interface sharing
-      properties:
-        dhcp_ip_range:
-          oneOf:
-          - type: 'null'
-          - $ref: '#/components/schemas/UpdateDhcpIpv4Range'
-            description: |-
-              Configure the DHCP server IP range.
-
-              The IP range must be in the same subnet as the server address, otherwise an error will be returned.
-              If not set, an IP range adjacent to the server address will be used.
-              Should not contain network address or broadcast address.
-        dhcp_lease_time_sec:
-          type:
-          - integer
-          - 'null'
-          format: int32
-          description: |-
-            Configure the DHCP server lease time in seconds.
-
-            Allowed values:
-
-            - 0 or empty: Default lease time (1h)
-            - 2147483647 (max int32): Infinite lease time
-            - 120-31536000: Valid range between 2 minutes and 1 year
-          minimum: 0
-        enabled:
-          type: boolean
-          description: |-
-            If enabled, this device acts as a mini router and may provide internet access to other devices connected to it.
-            This includes enabling a DHCP server on the device, which will assign IP addresses to connected devices, as well as hosting a DNS server.
-            Traffic will be forwarded through the outbound interface with the highest priority (lowest route metric).
-
-            If enabled, all other properties of the interface are ignored, except for the first IP address in the addresses list,
-            which is used as the server address for the DHCP server.
   securitySchemes:
     OAuth2:
       type: oauth2
@@ -2158,6 +3312,8 @@ components:
         clientCredentials:
           tokenUrl: /oauth2/token
           scopes:
+            u-os-adm.firewall.readonly: Read access for firewall endpoints
+            u-os-adm.firewall.readwrite: Read and write access for firewall endpoints
             u-os-adm.logging.readonly: Read access for logging endpoints
             u-os-adm.network.readonly: Read access for network endpoints
             u-os-adm.network.readwrite: Read and write access for network endpoints
@@ -2178,6 +3334,8 @@ tags:
   description: API for syslog forwarding configuration
 - name: network
   description: API for network settings and state of u-OS
+- name: firewall
+  description: API for firewall settings of u-OS
 - name: openapi
   description: API for reading the OpenAPI specification
 - name: operations
