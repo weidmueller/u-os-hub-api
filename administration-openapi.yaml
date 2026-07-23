@@ -71,6 +71,9 @@ paths:
         This endpoint is intended to test a configuration before applying it persistently to prevent
         misconfigurations that could lock the user out of the system.
 
+        Note that due to conntrack, existing connections will be kept intact even if the new configuration would block them.
+        Only new connections will be subject to the new rules.
+
         The config will be applied directly and temporarily.
         Please use `/firewall/config` to apply a configuration persistently.
 
@@ -185,11 +188,7 @@ paths:
         If no temporary configuration is active, the persistent configuration is used as
         the basis for the PATCH and rolled out temporarily along with the change.
 
-        By default the temporary config will be rolled back after reboot or `/firewall:reload`,
-        but you can also set a timeout for the automatic rollback to the persistent configuration with the "timeout" query parameter (in seconds).
-
-        Provide an `If-Match` header with the `ETag` of the currently active configuration to apply the
-        change only if the active configuration has not been modified in the meantime (optimistic locking).
+        See the `PUT /firewall/active-config` endpoint for details on the behavior of temporary configurations and the `If-Match` header.
       operationId: update_firewall_active_config
       parameters:
       - name: timeout
