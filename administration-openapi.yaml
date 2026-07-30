@@ -1453,6 +1453,7 @@ components:
             Network interface metric (priority) that is applied when the interface has failed probing.
             Should be higher than all normal interface metrics to ensure traffic is routed through healthy interfaces.
           example: 20000
+          maximum: 2147483647
           minimum: 1
         probe_target:
           $ref: '#/components/schemas/ProbeTarget'
@@ -1627,6 +1628,7 @@ components:
             - ANY
             - TCP
             - UDP
+            - ICMP
           source:
             type: array
             items:
@@ -1786,6 +1788,7 @@ components:
             - ANY
             - TCP
             - UDP
+            - ICMP
           source:
             type: array
             items:
@@ -1944,7 +1947,7 @@ components:
             description: Represents an IPv4 address in a string format.
         metric:
           type: integer
-          format: int32
+          format: int64
           description: |-
             Normal route metric (priority) for this interface. Lower values have higher priority.
             If a value of -1 is specified, the system will choose the metric automatically.
@@ -1952,6 +1955,7 @@ components:
             If failover is enabled, the actual metric of the interface is
             dynamic and may change between metric and `failed_metric` depending on the probe state.
           example: 100
+          maximum: 2147483647
           minimum: -1
         shared_mode:
           $ref: '#/components/schemas/SharedModeConfig'
@@ -2304,6 +2308,7 @@ components:
             - ANY
             - TCP
             - UDP
+            - ICMP
           source:
             type: array
             items:
@@ -2445,6 +2450,7 @@ components:
             Network interface metric (priority) that is applied when the interface has failed probing.
             Should be higher than all normal interface metrics to ensure traffic is routed through healthy interfaces.
           example: 20000
+          maximum: 2147483647
           minimum: 1
         probe_target:
           $ref: '#/components/schemas/ProbeTarget'
@@ -2510,7 +2516,7 @@ components:
             description: Represents an IPv4 address in a string format.
         metric:
           type: integer
-          format: int32
+          format: int64
           description: |-
             Normal route metric (priority) for this interface. Lower values have higher priority.
             If a value of -1 is specified, the system will choose the metric automatically.
@@ -2518,6 +2524,7 @@ components:
             If failover is enabled, the actual metric of the interface is
             dynamic and may change between metric and `failed_metric` depending on the probe state.
           example: 100
+          maximum: 2147483647
           minimum: -1
         shared_mode:
           $ref: '#/components/schemas/PartialSharedModeConfig'
