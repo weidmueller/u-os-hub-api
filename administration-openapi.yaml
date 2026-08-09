@@ -11,7 +11,7 @@ info:
   license:
     name: MIT
     identifier: MIT
-  version: 1.3.0-next
+  version: 1.4.0
 servers:
 - url: /u-os-adm/api/v1
 paths:
