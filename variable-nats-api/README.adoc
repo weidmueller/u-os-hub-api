@@ -1,0 +1,16 @@
+= Variable-NATS-API
+
+In the Variable-NATS-API, link:https://nats.io/[NATS] is used as the transport mechanism.
+link:https://flatbuffers.dev/[FlatBuffers] is used as the payload format.
+
+To use the Variable-NATS-API, we recommend using the link:https://github.com/weidmueller/u-os-hub-client-rs[u-os-hub-client-rs library].
+
+Alternatively, you can create your own library by directly using FlatBuffers and NATS libraries for your desired language.
+All NATS subjects are documented in the corresponding link:https://www.asyncapi.com/en[AsyncAPI] specification `link:variable-nats-asyncapi.yaml[variable-nats-asyncapi.yaml]`.
+The FlatBuffers messages and types are located in the `link:flatbuffers[flatbuffers]` directory.
+
+== Compiling FlatBuffers Schemata
+
+FlatBuffers schemata are compiled into target source code via the `flatc` compiler.
+The flatc compiler is not included in this repository, but can be downloaded from link:https://github.com/google/flatbuffers/releases[here].
+For an example of how to use flatc, see the link:https://flatbuffers.dev/flatc/[FlatBuffers documentation].
