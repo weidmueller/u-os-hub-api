@@ -1,0 +1,82 @@
+// SPDX-FileCopyrightText: 2026 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+//
+// SPDX-License-Identifier: MIT
+
+= u-OS Data Hub HTTP APIs
+:toc:
+:json-merge-patch: link:https://datatracker.ietf.org/doc/rfc7396/[JSON Merge Patch]
+
+We use link:https://spec.openapis.org/oas/latest.html[OpenAPI] to describe our HTTP APIs.
+All u-OS Data Hub openapi specifications can be found in this directory.
+
+To explore an API visually, use the API viewer in u-OS or an OpenAPI viewer such as link:https://swagger.io/tools/swagger-ui/[Swagger UI].
+
+== API Conventions
+
+=== Declarative Configuration
+
+Configuration capabilities are exposed through declarative endpoints.
+These endpoints follow these rules:
+
+* Imperative endpoints are supplementary. Every supported configuration must also be expressible through a declarative endpoint. Among other benefits, this simplifies link:../task-runner/README.adoc[Task Runner] workflows.
+* A configuration describes the desired state.
+* `GET` and `PUT` use the same schema. `GET` returns the complete configuration, including properties marked as optional in the schema.
+* The desired state may not take effect immediately. Where available, the corresponding `/state` endpoint reports the current state and deviations from the desired state.
+* Configurations for connected hardware must include every connected resource. For example, `/network/config` normally requires an entry for every connected interface. Exceptions are documented by the endpoint or schema. Where supported, resources that will become available later may also be configured.
+* Because `PUT` payloads represent the complete configuration and can be large, use `PATCH` with {json-merge-patch} for partial updates.
+* Some endpoints support optimistic locking. When updating such an endpoint, pass the `ETag` returned by `GET` in the `If-Match` header to prevent lost updates.
+
+=== Omitted, Null, and Explicit Values
+
+Properties in an update request have three distinct meanings:
+
+* If a property is omitted, its current value remains unchanged.
+* If a property is sent as `null`, its current value is cleared or set to `null`, as defined in the property's documentation. This is only allowed when the schema permits `null`.
+* If a property is sent with a concrete value, its current value is replaced with that value.
+
+This behavior allows older clients to omit properties introduced in later releases and follows {json-merge-patch} semantics.
+
+==== Partial Map Schemas
+
+Some client generators cannot correctly represent partial schemas as map values.
+For generator compatibility, affected maps may use `additionalProperties: true` in `PATCH` endpoints.
+The corresponding `Partial*` schemas remain available for type-safe use.
+
+=== Compatibility
+
+The HTTP APIs follow link:https://semver.org/[Semantic Versioning].
+The major API version is part of the base URL, such as `/api/v1`.
+The full specification version is recorded in the OpenAPI `info.version` field.
+
+These compatibility guarantees apply to the HTTP API contract, not to the structure of OpenAPI documents or generated client code.
+Minor and patch releases may therefore change schema or generated type names without changing the HTTP API contract.
+Generated code may also vary by generator, generator version, and configuration.
+An OpenAPI document may be split into multiple documents while its endpoints and HTTP contracts remain compatible.
+
+Within the same major API version:
+
+* Existing endpoints and documented behavior remain backward compatible.
+* Existing payload properties and enum values are not removed, renamed, or assigned incompatible types or semantics.
+* Minor releases may add endpoints, optional request properties, response properties, or enum values.
+* Older clients remain compatible with existing functionality if they tolerate unknown response properties and enum values.
+* Clients generated from a newer specification may require functionality unavailable in an older API implementation. Such combinations are not supported.
+* Deprecated functionality remains available for the rest of the major version and may be removed in the next major version. Deprecations are identified in the OpenAPI document.
+* Patch releases may correct implementation behavior that conflicts with the documented API contract. Such corrections are not considered breaking changes.
++
+For example, changing an incorrect `500` response to the documented `400` response is not a breaking change.
+
+=== Implicit HEAD Requests
+
+By default, each `GET` endpoint also supports `HEAD`.
+The `HEAD` response uses the same status code and headers as `GET`, but has no response body.
+Only `HEAD` endpoints that expose endpoint-specific metadata, such as specialized response headers, are explicitly documented in the OpenAPI specifications.
+
+=== Local API Access
+
+The Administration API is also exposed through the Unix domain socket `/run/u-os-adm/u-os-adm.sock`.
+The `root` user can access the API through this socket without authentication.
+
+== Generating a Client Library
+
+Use the link:https://openapi-generator.tech/[OpenAPI Generator] to generate a client library for your preferred programming language.
+For usage examples, see the link:https://openapi-generator.tech/docs/usage/[OpenAPI Generator documentation].
