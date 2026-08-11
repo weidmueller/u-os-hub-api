@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+//
+// SPDX-License-Identifier: MIT
+
 = Variable-NATS-API
 
 In the Variable-NATS-API, link:https://nats.io/[NATS] is used as the transport mechanism.

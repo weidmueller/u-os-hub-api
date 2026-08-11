@@ -8,6 +8,8 @@ To perform commissioning via the local update manager (LUM), the removable media
 
 The recipe.json file defines the update process and specifies the update files to be applied to the device. An update consists of one or more steps. The update files can be located anywhere on the removable media, as long as their paths are correctly specified in the recipe.json file.
 
+The update files for u-OS apps can be downloaded from the link:https://support.weidmueller.com/online-documentation/latest/019ed0c3-e669-732d-bde7-742270dd131e/index.html[u-OS App Hub].
+
 The `logs/` and `states/` directories are generated automatically, and `deployment_files/` is an example name for a directory containing deployment files.
 
 Example structure:
