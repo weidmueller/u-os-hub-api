@@ -17,7 +17,7 @@
     "build": "npm run generateJsonSchemas && npm run validateAsyncApi && npm run generateAsyncApiSite && npm run validateOpenApi",
     "generateJsonSchemas": "./tools/generate_json_schemas.sh",
     "generateAsyncApiSite": "asyncapi generate fromTemplate variable-nats-asyncapi.yaml @asyncapi/html-template@0.28.4 -o ./dist/asyncapi --force-write -p sidebarOrganization=byTags",
-    "validateOpenApi": "spectral lint --fail-severity=warn *-openapi.yaml --ruleset ./tools/spectral/openapi-rules.json -v",
+    "validateOpenApi": "spectral lint --fail-severity=warn openapi/*.yaml --ruleset ./tools/spectral/openapi-rules.json -v",
     "validateAsyncApi": "spectral lint --fail-severity=warn variable-nats-asyncapi.yaml --ruleset ./tools/spectral/asyncapi-rules.json"
   },
   "devDependencies": {
