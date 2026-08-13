@@ -1,0 +1,18 @@
+# SPDX-FileCopyrightText: 2026 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+#
+# SPDX-License-Identifier: MIT
+
+check: build
+	cd {{ source_directory() }}
+	spectral lint --fail-severity=warn variable-nats-asyncapi.yaml --ruleset ../tools/spectral/asyncapi-rules.json
+
+build: generate-json-schemas
+	cd {{ source_directory() }}
+	bun install --frozen-lockfile
+	bun --bun run build
+
+generate-json-schemas:
+	cd {{ source_directory() }}
+	rm -rf jsonschemas/messages
+	flatc --jsonschema -o jsonschemas/messages flatbuffers/messages/*
+	for file in jsonschemas/messages/*.schema.json; do jq '."$ref"[2:] as $ref | del(."$ref") | . + getpath($ref / "/") | delpaths([$ref / "/"])' "$file" > "$file.tmp"; mv "$file.tmp" "$file"; done

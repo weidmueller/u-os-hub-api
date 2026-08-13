@@ -40,23 +40,17 @@ Run `prek install` while in the devcontainer to set up the hooks locally.
 
 ==== Installing Dependencies
 
-Execute
-
-```
-npm ci --ignore-optional
-```
-
-to install necessary dependencies.
+All dependencies are included in the development container.
 
 ==== Building
 
 Execute
 
 ```
-npm run build
+just check
 ```
 
-to perform a complete build of u-os-hub-api.
+to perform a complete build and check of u-os-hub-api.
 This includes the following steps:
 
 1.  Generate JSON schemas from the FlatBuffers messages.
@@ -70,7 +64,7 @@ This includes the following steps:
 Execute
 
 ```
-npm run generateAsyncApiSite
+just variable-nats-api::build
 ```
 
 to generate an AsyncAPI UI from `variable-nats-asyncapi.yaml`.
@@ -83,7 +77,8 @@ After building, you can open the AsyncAPI UI in the browser via the link:https:/
 
 link:https://stoplight.io/open-source/spectral[Spectral] is an API style guide enforcer and linter.
 
-We use Spectral for both OpenAPI and AsyncAPI linting based on a set of rules described in `tools/spectral.json`.
+We use Spectral for both OpenAPI and AsyncAPI linting based on the rules in `tools/spectral`.
+Run all repository checks with `just check`, or a single scope with commands such as `just openapi::check`.
 
 === Publishing Your Changes
 
@@ -93,4 +88,4 @@ All commits must be signed off to affirm compliance with the link:https://develo
 
 ==== Check Your Changes
 
-Before creating a merge request, please run `tools/check-merge-request.sh` to validate your changes. This will prevent failures in the CI pipeline later.
+Before creating a merge request, run `just check` to validate your changes. This will prevent failures in the CI pipeline later.

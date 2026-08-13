@@ -5,60 +5,35 @@
             "message": "Property name '{{value}}' should use snake_case.",
             "severity": "warn",
             "given": "$.components.schemas[?(!@property.match(/AddressInformation|DeviceNameplate/))]..properties[*]~",
-            "then": {
-                "function": "casing",
-                "functionOptions": {
-                    "type": "snake"
-                }
-            }
+            "then": { "function": "casing", "functionOptions": { "type": "snake" } }
         },
         "naming-snake-case-query-params": {
             "description": "Query parameter names should use snake_case.",
             "message": "Query parameter name '{{value}}' should use snake_case.",
             "severity": "warn",
             "given": "$.paths..parameters[?(@.in == 'query')].name",
-            "then": {
-                "function": "casing",
-                "functionOptions": {
-                    "type": "snake"
-                }
-            }
+            "then": { "function": "casing", "functionOptions": { "type": "snake" } }
         },
         "naming-macro-case-enum-values": {
             "description": "Enum values should use UPPERCASE_SNAKE_CASE.",
             "message": "Enum value '{{value}}' should use UPPERCASE_SNAKE_CASE.",
             "severity": "warn",
             "given": "$.components.schemas[?(!@property.match(/StorageType/))].enum[*]",
-            "then": {
-                "function": "casing",
-                "functionOptions": {
-                    "type": "macro"
-                }
-            }
+            "then": { "function": "casing", "functionOptions": { "type": "macro" } }
         },
         "naming-pascal-case-schemas": {
             "description": "Schema names in components should use PascalCase.",
             "message": "Schema name '{{value}}' should use PascalCase.",
             "severity": "warn",
             "given": "$.components.schemas[?(!@property.match(/ISO8601Timestamp|ISO8601Duration/))]~",
-            "then": {
-                "function": "casing",
-                "functionOptions": {
-                    "type": "pascal"
-                }
-            }
+            "then": { "function": "casing", "functionOptions": { "type": "pascal" } }
         },
         "naming-kebab-case-path-segments": {
             "description": "Path segments should use kebab-case. Path parameters in {braces} are excluded.",
             "message": "Path '{{value}}' contains a segment that does not use kebab-case.",
             "severity": "warn",
             "given": "$.paths[*]~",
-            "then": {
-                "function": "pattern",
-                "functionOptions": {
-                    "match": "^(\\/([a-z0-9]+(-[a-z0-9]+)*(:[a-z0-9]+(-[a-z0-9]+)*)?(?:\\.[a-z0-9]+)?|\\{[a-zA-Z0-9_]+\\}))*$"
-                }
-            }
+            "then": { "function": "pattern", "functionOptions": { "match": "^(\\/([a-z0-9]+(-[a-z0-9]+)*(:[a-z0-9]+(-[a-z0-9]+)*)?(?:\\.[a-z0-9]+)?|\\{[a-zA-Z0-9_]+\\}))*$" } }
         },
         "naming-kebab-case-headers": {
             "description": "HTTP header names should use Kebab-Case (each word capitalized).",
@@ -68,12 +43,7 @@
                 "$.paths..parameters[?(@.in == 'header')].name",
                 "$.components.headers[*]~"
             ],
-            "then": {
-                "function": "pattern",
-                "functionOptions": {
-                    "match": "^([A-Z][a-z0-9]*)(-[A-Z][a-z0-9]*)*$"
-                }
-            }
+            "then": { "function": "pattern", "functionOptions": { "match": "^([A-Z][a-z0-9]*)(-[A-Z][a-z0-9]*)*$" } }
         }
     }
 }

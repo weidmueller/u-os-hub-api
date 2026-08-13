@@ -1,0 +1,14 @@
+{
+    "name": "variable-nats-api",
+    "version": "1.0.1",
+    "private": true,
+    "description": "AsyncAPI specification for the u-OS Data Hub Variable NATS API.",
+    "license": "MIT",
+    "scripts": {
+        "build": "asyncapi generate fromTemplate variable-nats-asyncapi.yaml ./node_modules/@asyncapi/html-template -o ../dist/asyncapi --force-write -p sidebarOrganization=byTags --no-interactive"
+    },
+    "devDependencies": {
+        "@asyncapi/cli": "^6.0.2",
+        "@asyncapi/html-template": "^3.5.6"
+    }
+}

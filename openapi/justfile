@@ -1,0 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+#
+# SPDX-License-Identifier: MIT
+
+check:
+	spectral lint --fail-severity=warn *.yaml --ruleset ../tools/spectral/openapi-rules.json -v
