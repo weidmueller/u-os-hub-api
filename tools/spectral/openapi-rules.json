@@ -4,6 +4,7 @@
         "./casing-rules.json"
     ],
     "rules": {
+        "oas3-unused-component": "off",
         "http-response-valid": {
             "description": "HTTP responses should contain a status code of 200 or 202.",
             "message": "HTTP response does not contain a status code of 200 or 202.",
@@ -14,16 +15,8 @@
                     "schema": {
                         "type": "object",
                         "anyOf": [
-                            {
-                                "required": [
-                                    "200"
-                                ]
-                            },
-                            {
-                                "required": [
-                                    "202"
-                                ]
-                            }
+                            { "required": ["200"] },
+                            { "required": ["202"] }
                         ]
                     }
                 }
@@ -34,14 +27,8 @@
             "message": "HTTP response does not contain a default error return status code.",
             "given": "$.paths..responses",
             "then": [
-                {
-                    "field": "default",
-                    "function": "truthy"
-                },
-                {
-                    "field": "default.content",
-                    "function": "truthy"
-                }
+                { "field": "default", "function": "truthy" },
+                { "field": "default.content", "function": "truthy" }
             ]
         }
     }

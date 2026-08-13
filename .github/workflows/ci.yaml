@@ -52,4 +52,4 @@ jobs:
           imageName: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/devcontainer
           cacheFrom: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/devcontainer
           runCmd: |
-            ./tools/check-merge-request.sh
+            just check

@@ -1,7 +1,7 @@
 {
     "extends": [
         "spectral:oas",
-        "@stoplight/spectral-owasp-ruleset"
+        "https://unpkg.com/@stoplight/spectral-owasp-ruleset@2.0.1/dist/ruleset.mjs"
     ],
     "rules": {
         "owasp:api4:2023-string-limit": "off",
