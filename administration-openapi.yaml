@@ -11,7 +11,7 @@ info:
   license:
     name: MIT
     identifier: MIT
-  version: 1.4.0
+  version: 1.5.0-next
 servers:
 - url: /u-os-adm/api/v1
 paths:
@@ -674,6 +674,32 @@ paths:
         - u-os-adm.network.readonly
       - OAuth2:
         - u-os-adm.network.readwrite
+  /network:factory-reset:
+    post:
+      tags:
+      - network
+      summary: Triggers a network settings factory reset.
+      description: Resets all network settings to factory defaults, which erases all user-defined network configurations on the system.
+      operationId: network_factory_reset
+      parameters:
+      - name: do_reboot
+        in: query
+        description: Whether the system should reboot after resetting the network settings.
+        required: false
+        schema:
+          type: boolean
+      responses:
+        '200':
+          description: Network settings reset successfully.
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.network.readwrite
   /openapi.json:
     get:
       tags:
@@ -729,6 +755,107 @@ paths:
                 $ref: '#/components/schemas/HttpErrorPayload'
       security:
       - OAuth2: []
+  /ping:
+    get:
+      tags:
+      - ping
+      summary: Minimal endpoint to verify the backend is started and reachable.
+      description: Requires no authorization and always returns `200 OK`.
+      operationId: ping
+      responses:
+        '200':
+          description: Backend is reachable.
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2: []
+  /realtime/config:
+    get:
+      tags:
+      - realtime
+      summary: Get the realtime configuration for the system.
+      description: |-
+        Notice that changing the realtime configuration requires a system reboot to take effect.
+        Check the realtime state endpoint to see the current state of the system.
+      operationId: get_realtime_config
+      responses:
+        '200':
+          description: Realtime configuration read successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RealtimeConfig'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.realtime.readonly
+      - OAuth2:
+        - u-os-adm.realtime.readwrite
+    put:
+      tags:
+      - realtime
+      summary: Set the realtime configuration for the system.
+      description: Changes are fully applied after a system reboot. The system will not be rebooted automatically.
+      operationId: set_realtime_config
+      requestBody:
+        description: Realtime configuration to update
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RealtimeConfig'
+        required: true
+      responses:
+        '200':
+          description: Realtime configuration updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RealtimeConfig'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.realtime.readwrite
+  /realtime/state:
+    get:
+      tags:
+      - realtime
+      summary: Get the current realtime state.
+      description: |-
+        Notice that changing to realtime configuration requires a system reboot to take effect.
+        The state will reflect the current state of the system, not the desired state after a reboot.
+      operationId: get_realtime_state
+      responses:
+        '200':
+          description: Realtime state read successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RealtimeState'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.realtime.readonly
+      - OAuth2:
+        - u-os-adm.realtime.readwrite
   /recovery:factory-reset:
     post:
       tags:
@@ -736,6 +863,13 @@ paths:
       summary: Triggers a factory reset.
       description: Triggers a factory reset, which erases all user data on the system.
       operationId: recovery_factory_reset
+      parameters:
+      - name: skip_reboot
+        in: query
+        description: Whether the reboot after initiating the factory reset should be skipped.
+        required: false
+        schema:
+          type: boolean
       responses:
         '202':
           description: Factory reset initiated successfully.
@@ -802,6 +936,122 @@ paths:
       security:
       - OAuth2:
         - u-os-adm.security.readwrite
+  /serial-interfaces/config:
+    get:
+      tags:
+      - serial-interfaces
+      summary: Read the serial interface configuration for the system.
+      description: |-
+        Note that the config may contain interfaces that are currently not present on the system, e.g. from u-extend modules.
+        This allows to configure interfaces before they get connected.
+      operationId: get_serial_interface_config
+      responses:
+        '200':
+          description: Configuration read successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SerialInterfacesConfig'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.serial-interfaces.readonly
+      - OAuth2:
+        - u-os-adm.serial-interfaces.readwrite
+    put:
+      tags:
+      - serial-interfaces
+      summary: Set the serial interface configuration for the system.
+      description: |-
+        Note that the config may contain interfaces that are currently not present on the system, e.g. from u-extend modules.
+        This allows to configure interfaces before they get connected.
+
+        You must always at least include all interfaces that are currently present on the system in the request payload.
+      operationId: set_serial_interface_config
+      requestBody:
+        description: Configuration to update
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SerialInterfacesConfig'
+        required: true
+      responses:
+        '200':
+          description: Configuration updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SerialInterfacesConfig'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.serial-interfaces.readwrite
+    patch:
+      tags:
+      - serial-interfaces
+      summary: Update the serial interface configuration for the system.
+      description: |-
+        Note that the config may contain interfaces that are currently not present on the system, e.g. from u-extend modules.
+        This allows to configure interfaces before they get connected.
+      operationId: update_serial_interface_config
+      requestBody:
+        description: Configuration to update
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PartialSerialInterfacesConfig'
+        required: true
+      responses:
+        '200':
+          description: Configuration updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SerialInterfacesConfig'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.serial-interfaces.readwrite
+  /serial-interfaces/state:
+    get:
+      tags:
+      - serial-interfaces
+      summary: Get the current state of the serial interfaces on the system.
+      description: The state only includes interfaces that are currently present on the system and contains their current, active state.
+      operationId: get_serial_interface_state
+      responses:
+        '200':
+          description: State read successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SerialInterfacesState'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.serial-interfaces.readonly
+      - OAuth2:
+        - u-os-adm.serial-interfaces.readwrite
   /syslog/certificates:
     get:
       tags:
@@ -1198,6 +1448,51 @@ components:
           type: string
         Zipcode:
           type: string
+    AllowedRsMode:
+      type: string
+      description: |-
+        Represents the allowed operation modes for a RS interface.
+
+        This determines which config variants are allowed for the interface.
+        For example, some interfaces may only support RS-232 or RS-485 mode. For example, tty-x3 on R-Series only supports RS-485 mode.
+      enum:
+      - RS232
+      - RS485
+    CanInterfaceConfig:
+      type: object
+      required:
+      - enable_termination_resistor
+      properties:
+        enable_termination_resistor:
+          type: boolean
+          description: If set to true, a termination resistor will be enabled on the CAN interface. If set to false, the termination resistor will be disabled.
+    CanInterfaceState:
+      type: object
+      required:
+      - name
+      - alt_names
+      - termination_resistance_ohm
+      properties:
+        alt_names:
+          type: array
+          items:
+            type: string
+          description: List of alternate names for the CAN interface, if any
+          example:
+          - can0
+        name:
+          type: string
+          description: Primary name of the CAN interface
+          example: can-fm0-em0
+        termination_resistance_ohm:
+          type: integer
+          format: int32
+          description: |-
+            Current termination resistor value for the CAN interface, in Ohms. A value of 0 indicates that the termination resistor is disabled.
+
+            Reports the terminator controlled by the local interface, not the effective resistance of the entire bus.
+          example: 120
+          minimum: 0
     CertificateEntry:
       type: object
       description: A single certificate entry.
@@ -1255,6 +1550,36 @@ components:
               -----BEGIN CERTIFICATE-----
               ...
               -----END CERTIFICATE-----
+    CpuIsolationConfig:
+      type: object
+      required:
+      - enabled
+      properties:
+        enabled:
+          type: boolean
+    CpuIsolationState:
+      type: object
+      required:
+      - enabled
+      - effective_cpus
+      properties:
+        effective_cpus:
+          type: array
+          items:
+            type: integer
+            format: int32
+            minimum: 0
+          description: |-
+            Lists the CPU cores effectively used for real-time tasks when CPU isolation is enabled.
+            CPU core numbers are zero-based. For example, `[3]` means that only the fourth CPU core is used for real-time tasks.
+          example:
+          - 1
+        enabled:
+          type: boolean
+          description: |-
+            Indicates whether CPU isolation is currently active.
+            This reflects the current system state, not the desired state after a reboot.
+            To view the desired state after a reboot, use the realtime configuration endpoint.
     CreateLogReportResponse:
       type: object
       required:
@@ -1360,6 +1685,11 @@ components:
       oneOf:
       - $ref: '#/components/schemas/DnatActionForward'
       - $ref: '#/components/schemas/DnatActionRedirect'
+      discriminator:
+        propertyName: mode
+        mapping:
+          FORWARD: '#/components/schemas/DnatActionForward'
+          REDIRECT: '#/components/schemas/DnatActionRedirect'
     DnatActionForward:
       type: object
       description: Forward to another host/port.
@@ -1395,7 +1725,6 @@ components:
           minimum: 0
         mode:
           type: string
-          description: Redirect to the firewall host itself
           enum:
           - REDIRECT
     FailoverGlobalConfig:
@@ -2221,6 +2550,12 @@ components:
       - $ref: '#/components/schemas/OperationStateCompleted'
       - $ref: '#/components/schemas/OperationStateFailed'
       description: Represents the entire state of a long-running operation.
+      discriminator:
+        propertyName: status
+        mapping:
+          COMPLETED: '#/components/schemas/OperationStateCompleted'
+          FAILED: '#/components/schemas/OperationStateFailed'
+          PENDING: '#/components/schemas/OperationStatePending'
     OperationStateCompleted:
       type: object
       required:
@@ -2374,6 +2709,19 @@ components:
             - `error` — The output is experiencing delivery failures and is currently retrying.
             - `pending` — Reachability cannot be determined yet, because no logs have been
               attempted to be sent so far (e.g. just started or filter-config filtered out all logs).
+    PartialCanInterfaceConfig:
+      type: object
+      properties:
+        enable_termination_resistor:
+          type: boolean
+          description: If set to true, a termination resistor will be enabled on the CAN interface. If set to false, the termination resistor will be disabled.
+    PartialCertificateEntry:
+      type: object
+      description: A single certificate entry. (PATCH)
+      properties:
+        content:
+          type: string
+          description: PEM-encoded certificate or key content.
     PartialCertificates:
       type: object
       description: |-
@@ -2403,6 +2751,50 @@ components:
         start:
           $ref: '#/components/schemas/Ipv4String'
           description: Start of the range (inclusive)
+    PartialDnatAction:
+      oneOf:
+      - $ref: '#/components/schemas/PartialDnatActionForward'
+      - $ref: '#/components/schemas/PartialDnatActionRedirect'
+      discriminator:
+        propertyName: mode
+        mapping:
+          FORWARD: '#/components/schemas/PartialDnatActionForward'
+          REDIRECT: '#/components/schemas/PartialDnatActionRedirect'
+    PartialDnatActionForward:
+      type: object
+      description: Forward to another host/port. (PATCH)
+      required:
+      - mode
+      properties:
+        mode:
+          type: string
+          enum:
+          - FORWARD
+        new_destination:
+          type: string
+          description: IPv4 address only. Accepts 'A.B.C.D'.
+        new_dport:
+          type:
+          - integer
+          - 'null'
+          format: int32
+          maximum: 65535
+          minimum: 0
+    PartialDnatActionRedirect:
+      type: object
+      description: Redirect to the firewall host itself (PATCH)
+      required:
+      - mode
+      properties:
+        local_dport:
+          type: integer
+          format: int32
+          maximum: 65535
+          minimum: 0
+        mode:
+          type: string
+          enum:
+          - REDIRECT
     PartialFailoverGlobalConfig:
       type: object
       description: |-
@@ -2484,6 +2876,138 @@ components:
           $ref: '#/components/schemas/PartialFilterRules'
         nat:
           $ref: '#/components/schemas/PartialNatRules'
+    PartialForwardMatch:
+      allOf:
+      - type: object
+        properties:
+          destination:
+            type: array
+            items:
+              type: string
+              description: |-
+                IPv4 address, CIDR subnet, or address range. Accepts 'A.B.C.D', 'A.B.C.D/N',
+                or 'A.B.C.D-A.B.C.D'.
+          dport:
+            type: array
+            items:
+              type: string
+              description: TCP/UDP port (0..=65535) or inclusive port range. Accepts 'PORT' or 'START-END'.
+          protocol:
+            type: string
+            description: |-
+              Specifying `sport` or `dport` with the protocol set to `ANY` implicitly limits protocol matching
+              to TCP, UDP, SCTP, and DCCP, as only these protocols support port numbers.
+              Otherwise, `ANY` matches all protocols.
+            enum:
+            - ANY
+            - TCP
+            - UDP
+            - ICMP
+          source:
+            type: array
+            items:
+              type: string
+              description: |-
+                IPv4 address, CIDR subnet, or address range. Accepts 'A.B.C.D', 'A.B.C.D/N',
+                or 'A.B.C.D-A.B.C.D'.
+          sport:
+            type: array
+            items:
+              type: string
+              description: TCP/UDP port (0..=65535) or inclusive port range. Accepts 'PORT' or 'START-END'.
+      - type: object
+        properties:
+          in_interface:
+            type: array
+            items:
+              type: string
+              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard, or a bare '*'.
+              pattern: ^(?:\*|[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?)$
+          out_interface:
+            type: array
+            items:
+              type: string
+              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard, or a bare '*'.
+              pattern: ^(?:\*|[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?)$
+    PartialForwardRule:
+      type: object
+      properties:
+        action:
+          $ref: '#/components/schemas/RuleAction'
+        description:
+          type: string
+          description: Human-readable comment for a firewall rule. The value is restricted to printable ASCII without quotes or backslashes.
+          pattern: ^[ -!#-\[\]-~]{0,128}$
+        match:
+          $ref: '#/components/schemas/PartialForwardMatch'
+        priority:
+          type: integer
+          format: int32
+          description: Sort order of the rule. Lower values are evaluated first.
+          minimum: 0
+    PartialInboundMatch:
+      allOf:
+      - type: object
+        properties:
+          destination:
+            type: array
+            items:
+              type: string
+              description: |-
+                IPv4 address, CIDR subnet, or address range. Accepts 'A.B.C.D', 'A.B.C.D/N',
+                or 'A.B.C.D-A.B.C.D'.
+          dport:
+            type: array
+            items:
+              type: string
+              description: TCP/UDP port (0..=65535) or inclusive port range. Accepts 'PORT' or 'START-END'.
+          protocol:
+            type: string
+            description: |-
+              Specifying `sport` or `dport` with the protocol set to `ANY` implicitly limits protocol matching
+              to TCP, UDP, SCTP, and DCCP, as only these protocols support port numbers.
+              Otherwise, `ANY` matches all protocols.
+            enum:
+            - ANY
+            - TCP
+            - UDP
+            - ICMP
+          source:
+            type: array
+            items:
+              type: string
+              description: |-
+                IPv4 address, CIDR subnet, or address range. Accepts 'A.B.C.D', 'A.B.C.D/N',
+                or 'A.B.C.D-A.B.C.D'.
+          sport:
+            type: array
+            items:
+              type: string
+              description: TCP/UDP port (0..=65535) or inclusive port range. Accepts 'PORT' or 'START-END'.
+      - type: object
+        properties:
+          in_interface:
+            type: array
+            items:
+              type: string
+              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard, or a bare '*'.
+              pattern: ^(?:\*|[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?)$
+    PartialInputRule:
+      type: object
+      properties:
+        action:
+          $ref: '#/components/schemas/RuleAction'
+        description:
+          type: string
+          description: Human-readable comment for a firewall rule. The value is restricted to printable ASCII without quotes or backslashes.
+          pattern: ^[ -!#-\[\]-~]{0,128}$
+        match:
+          $ref: '#/components/schemas/PartialInboundMatch'
+        priority:
+          type: integer
+          format: int32
+          description: Sort order of the rule. Lower values are evaluated first.
+          minimum: 0
     PartialInterfaceConfig:
       type: object
       description: Represents the configuration of a single network interface. (PATCH)
@@ -2492,6 +3016,23 @@ components:
           type: boolean
         ipv4_config:
           $ref: '#/components/schemas/PartialIpv4Config'
+    PartialInterfacePolicy:
+      type: object
+      description: |-
+        Specifies the default action for packets that do not match any rule on a specific interface.
+
+         This allows you to configure whether the rules are an allowlist or a blocklist.
+
+         All physical interfaces must have a policy defined.
+         But also non existing interfaces can be defined in the policy.
+         This allows to configure policies for interfaces that may be added while runtime. (PATCH)
+      properties:
+        forward:
+          $ref: '#/components/schemas/PolicyType'
+        input:
+          $ref: '#/components/schemas/PolicyType'
+        output:
+          $ref: '#/components/schemas/PolicyType'
     PartialIpv4Config:
       type: object
       description: Represents the IPv4 configuration of a network interface. (PATCH)
@@ -2573,6 +3114,115 @@ components:
           oneOf:
           - type: 'null'
           - $ref: '#/components/schemas/PartialServiceInterfaceConfig'
+    PartialOutboundMatch:
+      allOf:
+      - type: object
+        properties:
+          destination:
+            type: array
+            items:
+              type: string
+              description: |-
+                IPv4 address, CIDR subnet, or address range. Accepts 'A.B.C.D', 'A.B.C.D/N',
+                or 'A.B.C.D-A.B.C.D'.
+          dport:
+            type: array
+            items:
+              type: string
+              description: TCP/UDP port (0..=65535) or inclusive port range. Accepts 'PORT' or 'START-END'.
+          protocol:
+            type: string
+            description: |-
+              Specifying `sport` or `dport` with the protocol set to `ANY` implicitly limits protocol matching
+              to TCP, UDP, SCTP, and DCCP, as only these protocols support port numbers.
+              Otherwise, `ANY` matches all protocols.
+            enum:
+            - ANY
+            - TCP
+            - UDP
+            - ICMP
+          source:
+            type: array
+            items:
+              type: string
+              description: |-
+                IPv4 address, CIDR subnet, or address range. Accepts 'A.B.C.D', 'A.B.C.D/N',
+                or 'A.B.C.D-A.B.C.D'.
+          sport:
+            type: array
+            items:
+              type: string
+              description: TCP/UDP port (0..=65535) or inclusive port range. Accepts 'PORT' or 'START-END'.
+      - type: object
+        properties:
+          out_interface:
+            type: array
+            items:
+              type: string
+              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard, or a bare '*'.
+              pattern: ^(?:\*|[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?)$
+    PartialOutputRule:
+      type: object
+      properties:
+        action:
+          $ref: '#/components/schemas/RuleAction'
+        description:
+          type: string
+          description: Human-readable comment for a firewall rule. The value is restricted to printable ASCII without quotes or backslashes.
+          pattern: ^[ -!#-\[\]-~]{0,128}$
+        match:
+          $ref: '#/components/schemas/PartialOutboundMatch'
+        priority:
+          type: integer
+          format: int32
+          description: Sort order of the rule. Lower values are evaluated first.
+          minimum: 0
+    PartialPostroutingAction:
+      oneOf:
+      - $ref: '#/components/schemas/MasqueradeAction'
+      - $ref: '#/components/schemas/PartialSnatAction'
+      description: |-
+        Specifies the action to take for packets that match a postrouting rule.
+
+         Masquerade replaces the source address with the outgoing interface's IP address.
+         Snat replaces the source address with a specific IP address and optional port. (PATCH)
+      discriminator:
+        propertyName: mode
+        mapping:
+          MASQUERADE: '#/components/schemas/MasqueradeAction'
+          SNAT: '#/components/schemas/PartialSnatAction'
+    PartialPostroutingRule:
+      type: object
+      properties:
+        action:
+          $ref: '#/components/schemas/PartialPostroutingAction'
+        description:
+          type: string
+          description: Human-readable comment for a firewall rule. The value is restricted to printable ASCII without quotes or backslashes.
+          pattern: ^[ -!#-\[\]-~]{0,128}$
+        match:
+          $ref: '#/components/schemas/PartialOutboundMatch'
+        priority:
+          type: integer
+          format: int32
+          description: Sort order of the rule. Lower values are evaluated first.
+          minimum: 0
+    PartialPreroutingRule:
+      type: object
+      properties:
+        action:
+          $ref: '#/components/schemas/PartialDnatAction'
+        description:
+          type: string
+          description: Human-readable comment for a firewall rule. The value is restricted to printable ASCII without quotes or backslashes.
+          pattern: ^[ -!#-\[\]-~]{0,128}$
+        match:
+          $ref: '#/components/schemas/PartialInboundMatch'
+        priority:
+          type: integer
+          format: int32
+          description: Sort order of the rule. Lower values are evaluated first.
+          minimum: 0
     PartialRecipeSigning:
       type: object
       properties:
@@ -2597,6 +3247,77 @@ components:
                 ...
                 -----END PGP PUBLIC KEY BLOCK-----
             delete-me: null
+    PartialRs232Config:
+      type: object
+      required:
+      - mode
+      properties:
+        mode:
+          type: string
+          enum:
+          - RS232
+    PartialRs485Config:
+      type: object
+      required:
+      - mode
+      properties:
+        enable_termination_resistor:
+          type: boolean
+          description: If set to true, a termination resistor will be enabled on the RS-485 interface. If set to false, the termination resistor will be disabled.
+        mode:
+          type: string
+          enum:
+          - RS485
+    PartialRsInterfaceConfig:
+      oneOf:
+      - $ref: '#/components/schemas/PartialRs232Config'
+      - $ref: '#/components/schemas/PartialRs485Config'
+      description: |-
+        Current operation mode of a RS interface (RS-232 or RS-485). The `mode` field is the discriminator selecting the variant.
+
+         For RS-485 interfaces, this also includes whether the termination resistor is enabled or disabled.
+         Please note that some interfaces may only support RS-232 or RS-485 mode. For example, tty-x3 on R-Series only supports RS-485 mode. (PATCH)
+      examples:
+      - enable_termination_resistor: true
+        mode: RS485
+      discriminator:
+        propertyName: mode
+        mapping:
+          RS232: '#/components/schemas/PartialRs232Config'
+          RS485: '#/components/schemas/PartialRs485Config'
+    PartialSerialInterfacesConfig:
+      type: object
+      description: Configuration settings for all serial interfaces (CAN, RS-232, RS-485) on the system. (PATCH)
+      properties:
+        can_interfaces:
+          type: object
+          description: |-
+            Configuration settings for all CAN interfaces on the system, keyed by interface name.
+
+            Keys may contain interfaces that are currently not present on the system.
+            For each existing interface, a configuration must be provided. If an interface is missing, the request will be rejected.
+            You may delete configuration of interfaces which are no longer present, e.g. for u-extend modules.
+          additionalProperties: true
+          example:
+            can-fm0-em0:
+              enable_termination_resistor: true
+        rs_interfaces:
+          type: object
+          description: |-
+            Configuration settings for all RS interfaces (RS-232, RS-485) on the system, keyed by u-OS interface name.
+
+            Keys may contain interfaces that are currently not present on the system.
+            For each existing interface, a configuration must be provided. If an interface is missing, the request will be rejected.
+            You may delete configuration of interfaces which are no longer present, e.g. for u-extend modules.
+
+            Note that the  u-OS interface name is not the same as the device path in `/dev`. The u-OS interface name is used to configure the interface, while
+            the device path is used to open the interface for reading/writing. You can obtain the device path from the state endpoint.
+          additionalProperties: true
+          example:
+            tty-fm0-em1:
+              enable_termination_resistor: false
+              mode: RS485
+            tty-fm1-em1: null
     PartialServiceInterfaceConfig:
       type: object
       description: Represents the configuration of the service interface. (PATCH)
@@ -2640,6 +3361,58 @@ components:
 
             If enabled, all other properties of the interface are ignored, except for the first IP address in the addresses list,
             which is used as the server address for the DHCP server.
+    PartialSignedUpdateConfig:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          description: True if signed updates are enabled, false otherwise.
+        preinstalled_gpg_keys:
+          oneOf:
+          - type: object
+            properties:
+              enabled:
+                type: boolean
+                description: |-
+                  True if Preinstalled GPG keys are enabled, false otherwise.
+
+                  All devices come with preinstalled preinstalled GPG keys to verify updates.
+                  If this is set to false, those keys will be ignored during update verification.
+                  User must upload their own GPG keys to verify updates in this case.
+          description: |-
+            Can be used to enable or disable preinstalled Preinstalled GPG keys.
+            This can be useful e.g. to only allow custom, self signed updates to the device.
+        user_gpg_keys:
+          type: object
+          description: User specific GPG public keys that are used to verify software updates.
+          additionalProperties: true
+          example:
+            another-gpg-key:
+              content: |-
+                -----BEGIN PGP PUBLIC KEY BLOCK-----
+
+                ...
+                -----END PGP PUBLIC KEY BLOCK-----
+            delete-me: null
+    PartialSnatAction:
+      type: object
+      description: Write a specific source address to the packet. (PATCH)
+      required:
+      - mode
+      properties:
+        mode:
+          type: string
+          enum:
+          - SNAT
+        new_source:
+          type: string
+          description: IPv4 address only. Accepts 'A.B.C.D'.
+        new_sport:
+          type:
+          - integer
+          - 'null'
+          format: int32
+          minimum: 0
     PartialUpdateSettings:
       type: object
       description: Represents the update configuration for the system used in get and put. (PATCH)
@@ -2658,38 +3431,7 @@ components:
               $ref: '#/components/schemas/PartialRecipeSigning'
               description: Settings related to signing of removable media updates.
         signed_update:
-          type: object
-          properties:
-            enabled:
-              type: boolean
-              description: True if signed updates are enabled, false otherwise.
-            preinstalled_gpg_keys:
-              oneOf:
-              - type: object
-                properties:
-                  enabled:
-                    type: boolean
-                    description: |-
-                      True if Preinstalled GPG keys are enabled, false otherwise.
-
-                      All devices come with preinstalled preinstalled GPG keys to verify updates.
-                      If this is set to false, those keys will be ignored during update verification.
-                      User must upload their own GPG keys to verify updates in this case.
-              description: |-
-                Can be used to enable or disable preinstalled Preinstalled GPG keys.
-                This can be useful e.g. to only allow custom, self signed updates to the device.
-            user_gpg_keys:
-              type: object
-              description: User specific GPG public keys that are used to verify software updates.
-              additionalProperties: true
-              example:
-                another-gpg-key:
-                  content: |-
-                    -----BEGIN PGP PUBLIC KEY BLOCK-----
-
-                    ...
-                    -----END PGP PUBLIC KEY BLOCK-----
-                delete-me: null
+          $ref: '#/components/schemas/PartialSignedUpdateConfig'
     PolicyType:
       type: string
       description: |-
@@ -2714,6 +3456,11 @@ components:
 
         Masquerade replaces the source address with the outgoing interface's IP address.
         Snat replaces the source address with a specific IP address and optional port.
+      discriminator:
+        propertyName: mode
+        mapping:
+          MASQUERADE: '#/components/schemas/MasqueradeAction'
+          SNAT: '#/components/schemas/SnatAction'
     PostroutingRule:
       type: object
       required:
@@ -2765,6 +3512,20 @@ components:
       - example.com
       maxLength: 253
       minLength: 1
+    RealtimeConfig:
+      type: object
+      required:
+      - cpu_isolation
+      properties:
+        cpu_isolation:
+          $ref: '#/components/schemas/CpuIsolationConfig'
+    RealtimeState:
+      type: object
+      required:
+      - cpu_isolation
+      properties:
+        cpu_isolation:
+          $ref: '#/components/schemas/CpuIsolationState'
     RecipeSigning:
       type: object
       required:
@@ -2800,6 +3561,84 @@ components:
 
                 ...
                 -----END PGP PUBLIC KEY BLOCK-----
+    RootAccessConfig:
+      type: object
+      required:
+      - enabled
+      properties:
+        enabled:
+          type: boolean
+    Rs232Config:
+      type: object
+      description: RS-232 mode configuration.
+      required:
+      - mode
+      properties:
+        mode:
+          type: string
+          enum:
+          - RS232
+    Rs485Config:
+      type: object
+      description: RS-485 mode configuration.
+      required:
+      - mode
+      - enable_termination_resistor
+      properties:
+        enable_termination_resistor:
+          type: boolean
+          description: If set to true, a termination resistor will be enabled on the RS-485 interface. If set to false, the termination resistor will be disabled.
+        mode:
+          type: string
+          enum:
+          - RS485
+    RsInterfaceConfig:
+      oneOf:
+      - $ref: '#/components/schemas/Rs232Config'
+      - $ref: '#/components/schemas/Rs485Config'
+      description: |-
+        Current operation mode of a RS interface (RS-232 or RS-485). The `mode` field is the discriminator selecting the variant.
+
+        For RS-485 interfaces, this also includes whether the termination resistor is enabled or disabled.
+        Please note that some interfaces may only support RS-232 or RS-485 mode. For example, tty-x3 on R-Series only supports RS-485 mode.
+      examples:
+      - enable_termination_resistor: true
+        mode: RS485
+      discriminator:
+        propertyName: mode
+        mapping:
+          RS232: '#/components/schemas/Rs232Config'
+          RS485: '#/components/schemas/Rs485Config'
+    RsInterfaceState:
+      type: object
+      required:
+      - name
+      - device_path
+      - supported_modes
+      - state
+      properties:
+        device_path:
+          type: string
+          description: The device path in /dev that belong to the RS interface. This is the path that should be used to open the interface for reading/writing.
+          example: /dev/tty-x3
+        name:
+          type: string
+          description: Name of the RS interface. Used for configuration.
+          example: tty-x3
+        state:
+          $ref: '#/components/schemas/RsInterfaceConfig'
+          description: Current configuration of the RS interface (RS-232 or RS-485)
+        supported_modes:
+          type: array
+          items:
+            $ref: '#/components/schemas/AllowedRsMode'
+          description: |-
+            Returns the supported operation modes for this interface.
+
+            Some interfaces may only support RS-232 or RS-485 mode. For example, tty-x3 on R-Series only supports RS-485 mode.
+          example:
+          - RS232
+          - RS485
     RuleAction:
       type: string
       description: |-
@@ -2815,12 +3654,72 @@ components:
       - root_access
       properties:
         root_access:
+          $ref: '#/components/schemas/RootAccessConfig'
+    SerialInterfacesConfig:
+      type: object
+      description: Configuration settings for all serial interfaces (CAN, RS-232, RS-485) on the system.
+      required:
+      - can_interfaces
+      - rs_interfaces
+      properties:
+        can_interfaces:
           type: object
-          required:
-          - enabled
-          properties:
-            enabled:
-              type: boolean
+          description: |-
+            Configuration settings for all CAN interfaces on the system, keyed by interface name.
+
+            Keys may contain interfaces that are currently not present on the system.
+            For each existing interface, a configuration must be provided. If an interface is missing, the request will be rejected.
+            You may delete configuration of interfaces which are no longer present, e.g. for u-extend modules.
+          additionalProperties:
+            $ref: '#/components/schemas/CanInterfaceConfig'
+          propertyNames:
+            type: string
+          example:
+            can-fm0-em0:
+              enable_termination_resistor: true
+            can-fm0-em1:
+              enable_termination_resistor: false
+        rs_interfaces:
+          type: object
+          description: |-
+            Configuration settings for all RS interfaces (RS-232, RS-485) on the system, keyed by u-OS interface name.
+
+            Keys may contain interfaces that are currently not present on the system.
+            For each existing interface, a configuration must be provided. If an interface is missing, the request will be rejected.
+            You may delete configuration of interfaces which are no longer present, e.g. for u-extend modules.
+
+            Note that the  u-OS interface name is not the same as the device path in `/dev`. The u-OS interface name is used to configure the interface, while
+            the device path is used to open the interface for reading/writing. You can obtain the device path from the state endpoint.
+          additionalProperties:
+            $ref: '#/components/schemas/RsInterfaceConfig'
+          propertyNames:
+            type: string
+          example:
+            tty-fm0-em1:
+              mode: RS232
+            tty-x3:
+              enable_termination_resistor: true
+              mode: RS485
+    SerialInterfacesState:
+      type: object
+      description: |-
+        Current state of all serial interfaces (CAN, RS-232, RS-485) on the system.
+
+        Unlike the configuration struct, this only contains interfaces that are currently present on the system.
+      required:
+      - can_interfaces
+      - rs_interfaces
+      properties:
+        can_interfaces:
+          type: array
+          items:
+            $ref: '#/components/schemas/CanInterfaceState'
+          description: Current state of all CAN interfaces on the system.
+        rs_interfaces:
+          type: array
+          items:
+            $ref: '#/components/schemas/RsInterfaceState'
+          description: Current state of all RS interfaces (RS-232, RS-485) on the system.
     ServerCa:
       oneOf:
       - $ref: '#/components/schemas/ServerCaVerify'
@@ -2921,6 +3820,51 @@ components:
 
             If enabled, all other properties of the interface are ignored, except for the first IP address in the addresses list,
             which is used as the server address for the DHCP server.
+    SignedUpdateConfig:
+      type: object
+      required:
+      - enabled
+      properties:
+        enabled:
+          type: boolean
+          description: True if signed updates are enabled, false otherwise.
+        preinstalled_gpg_keys:
+          oneOf:
+          - type: object
+            required:
+            - enabled
+            properties:
+              enabled:
+                type: boolean
+                description: |-
+                  True if Preinstalled GPG keys are enabled, false otherwise.
+
+                  All devices come with preinstalled preinstalled GPG keys to verify updates.
+                  If this is set to false, those keys will be ignored during update verification.
+                  User must upload their own GPG keys to verify updates in this case.
+          description: |-
+            Can be used to enable or disable preinstalled Preinstalled GPG keys.
+            This can be useful e.g. to only allow custom, self signed updates to the device.
+        user_gpg_keys:
+          type: object
+          description: User specific GPG public keys that are used to verify software updates.
+          additionalProperties:
+            $ref: '#/components/schemas/GpgKey'
+          propertyNames:
+            type: string
+            description: A GPG key ID that acts as a unique identifier for the key
+            examples:
+            - custom-gpg-key
+            maxLength: 255
+            minLength: 1
+            pattern: ^[a-z][a-z\-0-9]*$
+          example:
+            another-gpg-key:
+              content: |-
+                -----BEGIN PGP PUBLIC KEY BLOCK-----
+
+                ...
+                -----END PGP PUBLIC KEY BLOCK-----
     SnatAction:
       type: object
       description: Write a specific source address to the packet.
@@ -3272,50 +4216,7 @@ components:
               $ref: '#/components/schemas/RecipeSigning'
               description: Settings related to signing of removable media updates.
         signed_update:
-          type: object
-          required:
-          - enabled
-          properties:
-            enabled:
-              type: boolean
-              description: True if signed updates are enabled, false otherwise.
-            preinstalled_gpg_keys:
-              oneOf:
-              - type: object
-                required:
-                - enabled
-                properties:
-                  enabled:
-                    type: boolean
-                    description: |-
-                      True if Preinstalled GPG keys are enabled, false otherwise.
-
-                      All devices come with preinstalled preinstalled GPG keys to verify updates.
-                      If this is set to false, those keys will be ignored during update verification.
-                      User must upload their own GPG keys to verify updates in this case.
-              description: |-
-                Can be used to enable or disable preinstalled Preinstalled GPG keys.
-                This can be useful e.g. to only allow custom, self signed updates to the device.
-            user_gpg_keys:
-              type: object
-              description: User specific GPG public keys that are used to verify software updates.
-              additionalProperties:
-                $ref: '#/components/schemas/GpgKey'
-              propertyNames:
-                type: string
-                description: A GPG key ID that acts as a unique identifier for the key
-                examples:
-                - custom-gpg-key
-                maxLength: 255
-                minLength: 1
-                pattern: ^[a-z][a-z\-0-9]*$
-              example:
-                another-gpg-key:
-                  content: |-
-                    -----BEGIN PGP PUBLIC KEY BLOCK-----
-
-                    ...
-                    -----END PGP PUBLIC KEY BLOCK-----
+          $ref: '#/components/schemas/SignedUpdateConfig'
   securitySchemes:
     OAuth2:
       type: oauth2
@@ -3328,9 +4229,13 @@ components:
             u-os-adm.logging.readonly: Read access for logging endpoints
             u-os-adm.network.readonly: Read access for network endpoints
             u-os-adm.network.readwrite: Read and write access for network endpoints
+            u-os-adm.realtime.readonly: Read access for realtime endpoints
+            u-os-adm.realtime.readwrite: Read and write access for realtime endpoints
             u-os-adm.recovery.readwrite: Read and write access for recovery endpoints
             u-os-adm.security.readonly: Read access for security endpoints
             u-os-adm.security.readwrite: Read and write access for security endpoints
+            u-os-adm.serial-interfaces.readonly: Read access for serial interface configuration endpoints
+            u-os-adm.serial-interfaces.readwrite: Read and write access for serial interface configuration endpoints
             u-os-adm.syslog.readonly: Read access for syslog endpoints
             u-os-adm.syslog.readwrite: Read and write access for syslog endpoints
             u-os-adm.system.readonly: Read access for system endpoints
@@ -3359,3 +4264,9 @@ tags:
   description: API for general system informations & actions of u-OS
 - name: update
   description: API for u-OS update settings
+- name: realtime
+  description: API for u-OS realtime settings
+- name: serial-interfaces
+  description: API for u-OS serial interface settings
+- name: ping
+  description: API for checking the availability of u-os-adm
