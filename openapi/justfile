@@ -2,5 +2,92 @@
 #
 # SPDX-License-Identifier: MIT
 
-check:
-	spectral lint --fail-severity=warn *.yaml --ruleset ../tools/spectral/openapi-rules.json -v
+check: check-client-generation
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    readonly project_dir='{{ source_directory() }}'
+
+    for spec in "${project_dir}"/*.yaml; do
+        if [[ "${spec##*/}" == 'variable-http-openapi.yaml' ]]; then
+            spectral lint --fail-severity=warn "${spec}" --ruleset "${project_dir}/../tools/spectral/variable-http-api-rules.json" -v
+        else
+            spectral lint --fail-severity=warn "${spec}" --ruleset "${project_dir}/../tools/spectral/openapi-rules.json" -v
+        fi
+    done
+
+    for spec in "${project_dir}"/*.yaml; do
+        main_spec_path="$(
+            git diff --name-status -M origin/main |
+                awk -F '\t' -v current_path="openapi/${spec##*/}" '$1 ~ /^R/ && $3 == current_path { current_path = $2 } END { print current_path }'
+        )"
+        printf 'Checking %s for breaking changes...\n' "${spec##*/}"
+        git show "origin/main:${main_spec_path}" | oasdiff breaking - "${spec}" -o WARN --err-ignore "${project_dir}/../tools/oasdiff-ignore.txt"
+    done
+
+check-client-generation:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    readonly project_dir='{{ source_directory() }}'
+    readonly repo_root="${project_dir}/.."
+    readonly generated_base_dir="${repo_root}/tmp"
+
+    mkdir -p "${generated_base_dir}"
+    for spec in "${project_dir}"/*.yaml; do
+        api_basename="${spec##*/}"
+        api_basename="${api_basename%.yaml}"
+        package_name="${api_basename}-http-client"
+        generated_project_dir="${generated_base_dir}/${package_name}"
+
+        printf 'Generating Rust client code from OpenAPI spec: %s...\n' "${spec}"
+        java -jar /usr/local/bin/openapi-generator-cli.jar generate \
+            -i "${spec}" \
+            -g rust \
+            -o "${generated_project_dir}" \
+            --additional-properties="packageName=${package_name},reqwestDefaultFeatures=rustls" \
+            >/dev/null
+        printf 'Rust client code generation succeeded for %s!\n' "${api_basename}"
+
+        printf '[workspace]\n' >>"${generated_project_dir}/Cargo.toml"
+
+        if grep -rn 'OneOf' "${generated_project_dir}/src/"; then
+            printf 'Error: Found unnamed union variants (OneOf) in generated code for %s. This can cause issues for clients.\n' "${api_basename}" >&2
+            printf 'Please check the OpenAPI spec and consider refactoring to avoid this pattern. See Operations API for an example.\n' >&2
+            exit 1
+        fi
+
+        printf 'Compiling generated Rust client code for %s...\n' "${api_basename}"
+        (
+            cd "${generated_project_dir}"
+            CARGO_TARGET_DIR="${repo_root}/target" cargo -q build
+        )
+        printf 'Building Rust HTTP client succeeded for %s!\n' "${api_basename}"
+    done
+
+clean:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    readonly generated_base_dir='{{ source_directory() }}/../tmp'
+
+    for generated_project_dir in "${generated_base_dir}"/*-http-client; do
+        if [[ -d "${generated_project_dir}" ]]; then
+            rm -rf "${generated_project_dir}"
+        fi
+    done
+
+changelog:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    readonly project_dir='{{ source_directory() }}'
+
+    for spec in "${project_dir}"/*.yaml; do
+        main_spec_path="$(
+            git diff --name-status -M origin/main |
+                awk -F '\t' -v current_path="openapi/${spec##*/}" '$1 ~ /^R/ && $3 == current_path { current_path = $2 } END { print current_path }'
+        )"
+        printf 'Showing differences for %s...\n' "${spec##*/}"
+        git show "origin/main:${main_spec_path}" | oasdiff changelog - "${spec}"
+    done

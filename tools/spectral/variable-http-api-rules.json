@@ -1,0 +1,8 @@
+{
+    "extends": [
+        "./openapi-rules.json"
+    ],
+    "rules": {
+        "http-error-response-rfc9457": "off"
+    }
+}

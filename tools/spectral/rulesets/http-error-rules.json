@@ -1,0 +1,165 @@
+{
+    "rules": {
+        "http-response-valid": {
+            "description": "HTTP responses should contain a status code of 200 or 202.",
+            "message": "HTTP response does not contain a status code of 200 or 202.",
+            "given": "$.paths..responses",
+            "then": {
+                "function": "schema",
+                "functionOptions": {
+                    "schema": {
+                        "type": "object",
+                        "anyOf": [
+                            {
+                                "required": [
+                                    "200"
+                                ]
+                            },
+                            {
+                                "required": [
+                                    "202"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "http-response-default": {
+            "description": "HTTP responses should contain a default error return status code.",
+            "message": "HTTP response does not contain a default error return status code.",
+            "given": "$.paths..responses",
+            "then": [
+                {
+                    "field": "default",
+                    "function": "truthy"
+                },
+                {
+                    "field": "default.content",
+                    "function": "truthy"
+                }
+            ]
+        },
+        "http-error-response-rfc9457": {
+            "description": "Error responses must use an RFC 9457 problem details payload with required type, title, and status properties.",
+            "message": "Error response must define an application/problem+json object schema with required type, title, and status properties.",
+            "given": "$.paths..responses[?(@property.match(/^(default|[45][0-9][0-9])$/))]",
+            "then": {
+                "function": "schema",
+                "functionOptions": {
+                    "schema": {
+                        "type": "object",
+                        "required": [
+                            "content"
+                        ],
+                        "properties": {
+                            "content": {
+                                "type": "object",
+                                "required": [
+                                    "application/problem+json"
+                                ],
+                                "properties": {
+                                    "application/problem+json": {
+                                        "type": "object",
+                                        "required": [
+                                            "schema"
+                                        ],
+                                        "properties": {
+                                            "schema": {
+                                                "type": "object",
+                                                "required": [
+                                                    "type",
+                                                    "required",
+                                                    "properties"
+                                                ],
+                                                "properties": {
+                                                    "type": {
+                                                        "const": "object"
+                                                    },
+                                                    "required": {
+                                                        "type": "array",
+                                                        "allOf": [
+                                                            {
+                                                                "contains": {
+                                                                    "const": "type"
+                                                                }
+                                                            },
+                                                            {
+                                                                "contains": {
+                                                                    "const": "title"
+                                                                }
+                                                            },
+                                                            {
+                                                                "contains": {
+                                                                    "const": "status"
+                                                                }
+                                                            }
+                                                        ]
+                                                    },
+                                                    "properties": {
+                                                        "type": "object",
+                                                        "required": [
+                                                            "detail",
+                                                            "instance",
+                                                            "type",
+                                                            "title",
+                                                            "status"
+                                                        ],
+                                                        "properties": {
+                                                            "type": {
+                                                                "type": "object",
+                                                                "required": [
+                                                                    "type"
+                                                                ],
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "const": "string"
+                                                                    }
+                                                                }
+                                                            },
+                                                            "title": {
+                                                                "type": "object",
+                                                                "required": [
+                                                                    "type"
+                                                                ],
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "const": "string"
+                                                                    }
+                                                                }
+                                                            },
+                                                            "status": {
+                                                                "type": "object",
+                                                                "required": [
+                                                                    "type"
+                                                                ],
+                                                                "properties": {
+                                                                    "type": {
+                                                                        "const": "integer"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "http-response-forbidden-status-code": {
+            "description": "HTTP response codes marked as do not document or do not use by the Zalando RESTful API and Event Guidelines must not be included.",
+            "message": "HTTP response code {{property}} must not be included. See https://opensource.zalando.com/restful-api-guidelines/#client-side-error-codes.",
+            "severity": "warn",
+            "given": "$.paths..responses[?(@property.match(/^(401|403|404|406|408|410|412|415|417|418|422|424|428|429|431)$/))]",
+            "then": {
+                "function": "falsy"
+            }
+        }
+    }
+}

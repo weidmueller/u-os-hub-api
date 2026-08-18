@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2026 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+#
+# SPDX-License-Identifier: MIT
+
+# Ignored oasdiff breaking-change findings.
+# See: https://github.com/oasdiff/oasdiff/blob/main/docs/BREAKING-CHANGES.md#ignoring-specific-breaking-changes
+
+PATCH /update/config removed `subschema #1` from the `signed_update/preinstalled_gpg_keys` request property `oneOf` list
+PATCH /update/config the `signed_update/preinstalled_gpg_keys` request property `type` changed from `any` to `object`
+PUT /update/config added the new required request property `signed_update/preinstalled_gpg_keys/enabled`
+PUT /update/config removed `subschema #1` from the `signed_update/preinstalled_gpg_keys` request property `oneOf` list
+PUT /update/config the `signed_update/preinstalled_gpg_keys` request property `type` changed from `any` to `object`

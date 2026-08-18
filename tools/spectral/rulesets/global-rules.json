@@ -19,6 +19,7 @@
         "owasp:api8:2023-define-error-validation": "off",
         "owasp:api9:2023-inventory-access": "off",
         "owasp:api9:2023-inventory-environment": "off",
-        "oas3-valid-media-example": "off"
+        "oas3-valid-media-example": "off",
+        "oas3-unused-component": "off"
     }
 }

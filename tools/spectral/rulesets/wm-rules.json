@@ -1,0 +1,50 @@
+{
+    "functionsDir": "./functions",
+    "functions": [
+        "colon-paths-only-post",
+        "get-put-same-schema",
+        "no-anonymous-object-schemas",
+        "unused-components-except-partial"
+    ],
+    "rules": {
+        "colon-paths-only-post": {
+            "description": "Paths containing a colon must only use POST operations.",
+            "message": "{{error}}",
+            "severity": "warn",
+            "given": "$.paths[*]",
+            "then": {
+                "function": "colon-paths-only-post"
+            }
+        },
+        "get-put-same-schema": {
+            "description": "GET responses and PUT request bodies on the same path should use the same schema.",
+            "message": "{{error}}",
+            "severity": "warn",
+            "resolved": false,
+            "given": "$.paths[*]",
+            "then": {
+                "function": "get-put-same-schema"
+            }
+        },
+        "no-anonymous-object-schemas": {
+            "description": "Object schemas should be named components and referenced with $ref.",
+            "message": "{{error}}",
+            "severity": "warn",
+            "resolved": false,
+            "given": "$",
+            "then": {
+                "function": "no-anonymous-object-schemas"
+            }
+        },
+        "unused-component-except-partial": {
+            "description": "Component schemas should be referenced. Partial schemas may be unused when their non-prefixed partner exists.",
+            "message": "{{error}}",
+            "severity": "warn",
+            "resolved": false,
+            "given": "$",
+            "then": {
+                "function": "unused-components-except-partial"
+            }
+        }
+    }
+}
