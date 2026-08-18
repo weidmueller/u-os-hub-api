@@ -1,35 +1,9 @@
 {
     "extends": [
-        "./global-rules.json",
-        "./casing-rules.json"
+        "./rulesets/global-rules.json",
+        "./rulesets/casing-rules.json",
+        "./rulesets/wm-rules.json",
+        "./rulesets/http-error-rules.json"
     ],
-    "rules": {
-        "oas3-unused-component": "off",
-        "http-response-valid": {
-            "description": "HTTP responses should contain a status code of 200 or 202.",
-            "message": "HTTP response does not contain a status code of 200 or 202.",
-            "given": "$.paths..responses",
-            "then": {
-                "function": "schema",
-                "functionOptions": {
-                    "schema": {
-                        "type": "object",
-                        "anyOf": [
-                            { "required": ["200"] },
-                            { "required": ["202"] }
-                        ]
-                    }
-                }
-            }
-        },
-        "http-response-default": {
-            "description": "HTTP responses should contain a default error return status code.",
-            "message": "HTTP response does not contain a default error return status code.",
-            "given": "$.paths..responses",
-            "then": [
-                { "field": "default", "function": "truthy" },
-                { "field": "default.content", "function": "truthy" }
-            ]
-        }
-    }
+    "rules": {}
 }

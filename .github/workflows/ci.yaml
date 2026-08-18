@@ -51,5 +51,4 @@ jobs:
         with:
           imageName: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/devcontainer
           cacheFrom: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/devcontainer
-          runCmd: |
-            just check
+          runCmd: just check && just openapi::changelog

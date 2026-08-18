@@ -9,7 +9,7 @@ check: build
 build: generate-json-schemas
 	cd {{ source_directory() }}
 	bun install --frozen-lockfile
-	bun --bun run build
+	NODE_CONFIG_DIR="./node_modules/@asyncapi/cli/lib/apps/api/configs" SUPPRESS_NO_CONFIG_WARNING=true bun --bun run build
 
 generate-json-schemas:
 	cd {{ source_directory() }}
