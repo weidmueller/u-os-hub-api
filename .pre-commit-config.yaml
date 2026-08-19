@@ -8,7 +8,6 @@ repos:
     hooks:
       - id: check-added-large-files
       - id: mixed-line-ending
-      - id: trailing-whitespace
 
   - repo: https://github.com/jorisroovers/gitlint
     rev: v0.19.1
