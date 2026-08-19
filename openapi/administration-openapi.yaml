@@ -53,7 +53,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/FirewallConfig'
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -126,14 +126,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FirewallConfig'
-        '412':
-          description: The supplied `If-Match` precondition did not match the current resource version. The resource was modified by someone else in the meantime. Re-fetch the resource to obtain the current `ETag` and retry.
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/HttpErrorPayload'
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -169,7 +163,7 @@ paths:
                 type: string
               description: Only present when a `Temporary` configuration has a scheduled rollback. The time at which the configuration will automatically revert to the persistent configuration, represented as an HTTP-date (for example, `Sun, 06 Nov 2025 08:49:37 GMT`). The timestamp is expressed in the device's system time. Clients SHOULD compare it with the HTTP `Date` response header rather than their local clock when calculating the time remaining until the rollback.
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -233,14 +227,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FirewallConfig'
-        '412':
-          description: The supplied `If-Match` precondition did not match the current resource version. The resource was modified by someone else in the meantime. Re-fetch the resource to obtain the current `ETag` and retry.
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/HttpErrorPayload'
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -275,7 +263,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/FirewallConfig'
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -318,14 +306,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FirewallConfig'
-        '412':
-          description: The supplied `If-Match` precondition did not match the current resource version. The resource was modified by someone else in the meantime. Re-fetch the resource to obtain the current `ETag` and retry.
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/HttpErrorPayload'
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -364,14 +346,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FirewallConfig'
-        '412':
-          description: The supplied `If-Match` precondition did not match the current resource version. The resource was modified by someone else in the meantime. Re-fetch the resource to obtain the current `ETag` and retry.
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/HttpErrorPayload'
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -397,7 +373,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/FirewallConfig'
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -459,7 +435,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/LogEntryResponse'
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -496,7 +472,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpErrorPayload'
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -526,7 +502,7 @@ paths:
           content:
             application/octet-stream: {}
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -549,7 +525,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/LogSourcesResponse'
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -572,7 +548,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/NetworkConfig'
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -607,7 +583,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/NetworkConfig'
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -641,7 +617,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/NetworkConfig'
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -664,7 +640,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/NetworkState'
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -692,7 +668,7 @@ paths:
         '200':
           description: Network settings reset successfully.
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -713,7 +689,7 @@ paths:
           content:
             application/json: {}
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -748,7 +724,25 @@ paths:
               schema:
                 $ref: '#/components/schemas/OperationState'
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2: []
+  /ping:
+    get:
+      tags:
+      - ping
+      summary: Minimal endpoint to verify the backend is started and reachable.
+      description: Requires no authorization and always returns `200 OK`.
+      operationId: ping
+      responses:
+        '200':
+          description: Backend is reachable.
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -772,7 +766,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/RealtimeConfig'
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -803,7 +797,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/RealtimeConfig'
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -828,7 +822,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/RealtimeState'
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -856,7 +850,7 @@ paths:
         '202':
           description: Factory reset initiated successfully.
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -879,7 +873,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/SecuritySettings'
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -910,7 +904,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/SecuritySettings'
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -935,7 +929,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/SerialInterfacesConfig'
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -970,7 +964,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/SerialInterfacesConfig'
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -1001,7 +995,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/SerialInterfacesConfig'
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -1024,7 +1018,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/SerialInterfacesState'
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -1049,7 +1043,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Certificates'
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -1087,11 +1081,11 @@ paths:
         '400':
           description: Invalid certificate data
           content:
-            application/json:
+            application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpErrorPayload'
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -1134,11 +1128,11 @@ paths:
         '400':
           description: Invalid certificate data
           content:
-            application/json:
+            application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpErrorPayload'
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -1161,7 +1155,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/SyslogConfig'
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -1189,11 +1183,11 @@ paths:
         '400':
           description: Invalid configuration
           content:
-            application/json:
+            application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpErrorPayload'
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -1218,7 +1212,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/SyslogState'
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -1243,7 +1237,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Disks'
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -1270,7 +1264,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/SystemInformation'
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -1295,7 +1289,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/DeviceNameplate'
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -1316,7 +1310,7 @@ paths:
         '202':
           description: System reboot initiated successfully.
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -1339,7 +1333,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/UpdateSettings'
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -1372,7 +1366,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/UpdateSettings'
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -1403,7 +1397,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/UpdateSettings'
         default:
-          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
           content:
             application/problem+json:
               schema:
@@ -3189,6 +3183,17 @@ components:
           format: int32
           description: Sort order of the rule. Lower values are evaluated first.
           minimum: 0
+    PartialPreinstalledGpgKeysEnabled:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          description: |-
+            True if Preinstalled GPG keys are enabled, false otherwise.
+
+            All devices come with preinstalled preinstalled GPG keys to verify updates.
+            If this is set to false, those keys will be ignored during update verification.
+            User must upload their own GPG keys to verify updates in this case.
     PartialPreroutingRule:
       type: object
       properties:
@@ -3229,6 +3234,19 @@ components:
                 ...
                 -----END PGP PUBLIC KEY BLOCK-----
             delete-me: null
+    PartialRemovableMediaUpdateConfig:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          description: |-
+            True if removable media updates are enabled, false otherwise.
+
+            Note: Removable media updates are always enabled before initial setup is complete.
+            This value shows only the state after the initial setup.
+        recipe_signing:
+          $ref: '#/components/schemas/PartialRecipeSigning'
+          description: Settings related to signing of removable media updates.
     PartialRs232Config:
       type: object
       required:
@@ -3350,17 +3368,7 @@ components:
           type: boolean
           description: True if signed updates are enabled, false otherwise.
         preinstalled_gpg_keys:
-          oneOf:
-          - type: object
-            properties:
-              enabled:
-                type: boolean
-                description: |-
-                  True if Preinstalled GPG keys are enabled, false otherwise.
-
-                  All devices come with preinstalled preinstalled GPG keys to verify updates.
-                  If this is set to false, those keys will be ignored during update verification.
-                  User must upload their own GPG keys to verify updates in this case.
+          $ref: '#/components/schemas/PartialPreinstalledGpgKeysEnabled'
           description: |-
             Can be used to enable or disable preinstalled Preinstalled GPG keys.
             This can be useful e.g. to only allow custom, self signed updates to the device.
@@ -3400,18 +3408,7 @@ components:
       description: Represents the update configuration for the system used in get and put. (PATCH)
       properties:
         removable_media_update:
-          type: object
-          properties:
-            enabled:
-              type: boolean
-              description: |-
-                True if removable media updates are enabled, false otherwise.
-
-                Note: Removable media updates are always enabled before initial setup is complete.
-                This value shows only the state after the initial setup.
-            recipe_signing:
-              $ref: '#/components/schemas/PartialRecipeSigning'
-              description: Settings related to signing of removable media updates.
+          $ref: '#/components/schemas/PartialRemovableMediaUpdateConfig'
         signed_update:
           $ref: '#/components/schemas/PartialSignedUpdateConfig'
     PolicyType:
@@ -3464,6 +3461,19 @@ components:
           format: int32
           description: Sort order of the rule. Lower values are evaluated first.
           minimum: 0
+    PreinstalledGpgKeysEnabled:
+      type: object
+      required:
+      - enabled
+      properties:
+        enabled:
+          type: boolean
+          description: |-
+            True if Preinstalled GPG keys are enabled, false otherwise.
+
+            All devices come with preinstalled preinstalled GPG keys to verify updates.
+            If this is set to false, those keys will be ignored during update verification.
+            User must upload their own GPG keys to verify updates in this case.
     PreroutingRule:
       type: object
       required:
@@ -3543,6 +3553,22 @@ components:
 
                 ...
                 -----END PGP PUBLIC KEY BLOCK-----
+    RemovableMediaUpdateConfig:
+      type: object
+      required:
+      - enabled
+      - recipe_signing
+      properties:
+        enabled:
+          type: boolean
+          description: |-
+            True if removable media updates are enabled, false otherwise.
+
+            Note: Removable media updates are always enabled before initial setup is complete.
+            This value shows only the state after the initial setup.
+        recipe_signing:
+          $ref: '#/components/schemas/RecipeSigning'
+          description: Settings related to signing of removable media updates.
     RootAccessConfig:
       type: object
       required:
@@ -3811,19 +3837,7 @@ components:
           type: boolean
           description: True if signed updates are enabled, false otherwise.
         preinstalled_gpg_keys:
-          oneOf:
-          - type: object
-            required:
-            - enabled
-            properties:
-              enabled:
-                type: boolean
-                description: |-
-                  True if Preinstalled GPG keys are enabled, false otherwise.
-
-                  All devices come with preinstalled preinstalled GPG keys to verify updates.
-                  If this is set to false, those keys will be ignored during update verification.
-                  User must upload their own GPG keys to verify updates in this case.
+          $ref: '#/components/schemas/PreinstalledGpgKeysEnabled'
           description: |-
             Can be used to enable or disable preinstalled Preinstalled GPG keys.
             This can be useful e.g. to only allow custom, self signed updates to the device.
@@ -4182,21 +4196,7 @@ components:
       - signed_update
       properties:
         removable_media_update:
-          type: object
-          required:
-          - enabled
-          - recipe_signing
-          properties:
-            enabled:
-              type: boolean
-              description: |-
-                True if removable media updates are enabled, false otherwise.
-
-                Note: Removable media updates are always enabled before initial setup is complete.
-                This value shows only the state after the initial setup.
-            recipe_signing:
-              $ref: '#/components/schemas/RecipeSigning'
-              description: Settings related to signing of removable media updates.
+          $ref: '#/components/schemas/RemovableMediaUpdateConfig'
         signed_update:
           $ref: '#/components/schemas/SignedUpdateConfig'
   securitySchemes:
@@ -4250,3 +4250,5 @@ tags:
   description: API for u-OS realtime settings
 - name: serial-interfaces
   description: API for u-OS serial interface settings
+- name: ping
+  description: API for checking the availability of u-os-adm
