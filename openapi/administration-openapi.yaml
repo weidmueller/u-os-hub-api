@@ -918,8 +918,9 @@ paths:
       - serial-interfaces
       summary: Read the serial interface configuration for the system.
       description: |-
-        Note that the config may contain interfaces that are currently not present on the system, e.g. from u-extend modules.
-        This allows to configure interfaces before they get connected.
+        For systems that support u-extend modules, the config may also contain interfaces that are currently not present on the system.
+
+        This endpoint is only available on platforms with configurable serial interfaces (e.g. R-Series or M-Series).
       operationId: get_serial_interface_config
       responses:
         '200':
@@ -944,10 +945,12 @@ paths:
       - serial-interfaces
       summary: Set the serial interface configuration for the system.
       description: |-
-        Note that the config may contain interfaces that are currently not present on the system, e.g. from u-extend modules.
+        You must always at least include all interfaces that are currently present on the system in the request payload.
+
+        For systems that support u-extend modules, the config may also contain interfaces that are currently not present on the system.
         This allows to configure interfaces before they get connected.
 
-        You must always at least include all interfaces that are currently present on the system in the request payload.
+        This endpoint is only available on platforms with configurable serial interfaces (e.g. R-Series or M-Series).
       operationId: set_serial_interface_config
       requestBody:
         description: Configuration to update
@@ -977,8 +980,10 @@ paths:
       - serial-interfaces
       summary: Update the serial interface configuration for the system.
       description: |-
-        Note that the config may contain interfaces that are currently not present on the system, e.g. from u-extend modules.
+        For systems that support u-extend modules, the config may also contain interfaces that are currently not present on the system.
         This allows to configure interfaces before they get connected.
+
+        This endpoint is only available on platforms with configurable serial interfaces (e.g. R-Series or M-Series).
       operationId: update_serial_interface_config
       requestBody:
         description: Configuration to update
@@ -1008,7 +1013,10 @@ paths:
       tags:
       - serial-interfaces
       summary: Get the current state of the serial interfaces on the system.
-      description: The state only includes interfaces that are currently present on the system and contains their current, active state.
+      description: |-
+        The state only includes interfaces that are currently present on the system and contains their current, active state.
+
+        This endpoint is only available on platforms with configurable serial interfaces (e.g. R-Series or M-Series).
       operationId: get_serial_interface_state
       responses:
         '200':
@@ -1318,6 +1326,119 @@ paths:
       security:
       - OAuth2:
         - u-os-adm.system.readwrite
+  /time/config:
+    get:
+      tags:
+      - time
+      summary: Get time configuration.
+      description: |-
+        Returns the current time configuration including NTP servers and timezone.
+        If `method` is `NTP` and `ntp_servers` is empty, the default fallback servers will be used for NTP synchronization
+        (`time1.google.com`, `time2.google.com`, `time3.google.com`, `time4.google.com`).
+      operationId: get_time_config
+      responses:
+        '200':
+          description: Current time configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeConfig'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.time.readonly
+      - OAuth2:
+        - u-os-adm.time.readwrite
+    put:
+      tags:
+      - time
+      summary: Replace time configuration.
+      description: |-
+        Changes take effect immediately:
+        - The timezone is applied system-wide.
+        - When `method` is `MANUAL`, the system clock is set immediately to the given `date_time`.
+        - When `method` is `NTP`, and if `ntp_servers` is empty, the default fallback servers will be used for NTP synchronization
+          (`time1.google.com`, `time2.google.com`, `time3.google.com`, `time4.google.com`).
+
+        Available timezones can be queried via `GET /time/timezones`.
+      operationId: set_time_config
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimeConfig'
+        required: true
+      responses:
+        '200':
+          description: Time configuration replaced successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeConfig'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.time.readwrite
+  /time/state:
+    get:
+      tags:
+      - time
+      summary: Get current time state.
+      description: Returns the current time state of the system, including the current date and time.
+      operationId: get_time_state
+      responses:
+        '200':
+          description: Current time state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeStateResponse'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.time.readonly
+      - OAuth2:
+        - u-os-adm.time.readwrite
+  /time/timezones:
+    get:
+      tags:
+      - time
+      summary: List available timezones.
+      description: Returns all supported IANA timezones with base and currently active seasonal offsets.
+      operationId: list_timezones
+      responses:
+        '200':
+          description: List of supported timezones
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListTimezonesResponse'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.time.readonly
+      - OAuth2:
+        - u-os-adm.time.readwrite
   /update/config:
     get:
       tags:
@@ -1661,6 +1782,10 @@ components:
       oneOf:
       - $ref: '#/components/schemas/DnatActionForward'
       - $ref: '#/components/schemas/DnatActionRedirect'
+      examples:
+      - mode: FORWARD
+        new_destination: 192.168.1.100
+        new_dport: 8080
       discriminator:
         propertyName: mode
         mapping:
@@ -2323,6 +2448,15 @@ components:
           $ref: '#/components/schemas/Ipv4String'
         prefix_length:
           $ref: '#/components/schemas/Ipv4PrefixLength'
+    ListTimezonesResponse:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimezoneItem'
     LogEntry:
       type: object
       required:
@@ -2368,6 +2502,22 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/LogSource'
+    ManualTimeSettings:
+      type: object
+      description: Manual time settings used when `method` is `MANUAL`.
+      required:
+      - method
+      - date_time
+      properties:
+        date_time:
+          type: string
+          format: date-time
+          description: RFC 3339 datetime string in UTC, e.g. `"2026-01-15T12:00:00Z"`.
+          example: 2026-01-15T12:00:00Z
+        method:
+          type: string
+          enum:
+          - MANUAL
     MasqueradeAction:
       type: object
       description: |-
@@ -2520,12 +2670,61 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Ipv4Route'
+    NtpRuntimeState:
+      type: object
+      required:
+      - ntp_synchronized
+      - link_ntp_servers
+      - current_server
+      properties:
+        current_server:
+          type: string
+          description: |-
+            The NTP server currently used for time synchronisation.
+            The NTP servers are used in the following order if a server is unavailable: `link_servers` (DHCP) > configured servers > fallback server.
+            If no server is currently being used for synchronisation, this entry is empty.
+        link_ntp_servers:
+          type: array
+          items:
+            type: string
+          description: |-
+            NTP servers provided by network link configuration (DHCP).
+            These are runtime-discovered servers and are independent from `ntp_servers` in `/time/config`.
+        ntp_synchronized:
+          type: boolean
+          description: Whether the system clock is currently synchronized via NTP.
+    NtpSettings:
+      type: object
+      description: NTP-specific settings used when `method` is `NTP`.
+      required:
+      - method
+      - ntp_servers
+      properties:
+        method:
+          type: string
+          enum:
+          - NTP
+        ntp_servers:
+          type: array
+          items:
+            type: string
+          description: |-
+            Statically configured NTP server hostnames or IP addresses.
+            This list can be empty when no static servers are configured.
+            In that case default fallback servers will be used:
+            `time1.google.com`, `time2.google.com`, `time3.google.com`, `time4.google.com`.
+          example:
+          - pool.ntp.org
+          - time.google.com
     OperationState:
       oneOf:
       - $ref: '#/components/schemas/OperationStatePending'
       - $ref: '#/components/schemas/OperationStateCompleted'
       - $ref: '#/components/schemas/OperationStateFailed'
       description: Represents the entire state of a long-running operation.
+      examples:
+      - created_at: 2026-08-31T12:57:46.627169822+00:00
+        status: PENDING
       discriminator:
         propertyName: status
         mapping:
@@ -2731,6 +2930,10 @@ components:
       oneOf:
       - $ref: '#/components/schemas/PartialDnatActionForward'
       - $ref: '#/components/schemas/PartialDnatActionRedirect'
+      examples:
+      - mode: FORWARD
+        new_destination: 192.168.1.100
+        new_dport: 8080
       discriminator:
         propertyName: mode
         mapping:
@@ -3162,6 +3365,8 @@ components:
 
          Masquerade replaces the source address with the outgoing interface's IP address.
          Snat replaces the source address with a specific IP address and optional port. (PATCH)
+      examples:
+      - mode: MASQUERADE
       discriminator:
         propertyName: mode
         mapping:
@@ -3435,6 +3640,8 @@ components:
 
         Masquerade replaces the source address with the outgoing interface's IP address.
         Snat replaces the source address with a specific IP address and optional port.
+      examples:
+      - mode: MASQUERADE
       discriminator:
         propertyName: mode
         mapping:
@@ -3715,9 +3922,23 @@ components:
 
         Unlike the configuration struct, this only contains interfaces that are currently present on the system.
       required:
+      - allow_add_can_interfaces
+      - allow_add_rs_interfaces
       - can_interfaces
       - rs_interfaces
       properties:
+        allow_add_can_interfaces:
+          type: boolean
+          description: |-
+            If set to true, the system allows adding new CAN interfaces.
+
+            This is the case for systems which allow expansion (e.g. u-extend) with new interfaces.
+        allow_add_rs_interfaces:
+          type: boolean
+          description: |-
+            If set to true, the system allows adding new RS interfaces.
+
+            This is the case for systems which allow expansion (e.g. u-extend) with new interfaces.
         can_interfaces:
           type: array
           items:
@@ -4125,6 +4346,88 @@ components:
           $ref: '#/components/schemas/Firmware'
         memory:
           $ref: '#/components/schemas/Memory'
+    TimeConfig:
+      type: object
+      description: Time configuration for `GET /time/config` and `PUT /time/config`.
+      required:
+      - timezone
+      - source
+      properties:
+        source:
+          $ref: '#/components/schemas/TimeConfigSource'
+        timezone:
+          type: string
+          description: |-
+            IANA timezone name to apply to the system, e.g. `"Europe/Berlin"`.
+            DST transitions are handled automatically based on the IANA rules for the given timezone.
+            The full list of accepted values is available via `GET /time/timezones`.
+            This timezone controls local time representation (including DST) used by the system and API responses.
+          example: Europe/Berlin
+    TimeConfigSource:
+      oneOf:
+      - $ref: '#/components/schemas/NtpSettings'
+      - $ref: '#/components/schemas/ManualTimeSettings'
+      description: Discriminates between NTP and manual time synchronization methods.
+      examples:
+      - method: NTP
+        ntp_servers:
+        - pool.ntp.org
+        - time.google.com
+      discriminator:
+        propertyName: method
+        mapping:
+          MANUAL: '#/components/schemas/ManualTimeSettings'
+          NTP: '#/components/schemas/NtpSettings'
+    TimeStateResponse:
+      type: object
+      required:
+      - local_time
+      properties:
+        local_time:
+          type: string
+          format: date-time
+          description: Current local time in the configured timezone, RFC 3339 formatted with UTC offset.
+          example: 2026-01-15T12:00:00+02:00
+        ntp:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/NtpRuntimeState'
+            description: Runtime NTP status details (present only when NTP is configured).
+      example:
+        local_time: 2026-01-15T12:00:00+02:00
+        ntp:
+          current_server: time1.google.com
+          link_ntp_servers:
+          - time1.google.com
+          - time2.google.com
+          ntp_synchronized: true
+    TimezoneItem:
+      type: object
+      description: A single timezone entry with base and currently active seasonal offsets.
+      required:
+      - name
+      - base_offset
+      - actual_offset
+      properties:
+        actual_offset:
+          type: integer
+          format: int32
+          description: |-
+            Currently applicable UTC offset in minutes for this timezone.
+            This is the offset that is used now and can differ from `base_offset` due to seasonal timezone rules.
+          example: 60
+        base_offset:
+          type: integer
+          format: int32
+          description: |-
+            Standard UTC offset in minutes (without DST), e.g. `60` for UTC+01:00 or `-300` for UTC-05:00.
+            This is the fixed base offset defined by the timezone rules.
+            The currently used offset is returned in `actual_offset`.
+          example: 60
+        name:
+          type: string
+          description: IANA timezone name, e.g. `"Europe/Berlin"`.
+          example: Europe/Berlin
     TlsConfig:
       oneOf:
       - $ref: '#/components/schemas/TlsDisabled'
@@ -4222,6 +4525,8 @@ components:
             u-os-adm.syslog.readwrite: Read and write access for syslog endpoints
             u-os-adm.system.readonly: Read access for system endpoints
             u-os-adm.system.readwrite: Read and write access for system endpoints
+            u-os-adm.time.readonly: Read access for time settings endpoints
+            u-os-adm.time.readwrite: Read and write access for time settings endpoints
             u-os-adm.update.readonly: Read access for update endpoints
             u-os-adm.update.readwrite: Read and write access for update endpoints
       description: The HTTP API uses the OAuth2 client credentials flow.
@@ -4244,6 +4549,8 @@ tags:
   description: API for u-OS security settings
 - name: system
   description: API for general system informations & actions of u-OS
+- name: time
+  description: API for time settings and time state of u-OS
 - name: update
   description: API for u-OS update settings
 - name: realtime
