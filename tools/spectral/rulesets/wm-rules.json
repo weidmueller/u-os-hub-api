@@ -16,6 +16,16 @@
                 "function": "colon-paths-only-post"
             }
         },
+        "discriminator-example": {
+            "description": "Schemas with a discriminator must define an example to work around Swagger UI issue #8336.",
+            "message": "Schema with discriminator must define at least one example. As work around for Swagger UI issue #8336.",
+            "severity": "warn",
+            "given": "$.components.schemas[?(@.discriminator)]",
+            "then": {
+                "field": "examples",
+                "function": "truthy"
+            }
+        },
         "get-put-same-schema": {
             "description": "GET responses and PUT request bodies on the same path should use the same schema.",
             "message": "{{error}}",
