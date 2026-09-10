@@ -5,5 +5,42 @@
         "./rulesets/wm-rules.json",
         "./rulesets/http-error-rules.json"
     ],
-    "rules": {}
+    "rules": {},
+    "overrides": [
+        {
+            "files": [
+                "api.identitymanagement.yaml#/paths/~1users~1password-rules/get",
+                "api.identitymanagement.yaml#/paths/~1auth~1authId~1%7BauthId%7D/get",
+                "api.identitymanagement.yaml#/paths/~1users~1has-system-user/get",
+                "identitymanagement-openapi.yaml#/paths/~1users~1password-rules/get",
+                "identitymanagement-openapi.yaml#/paths/~1auth~1authId~1%7BauthId%7D/get",
+                "identitymanagement-openapi.yaml#/paths/~1users~1has-system-user/get"
+            ],
+            "rules": {
+                "owasp:api2:2023-read-restricted": "off"
+            }
+        },
+        {
+            "files": [
+                "api.identitymanagement.yaml#/paths/~1auth~1change-password/post",
+                "api.identitymanagement.yaml#/paths/~1users~1create-system-user/post",
+                "identitymanagement-openapi.yaml#/paths/~1auth~1change-password/post",
+                "identitymanagement-openapi.yaml#/paths/~1users~1create-system-user/post"
+            ],
+            "rules": {
+                "owasp:api2:2023-write-restricted": "off"
+            }
+        },
+        {
+            "files": [
+                "api.identitymanagement.yaml",
+                "identitymanagement-openapi.yaml"
+            ],
+            "rules": {
+                "naming-snake-case-properties": "off",
+                "naming-kebab-case-path-segments": "off",
+                "http-error-response-rfc9457": "off"
+            }
+        }
+    ]
 }

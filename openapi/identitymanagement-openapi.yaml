@@ -1,0 +1,2006 @@
+openapi: 3.0.0
+info:
+  title: User management API
+  version: 1.0.0
+  description: API for user and identity management.
+  contact:
+    email: info@gti.de
+    name: Weidmüller GTI Software GmbH
+    url: 'https://www.weidmueller-gti-software.com/'
+servers:
+  - url: /u-os-iam/api/v1
+
+tags:
+  - name: Authentication
+    description: Endpoints for authentication and session management.
+  - name: Users
+    description: Endpoints for user management.
+  - name: UsersRoles
+    description: Endpoints for managing user roles.
+  - name: Roles
+    description: Endpoints for role management.
+  - name: RolesPermissions
+    description: Endpoints for managing role permissions.
+  - name: Permissions
+    description: Endpoints for permission management.
+  - name: PermissionsRoles
+    description: Endpoints for managing permission roles.
+
+paths:
+  /auth/logout:
+    post:
+      summary: Logout user from all sessions
+      description: Invalidate all sessions for the given user. The username must match the username in the provided token. |
+        Otherwise, the requesting user must have the "user-management:administrate" permission.
+      tags: [Authentication]
+      operationId: Logout
+      security:
+        - oauth2Profiles: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+              required:
+                - username
+      responses:
+        '204':
+          description: Successful logout
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+
+  /auth/change-password:
+    post:
+      summary: Change password
+      tags: [Authentication]
+      operationId: ChangePassword
+      description: Change password using a nonce received from a forced password change after successful login.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                nonce:
+                  type: string
+                  description: Nonce from the login responses
+                newPassword:
+                  type: string
+              required:
+                - username
+                - nonce
+                - newPassword
+              example:
+                username: jdoe
+                nonce: "123456"
+                newPassword: Pa$$w0rd2
+      responses:
+        '204':
+          description: Successful password change
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+
+    put:
+      summary: Change password
+      tags: [Authentication]
+      operationId: ChangePasswordUser
+      description: Change password by providing the old password.
+      security:
+        - oauth2Profiles: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                oldPassword:
+                  type: string
+                newPassword:
+                  type: string
+              required:
+                - username
+                - oldPassword
+                - newPassword
+              example:
+                username: jdoe
+                oldPassword: Pa$$w0rd
+                newPassword: Pa$$w0rd2
+      responses:
+        '204':
+          description: Successful password change
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+
+  /auth/clients:
+    get:
+      summary: Get OAuth2 clients
+      tags: [Authentication]
+      operationId: GetOAuth2Clients
+      description: Retrieve a list of all OAuth2 clients.
+      security:
+        - oauth2Profiles: [u-os-iam.read]
+      responses:
+        '200':
+          description: Successful query
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OAuth2ClientId'
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+
+    post:
+      summary: Create OAuth2 client
+      tags: [Authentication]
+      operationId: CreateOAuth2Client
+      description: Create a new OAuth2 client.
+      security:
+        - oauth2Profiles: [u-os-iam.write]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OAuth2Client'
+      responses:
+        '201':
+          description: Successful creation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  clientId:
+                    type: string
+                  clientSecret:
+                    type: string
+                required:
+                  - clientId
+                  - clientSecret
+                example:
+                  clientId: "123456"
+                  clientSecret: "654321"
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+
+  /auth/client/{clientId}:
+    get:
+      summary: Get OAuth2 client
+      tags: [Authentication]
+      operationId: GetOAuth2Client
+      description: Retrieve details of a specific OAuth2 client by its ID.
+      security:
+        - oauth2Profiles: [u-os-iam.read]
+      parameters:
+        - in: path
+          name: clientId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful query
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OAuth2ClientId'
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+    put:
+      summary: Update OAuth2 client
+      tags: [Authentication]
+      operationId: UpdateOAuth2Client
+      description: Update an existing OAuth2 client.
+      security:
+        - oauth2Profiles: [u-os-iam.write]
+      parameters:
+        - in: path
+          name: clientId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OAuth2Client'
+      responses:
+        '200':
+          description: Successful update
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OAuth2ClientId'
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+    delete:
+      summary: Delete OAuth2 client
+      tags: [Authentication]
+      operationId: DeleteOAuth2Client
+      description: Delete an existing OAuth2 client by its ID.
+      security:
+        - oauth2Profiles: [u-os-iam.write]
+      parameters:
+        - in: path
+          name: clientId
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Successful deletion
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+
+  /auth/sessions:
+    get:
+      summary: Get sessions
+      tags: [Authentication]
+      operationId: GetSessions
+      description: Retrieve a list of all active sessions.
+      security:
+        - oauth2Profiles: [u-os-iam.read]
+      responses:
+        '200':
+          description: Successful query
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OAuth2Session'
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+
+  /auth/sessions/{sessionId}:
+    delete:
+      summary: Delete session
+      tags: [Authentication]
+      operationId: DeleteSession
+      description: Delete a specific session by its ID.
+      security:
+        - oauth2Profiles: [u-os-iam.administrate]
+      parameters:
+        - in: path
+          name: sessionId
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Successful deletion
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+
+  /auth/sessions/config:
+    get:
+      summary: Get session configuration
+      tags: [Authentication]
+      operationId: GetSessionConfig
+      description: Retrieve the current session configuration.
+      security:
+        - oauth2Profiles: []
+      responses:
+        '200':
+          description: Successful query
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionConfiguration'
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+    put:
+      summary: Update session configuration
+      tags: [Authentication]
+      operationId: UpdateSessionConfig
+      description: Update the session configuration.
+      security:
+        - oauth2Profiles: [u-os-iam.administrate]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionConfiguration'
+      responses:
+        '204':
+          description: Successful update
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+
+  /auth/unauthenticated-access:
+    get:
+      summary: Get unauthenticated access configuration
+      tags: [Authentication]
+      operationId: GetUnauthenticatedAccess
+      description: Retrieve the current unauthenticated access configuration.
+      security:
+        - oauth2Profiles: [u-os-iam.read]
+      responses:
+        '200':
+          description: Successful query
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthenticatedAccessConfiguration'
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+    post:
+      summary: Update unauthenticated access configuration
+      tags: [Authentication]
+      operationId: UpdateUnauthenticatedAccess
+      description: Update the unauthenticated access configuration.
+      security:
+        - oauth2Profiles: [u-os-iam.administrate]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UnauthenticatedAccessConfiguration'
+      responses:
+        '204':
+          description: Successful update
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+
+  /auth/login/config:
+    get:
+      summary: Get login configuration
+      tags: [Authentication]
+      operationId: GetLoginConfig
+      description: Retrieve the current login attempt configuration.
+      security:
+        - oauth2Profiles: [u-os-iam.read]
+      responses:
+        '200':
+          description: Successful query
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginAttemptConfig'
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+    put:
+      summary: Update login configuration
+      tags: [Authentication]
+      operationId: UpdateLoginConfig
+      description: Update the login attempt configuration.
+      security:
+        - oauth2Profiles: [u-os-iam.administrate]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginAttemptConfig'
+      responses:
+        '204':
+          description: Successful update
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+
+  /auth/banner/config:
+    get:
+      summary: Get banner configuration
+      tags: [Authentication]
+      operationId: GetBannerConfig
+      description: Retrieve the current banner configuration.
+      security:
+        - oauth2Profiles: []
+      responses:
+        '200':
+          description: Successful query
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BannerConfig'
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+    put:
+      summary: Update banner configuration
+      tags: [Authentication]
+      operationId: UpdateBannerConfig
+      description: Update the banner configuration.
+      security:
+        - oauth2Profiles: [u-os-iam.administrate]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BannerConfig'
+      responses:
+        '204':
+          description: Successful update
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+
+  /auth/authz:
+    post:
+      summary: Check authorization
+      tags: [Authentication]
+      operationId: CheckAuthorization
+      description: Check if the current user is authorized for the given permissions.
+      security:
+        - oauth2Profiles: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthzCheckRequest'
+      responses:
+        '200':
+          description: Successful query
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  allowed:
+                    type: boolean
+                required:
+                  - allowed
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+
+  /auth/ldap:
+    get: 
+      summary: Retrieve current LDAP configuration
+      tags: [Authentication]
+      operationId: GetLDAPConfiguration
+      description: Returns the currently set LDAP configuration
+      security:
+        - oauth2Profiles: [u-os-iam.read]
+      responses: 
+        '200':
+          description: Successful query
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LDAPConfiguration'
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+    put:
+      summary: Update LDAP configuration
+      tags: [Authentication]
+      operationId: UpdateLDAPConfiguration
+      description: Update the LDAP configuration.
+      security:
+        - oauth2Profiles: [u-os-iam.write]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LDAPConfiguration'
+      responses:
+        '204':
+          description: Successful update
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+  
+  /auth/authId/{authId}:
+    get:
+      summary: Check validity of auth id
+      tags: [Authentication]
+      operationId: GetAuthRequestValidity
+      description: Returns the amount of seconds which this auth request is still valid.
+      parameters:
+        - in: path
+          name: authId
+          required: true
+          schema:
+            type: string
+      responses: 
+        '200':
+          description: Successful query
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthIdValidityResponse'
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+
+  /auth/forward-auth:
+    get:
+      summary: Check authorization
+      tags: [Authentication]
+      operationId: ForwardAuth
+      description: >-
+        Check if the current user/client is authorized for the given permissions.
+        Intended to be used as an nginx `auth_request` (forward authentication)
+        endpoint. The requested permissions are passed via the `permissionScopes`
+        query parameter (comma separated and/or repeated).
+
+
+        By default ALL requested scopes are required (AND logic). Setting the
+        `scopeMatch` query parameter to `any` switches to OR logic, where holding
+        any single one of the requested scopes is sufficient.
+
+
+        The result is conveyed entirely via the HTTP status code and response
+        headers; there is no response body. nginx forwards the status code to
+        the frontend, allowing it to distinguish a lost/absent session (401)
+        from a missing permission (403):
+          * `200 OK` - authorized.
+          * `401 Unauthorized` - no or invalid session/token; the caller should
+            (re-)authenticate.
+          * `403 Forbidden` - authenticated, but lacking one of the requested
+            permissions.
+
+
+        On a successful check the response additionally carries the resolved
+        identity information in headers so that nginx can forward them to the
+        backend services. The permission header is only set when the request is
+        authorized, to avoid leaking which permissions exist.
+      security:
+        - oauth2Profiles: []
+      parameters:
+        - name: permissionScopes
+          in: query
+          required: false
+          description: >-
+            Comma separated list of permission scopes that are required for the
+            request. May be repeated. When omitted only authentication is checked.
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: true
+        - name: scopeMatch
+          in: query
+          required: false
+          description: >-
+            Selects how the `permissionScopes` are combined. `all` (the default)
+            requires every requested scope (AND logic); `any` authorizes the
+            request if the caller holds at least one of them (OR logic). Any
+            other or missing value keeps the stricter `all` behaviour.
+          schema:
+            type: string
+            enum: [all, any]
+            default: all
+      responses:
+        '200':
+          description: The user/client is authenticated and authorized.
+          headers:
+            Iam-Authorized-Scopes:
+              description: >-
+                Comma separated, sorted list of scopes the user/client is allowed
+                to access, or `bypassAll` for system/admin users. Omitted if the
+                user/client has no permissions.
+              schema:
+                type: string
+            Iam-Authorized-Name:
+              description: Human readable name of the authenticated user/client.
+              schema:
+                type: string
+        "401":
+          description: >-
+            No or invalid session/token. The caller should (re-)authenticate.
+          headers:
+            Iam-Authorized-Name:
+              description: Human readable name of the authenticated user/client.
+              schema:
+                type: string
+        "403":
+          description: >-
+            The user/client is authenticated but lacks one of the requested
+            permissions.
+          headers:
+            Iam-Authorized-Name:
+              description: Human readable name of the authenticated user/client.
+              schema:
+                type: string
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+
+  /users:
+    get:
+      summary: Retrieve all users
+      tags: [Users]
+      operationId: GetUsers
+      description: Retrieve a list of all users.
+      security:
+        - oauth2Profiles: [u-os-iam.read]
+      responses:
+        '200':
+          description: Successful query
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+
+    post:
+      summary: Create new user
+      tags: [Users]
+      operationId: CreateUser
+      description: Create a new user.
+      security:
+        - oauth2Profiles: [u-os-iam.write]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserInput'
+      responses:
+        '200':
+          description: Successful creation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+    put:
+      summary: Update users in bulk
+      tags: [Users]
+      operationId: UpdateUsersBulk
+      description: Update multiple users in bulk.
+      security:
+        - oauth2Profiles: [u-os-iam.write]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/UserNoPassword'
+      responses:
+        '200':
+          description: Successful update
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+  
+  /users/password-rules:
+    get:
+      summary: Get password rules
+      tags: [Users]
+      operationId: GetPasswordRules
+      description: Retrieve the current password rules.
+      responses:
+        '200':
+          description: Successful query
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PasswordRules'
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+    put:
+      summary: Update password rules
+      tags: [Users]
+      operationId: UpdatePasswordRules
+      description: Update the password rules.
+      security:
+        - oauth2Profiles: [u-os-iam.administrate]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordRules'
+      responses:
+        '204':
+          description: Successful update
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+  
+  /users/{userId}:
+    get:
+      summary: Get a specific user
+      tags: [Users]
+      operationId: GetSpecificUser
+      description: Retrieve details of a specific user by their ID.
+      security:
+        - oauth2Profiles: [u-os-iam.read]
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      responses:
+        '200':
+          description: Successful query
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+    put:
+      summary: Update user
+      tags: [Users]
+      operationId: UpdateNonSensitiveUser
+      description: Update a user's non-sensitive information.
+      security:
+        - oauth2Profiles: [u-os-iam.write]
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserNoPassword'
+      responses:
+        '200':
+          description: Successful update
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+    delete:
+      summary: Delete user
+      tags: [Users]
+      operationId: DeleteUser
+      description: Delete a specific user by their ID.
+      security:
+        - oauth2Profiles: [u-os-iam.write]
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      responses:
+        '204':
+          description: Successful deletion
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+  
+  /users/{userId}/roles:
+    get:
+      summary: Get user roles
+      tags: [UsersRoles]
+      operationId: GetUserRoles
+      description: Retrieve the roles assigned to a specific user.
+      security:
+        - oauth2Profiles: [u-os-iam.read]
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      responses:
+        '200':
+          description: Successful query
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Uuid'
+              example:
+                - f47ac10b-58cc-4372-a567-0e02b2c3d479
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+    put:
+      summary: Add roles to a user.
+      tags: [UsersRoles]
+      operationId: AddRolesToUser
+      description: Assign roles to a specific user.
+      security:
+        - oauth2Profiles: [u-os-iam.write]
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/Uuid'
+              example:
+                - f47ac10b-58cc-4372-a567-0e02b2c3d479
+      responses:
+        '204':
+          description: Successful added roles to user
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+    delete:
+      summary: Remove roles from user
+      tags: [UsersRoles]
+      operationId: RemoveRolesFromUser
+      description: Remove roles from a specific user.
+      security:
+        - oauth2Profiles: [u-os-iam.write]
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/Uuid'
+              example:
+                - f47ac10b-58cc-4372-a567-0e02b2c3d479
+      responses:
+        '204':
+          description: Successful removed roles from user
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+  
+  /users/{userId}/change-password:
+    post:
+      summary: Change user password
+      tags: [Users]
+      operationId: ChangePasswordAdmin
+      description: Change password for a specific user by an administrator. The user must set a new password at next login.
+      security:
+        - oauth2Profiles: [u-os-iam.administrate]
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+              required:
+                - password
+              example:
+                password: Pa$$w0rd
+      responses:
+        '204':
+          description: Successful password change
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+
+  /users/{userId}/deactivate:
+    post:
+      summary: Deactivate user
+      tags: [Users]
+      operationId: DeactivateUser
+      description: Deactivate a specific user. The user remains deactivated until reactivated.
+      security:
+        - oauth2Profiles: [u-os-iam.administrate]
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      responses:
+        '204':
+          description: Successful deactivation
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+  /users/{userId}/activate:
+    post:
+      summary: Activate user
+      tags: [Users]
+      operationId: ActivateUser
+      description: Activate a specific user.
+      security:
+        - oauth2Profiles: [u-os-iam.administrate]
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      responses:
+        '204':
+          description: Successful activation
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+  
+  /users/current/permissions:
+    get:
+      summary: Get current permissions
+      description: |
+        Get the current permissions of the authenticated user.
+        This endpoint returns a list of permissions that the user has.
+        The token must be provided in the Authorization header as a Bearer token.
+      tags: [Users]
+      operationId: GetPermissionsForCurrentUser
+      security:
+        - oauth2Profiles: []
+      responses:
+        '200':
+          description: Successful query. Either returns an array of permissions or "bypassAll", if user is system user.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      type: string
+                    example:
+                      - permission1
+                      - permission2
+                      - permission3
+                  - type: string
+                    enum:
+                      - "bypassAll"
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+    post:
+      summary: Get current permissions
+      description: |
+        Get the current permissions of the authenticated user.
+        This endpoint returns a list of permissions that the user has.
+        The token must be provided in the body as a Bearer token.
+      tags: [Users]
+      operationId: GetPermissionsForCurrentUserPost
+      security:
+        - oauth2Profiles: []
+      requestBody:
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: string
+              example: Bearer token
+      responses:
+        '200':
+          description: Successful query. Either returns an array of permissions or "bypassAll", if user is system user.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      type: string
+                    example:
+                      - permission1
+                      - permission2
+                      - permission3
+                  - type: string
+                    enum:
+                      - "bypassAll"
+                    example: bypassAll
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+  /users/current/ephemeral:
+    get:
+      summary: Check if current user is ephemeral
+      description: |
+        Check if the currently logged in user is ephemeral. This means a user does not exist locally, but was logged in via a remote procedure, for
+        example with LDAP.
+      tags: [Users]
+      operationId: IsUserEphemeral
+      security:
+        - oauth2Profiles: []
+      responses:
+        '200':
+          description: Successful query.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isEphemeral:
+                    type: boolean
+                required:
+                  - isEphemeral
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+
+  /users/has-system-user:
+    get:
+      summary: Check for system user
+      description: |
+        Checks if a system user has already been defined.
+      tags: [Users]
+      operationId: HasSystemUser
+      responses:
+        '200':
+          description: Successful query.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  exists:
+                    type: boolean
+                required:
+                  - exists
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+  /users/create-system-user:
+    post:
+      summary: Creates a system user
+      description: |
+        Create a system user if none is available
+      tags: [Users]
+      operationId: CreateSystemUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserInput'
+      responses:
+        '204':
+          description: Successful creation.
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+
+  /roles:
+    get:
+      summary: Get all roles
+      tags: [Roles]
+      operationId: GetRoles
+      description: Retrieve a list of all roles.
+      security:
+        - oauth2Profiles: [u-os-iam.read]
+      responses:
+        '200':
+          description: Successful query
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Role'
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+
+    post:
+      summary: Create role
+      tags: [Roles]
+      operationId: CreateRole
+      description: Create a new role.
+      security:
+        - oauth2Profiles: [u-os-iam.write]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleNoId'
+      responses:
+        '201':
+          description: Successful creation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+
+  /roles/{rolesId}:
+    parameters:
+      - name: rolesId
+        in: path
+        required: true
+        description: The ID of the role
+        schema:
+          $ref: '#/components/schemas/Uuid'
+    get:
+      summary: Get role details
+      tags: [Roles]
+      operationId: GetSpecificRole
+      description: Retrieve details of a specific role by its ID.
+      security:
+        - oauth2Profiles: [u-os-iam.read]
+      responses:
+        '200':
+          description: Successful query
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+
+    put:
+      summary: Update role
+      tags: [Roles]
+      operationId: UpdateRole
+      description: Update an existing role.
+      security:
+        - oauth2Profiles: [u-os-iam.write]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Role'
+      responses:
+        '200':
+          description: Successful update
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+
+    delete:
+      summary: Delete role
+      tags: [Roles]
+      operationId: DeleteRole
+      description: Delete an existing role by its ID.
+      security:
+        - oauth2Profiles: [u-os-iam.write]
+      responses:
+        '204':
+          description: Successful deletion
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+
+  /roles/{roleId}/users:
+    get:
+      summary: Get users with role
+      tags: [UsersRoles]
+      operationId: GetUsersWithRole
+      description: Retrieve the users assigned to a specific role.
+      security:
+        - oauth2Profiles: [u-os-iam.read]
+      parameters:
+        - in: path
+          name: roleId
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      responses:
+        '200':
+          description: Successful query
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+              example:
+                - user1
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+    put:
+      summary: Add users to role.
+      tags: [UsersRoles]
+      operationId: AddUsersToRole
+      description: Assign users to a specific role.
+      security:
+        - oauth2Profiles: [u-os-iam.write]
+      parameters:
+        - in: path
+          name: roleId
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+              example:
+                - user1
+      responses:
+        '204':
+          description: Successfully added users to role
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+    delete:
+      summary: Remove users from role
+      tags: [UsersRoles]
+      operationId: RemoveUsersFromRole
+      description: Remove users from a specific role.
+      security:
+        - oauth2Profiles: [u-os-iam.write]
+      parameters:
+        - in: path
+          name: roleId
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+              example:
+                - user1
+      responses:
+        '204':
+          description: Successfully removed users from role
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+
+  /roles/{roleId}/permissions:
+    get:
+      summary: Get permissions with role
+      tags: [RolesPermissions]
+      operationId: GetPermissionsWithRole
+      description: Retrieve the permissions assigned to a specific role.
+      security:
+        - oauth2Profiles: [u-os-iam.read]
+      parameters:
+        - in: path
+          name: roleId
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      responses:
+        '200':
+          description: Successful query
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+    put:
+      summary: Add permissions to role.
+      tags: [RolesPermissions]
+      operationId: AddPermissionsToRole
+      description: Assign permissions to a specific role.
+      security:
+        - oauth2Profiles: [u-os-iam.write]
+      parameters:
+        - in: path
+          name: roleId
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+              example:
+                - permission1
+      responses:
+        '204':
+          description: Successfully added permissions to role
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+    delete:
+      summary: Remove permissions from role
+      tags: [RolesPermissions]
+      operationId: RemovePermissionsFromRole
+      description: Remove permissions from a specific role.
+      security:
+        - oauth2Profiles: [u-os-iam.write]
+      parameters:
+        - in: path
+          name: roleId
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+              example:
+                - permission1
+      responses:
+        '204':
+          description: Successfully removed permissions from role
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+
+
+  /permissions:
+    get:
+      summary: Get all permissions
+      tags: [Permissions]
+      operationId: GetPermissions
+      description: Retrieve a list of all permissions.
+      security:
+        - oauth2Profiles: [u-os-iam.read]
+      responses:
+        '200':
+          description: Successful query
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PermissionHierarchy'
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+    post:
+      summary: Create or update permission
+      tags: [Permissions]
+      operationId: CreateOrUpdatePermission
+      description: Create a new permission or update an existing one.
+      security:
+        - oauth2Profiles: [u-os-iam.write]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PermissionHierarchy'
+      responses:
+        '200':
+          description: Successful creation or update
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionHierarchy'
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+
+  /permissions/{serviceId}:
+    delete:
+      summary: Delete permission
+      tags: [Permissions]
+      operationId: DeletePermission
+      description: Delete an existing permission by its service ID.
+      security:
+        - oauth2Profiles: [u-os-iam.write]
+      parameters:
+        - in: path
+          name: serviceId
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Successful deletion
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+
+  /permissions/{scope}/roles:
+    get:
+      summary: Get roles with permission
+      tags: [PermissionsRoles]
+      operationId: GetRolesWithPermission
+      description: Retrieve the roles assigned to a specific permission scope.
+      security:
+        - oauth2Profiles: [u-os-iam.read]
+      parameters:
+        - in: path
+          name: scope
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful query
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+              example:
+                - role1
+        default:
+          $ref: '#/components/responses/ProblemJsonResponse'
+
+
+components:
+  schemas:
+
+    OAuth2Client:
+      type: object
+      properties:
+        redirectURL:
+          type: array
+          items:
+            type: string
+          minItems: 1
+        postLogoutRedirectURL:
+          type: array
+          items:
+            type: string
+          minItems: 1
+        applicationType:
+          type: string
+          enum: [web, user_agent, native]
+        authMethod:
+          type: string
+          enum: [client_secret_basic, client_secret_post, "none","private_key_jwt"]
+        loginURL:
+          type: string
+        responseTypes:
+          type: array
+          items:
+            type: string
+            enum: [code, id_token token, id_token]
+          minItems: 1
+        grantTypes:
+          type: array
+          items:
+            type: string
+            enum: [authorization_code, implicit, client_credentials, refresh_token, urn:ietf:params:oauth:grant-type:jwt-bearer,urn:ietf:params:oauth:grant-type:token-exchange,urn:ietf:params:oauth:grant-type:device_code]
+          minItems: 1
+        accessTokenType:
+          type: string
+          enum: [bearer]
+        idTokenUserinfoClaimsAssertion:
+          type: boolean
+        clockSkew:
+          type: integer
+          format: int64
+        scopeWhitelist:
+          type: array
+          items:
+            type: string
+        clientName:
+          type: string
+        canModify:
+          type: boolean
+      required:
+        - redirectURL
+        - postLogoutRedirectURL
+        - applicationType
+        - authMethod
+        - loginURL
+        - responseTypes
+        - grantTypes
+        - accessTokenType
+      example:
+        redirectURL:
+          - http://localhost:8080
+        postLogoutRedirectURL:
+          - http://localhost:8080
+        applicationType: web
+        authMethod: client_secret_basic
+        loginURL: http://localhost:8080
+        responseTypes:
+          - code
+        grantTypes:
+          - authorization_code
+        accessTokenType: bearer
+        idTokenUserinfoClaimsAssertion: true
+        clockSkew: 300
+
+    OAuth2ClientId:
+      allOf:
+        - $ref: '#/components/schemas/OAuth2Client'
+        - type: object
+          properties:
+            id: 
+              type: string
+          required:
+            - id
+
+    OAuth2Session:
+      type: object
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        userId:
+          type: string
+        clientId:
+          type: string
+        identityProvider:
+          type: string
+        ip:
+          type: string
+        authTime:
+          type: string
+          format: date-time
+        expires:
+          type: string
+          format: date-time
+        refreshToken:
+          type: object
+          properties:
+            expires:
+              type: string
+              format: date-time
+      required:
+        - id
+        - username
+        - userId
+        - clientId
+        - identityProvider
+        - authTime
+        - expires
+      example:
+        id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
+        username: jdoe
+        userId: f47ac10b-58cc-4372-a567-0e02b2c3d479
+        clientId: "123456"
+        identityProvider: "Procon-Connect"
+        authTime: 2020-01-01T12:00:00Z
+        expires: 2020-01-01T12:00:00Z
+        refreshToken:
+          expires: 2020-01-01T12:00:00Z
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          $ref: '#/components/schemas/UserNameString'
+        lastLogin:
+          type: string
+          format: date-time
+        active:
+          type: string
+          enum: [Online, Offline, Deactivated]
+      required:
+        - id
+        - username
+        - active
+      example:
+        id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
+        username: jdoe
+        lastLogin: 2020-01-01T12:00:00Z
+        status: Offline
+        active: Online
+
+    
+    UserNoPassword:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          $ref: '#/components/schemas/UserNameString'
+      required:
+        - id
+        - username
+      example:
+        id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
+        username: jdoe
+
+    UserInput:
+      type: object
+      properties:
+        username:
+          $ref: '#/components/schemas/UserNameString'
+        password:
+              type: string
+      required:
+        - username
+        - password
+      example:
+        username: jdoe
+        password: Pa$$w0rd
+
+    RoleNoId:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Permission'
+      required:
+        - name
+        - permissions
+      example:
+        name: administrator
+        description: Eine Beispielrolle
+        permissions:
+          - name: read
+            description: Berechtigung zum Lesen von Daten
+            scope: data_read
+            translations:
+              read:
+                de: Lesen
+                en: Read
+              desc:
+                de: Beschreibung
+                en: Description
+          - name: write
+            description: Berechtigung zum Schreiben von Daten
+            scope: data_write
+            translations:
+              write:
+                de: Schreiben
+                en: Write
+              desc:
+                de: Beschreibung
+                en: Description
+
+    Role:
+      allOf:
+        - $ref: '#/components/schemas/RoleNoId'
+        - type: object
+          properties:
+           id:
+            type: string
+            format: uuid
+      required:
+        - id
+      example:
+        id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
+        name: administrator
+        description: Eine Beispielrolle
+        permissions:
+          - name: read
+            description: Berechtigung zum Lesen von Daten
+            scope: data_read
+          - name: write
+            description: Berechtigung zum Schreiben von Daten
+            scope: data_write
+
+    PermissionHierarchy:
+      type: object
+      properties:
+        serviceId: 
+          type: string
+        name:
+          type: string
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Permission'
+        translation:
+          additionalProperties: true
+      required:
+        - serviceId
+        - name
+        - permissions
+        - translation
+      example:
+        serviceId: service
+        name: data
+        permissions:
+          - name: read
+            description: desc
+            scope: data_read
+            translations:
+              read:
+                de: Lesen
+                en: Read
+              desc:
+                de: Beschreibung
+                en: Description
+          - name: write
+            description: desc
+            scope: data_write
+            translations:
+              write:
+                de: Schreiben
+                en: Write
+              desc:
+                de: Beschreibung
+                en: Description
+        translation:
+          de: Daten
+          en: Data
+
+    Permission:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        scope:
+          type: string
+        translations:
+          additionalProperties: true
+        no_auth_option:
+          type: boolean
+          description: Whether this permission may be assigned to the unauthenticated access configuration.
+      required:
+        - name
+        - description
+        - scope
+        - translations
+      example:
+        name: read
+        description: desc
+        scope: data_read
+        translations:
+          read:
+            de: Lesen
+            en: Read
+          desc:
+            de: Beschreibung
+            en: Description
+
+    PasswordRules:
+      type: object
+      properties:
+        user_name_forbidden:
+          type: boolean
+        min_length:
+          type: integer
+          minimum: 1
+          format: int32
+        min_lowercase:
+          type: integer
+          minimum: 0
+          format: int32
+        min_uppercase:
+          type: integer
+          minimum: 0
+          format: int32
+        min_digits:
+          type: integer
+          minimum: 0
+          format: int32
+        min_special:
+          type: integer
+          minimum: 0
+          format: int32
+      required:
+        - user_name_forbidden
+        - min_length
+        - min_lowercase
+        - min_uppercase
+        - min_digits
+        - min_special
+      example:
+        user_name_forbidden: true
+        min_length: 12
+        min_lowercase: 1
+        min_uppercase: 1
+        min_digits: 1
+        min_special: 1
+
+    SessionConfiguration:
+      type: object
+      properties:
+        inactivityTimeout:
+          type: integer
+          description: Logout after inactivity in minutes. 0 means no timeout.
+          minimum: 0
+          format: int64
+      required:
+        - inactivityTimeout
+      example:
+        inactivityTimeout: 5
+    UnauthenticatedAccessConfiguration:
+      type: object
+      properties:
+        permissions:
+          type: array
+          items:
+            type: string
+          description: Permissions granted to every request. An empty list disables unauthenticated access.
+      required:
+        - permissions
+      example:
+        permissions: ["hub.variables.readonly"]
+    LoginAttemptConfig:
+      type: object
+      properties:
+        consecutive_failed_logins_time_frame:
+          type: integer
+          format: int32
+          description: |
+            Time frame in minutes for counting consecutive failed login attempts.
+            0 means that all failed attempts are counted regardless of time.
+        max_consecutive_failed_logins:
+          type: integer
+          format: int32
+          description: | 
+            Maximum number of allowed consecutive failed login attempts within the time frame.
+            0 means that there is no limit and users will never be blocked.
+        login_block_type:
+          type: string
+          enum: [LoginBlockTimed, LoginBlockAdmin]
+          description: Type of login block to apply when the maximum number of failed attempts is reached.
+        login_block_duration:
+          type: integer
+          format: int32
+          description: |
+            Duration in minutes for which the user is blocked from logging in 
+            after reaching the maximum number of failed attempts. 
+            Only applicable if loginBlockType is set to 'LoginBlockTimed'.
+      example:
+        consecutive_failed_logins_time_frame: 10
+        max_consecutive_failed_logins: 3
+        login_block_type: LoginBlockAdmin
+        login_block_duration: 10
+    BannerConfig:
+      type: object
+      properties:
+        text:
+          type: string
+          description: Banner text to be displayed on the login page.
+      required:
+        - text
+    AuthzCheckRequest:
+      type: object
+      properties:
+        permissionScopes:
+          type: array
+          items:
+            type: string
+      required:
+        - permissionScopes
+      example:
+        permissionScopes:
+          - data_read
+          - data_write
+    ProblemJson:
+      type: object
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+          format: int32
+        detail:
+          type: string
+        instance:
+          type: string
+      example:
+        type: https://example.com/probs/out-of-credit
+        title: You do not have enough credit.
+        status: 403
+        detail: Your current balance is 30, but that costs 50.
+        instance: /account/12345/transactions/abc
+    
+    Uuid:
+      type: string
+      format: uuid
+      example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+    
+    UserNameString:
+      type: string
+      format: ^[a-zA-Z0-9-_]$
+      maxLength: 64
+      description: A string for valid user names.
+      example: SafeUsername1
+    
+    LDAPConfiguration:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        host:
+          type: string
+        port:
+          type: integer
+          format: uint32
+        usr_attr:
+          type: string
+        additional_dn:
+          type: string
+        bind_usr_dn:
+          type: string
+        bind_usr_pw:
+          type: string
+        user_filter:
+          type: string
+        usr_login_attr:
+          type: string
+        encryption:
+          type: string
+          enum:
+            - None
+            - StartTLS
+            - SSL
+        ssl_cert:
+          type: string
+          description: |
+            The SSL certificate to use when communicating with the LDAP server.
+            Note that once set, the GET endpoint will return a dummy value instead of the real
+            certificate. PUT requests using the dummy value received from said GET request will keep
+            the previously set certificate.
+        displayName:
+          type: string
+        roleMappings:
+          $ref: '#/components/schemas/RoleMappings'
+      required:
+        - enabled
+        - host
+        - port
+        - usr_attr
+    
+    RoleMappings:
+      type: array
+      items:
+        $ref: '#/components/schemas/RoleMapping'
+
+    RoleMapping:
+      type: object
+      properties:
+        groupAttribute:
+          type: string
+        attributeValue:
+          type: string
+        mappedRoleIds:
+          type: array
+          items:
+            type: string
+      required:
+        - groupAttribute
+        - attributeValue
+        - mappedRoleIds
+  
+    AuthIdValidityResponse:
+      type: object
+      properties:
+        validSeconds:
+          type: integer
+          format: int32
+      required:
+        - validSeconds
+    
+  responses:
+    ProblemJsonResponse:
+      description: Problem Details as per RFC 7807
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemJson'
+
+  securitySchemes:
+    oauth2Profiles:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: /oauth2/token
+          scopes:
+            u-os-iam.read: Read Operations for User Management
+            u-os-iam.write: Write Operations for User Management
+            u-os-iam.administrate: Administrate Operations for User Management
+    openIdConnect:
+      type: openIdConnect
+      openIdConnectUrl: ./.well-known/openid-configuration
