@@ -405,8 +405,9 @@ paths:
         required: false
         schema:
           type: integer
-          format: int64
-          minimum: 0
+          format: int32
+          maximum: 65535
+          minimum: 1
       - name: sources
         in: query
         description: |-
@@ -538,11 +539,19 @@ paths:
       tags:
       - network
       summary: Get the current network configuration of the device.
-      description: This only returns fields that can be configured and changed via the HTTP API.
+      description: |-
+        This only returns fields that can be configured and changed via the HTTP API.
+        The response carries an `ETag` header derived from the configuration. Use its value in an
+        `If-Match` header on `PUT`/`PATCH` to guard against lost updates.
       operationId: get_network_config
       responses:
         '200':
           description: Network config
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: Opaque token identifying the current resource version. Return it unchanged in the `If-Match` header on subsequent `PUT`/`PATCH` requests to prevent lost updates (optimistic locking).
           content:
             application/json:
               schema:
@@ -569,6 +578,13 @@ paths:
         Note that some network properties are not yet supported by the API.
         These properties will be unaffected when applying the changes, thus preserving any manual changes.
       operationId: set_network_config
+      parameters:
+      - name: If-Match
+        in: header
+        description: Apply the request only if the current resource version matches this `ETag` (optimistic locking). If no match is found, 412 is returned.
+        required: false
+        schema:
+          type: string
       requestBody:
         content:
           application/json:
@@ -578,6 +594,11 @@ paths:
       responses:
         '200':
           description: Network config
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: Opaque token identifying the current resource version. Return it unchanged in the `If-Match` header on subsequent `PUT`/`PATCH` requests to prevent lost updates (optimistic locking).
           content:
             application/json:
               schema:
@@ -603,6 +624,13 @@ paths:
         Note that some network properties are not yet supported by the API.
         These properties will be unaffected when applying the changes, thus preserving any manual changes.
       operationId: update_network_config
+      parameters:
+      - name: If-Match
+        in: header
+        description: Apply the request only if the current resource version matches this `ETag` (optimistic locking). If no match is found, 412 is returned.
+        required: false
+        schema:
+          type: string
       requestBody:
         content:
           application/merge-patch+json:
@@ -612,6 +640,11 @@ paths:
       responses:
         '200':
           description: Network config
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: Opaque token identifying the current resource version. Return it unchanged in the `If-Match` header on subsequent `PUT`/`PATCH` requests to prevent lost updates (optimistic locking).
           content:
             application/json:
               schema:
@@ -660,7 +693,17 @@ paths:
       parameters:
       - name: do_reboot
         in: query
-        description: Whether the system should reboot after resetting the network settings.
+        description: |-
+          Whether the system should reboot after resetting the network settings.
+          Defaults to `false` if not specified.
+        required: false
+        schema:
+          type: boolean
+      - name: reset_firewall
+        in: query
+        description: |-
+          Whether the system should reset the firewall settings along with the network settings.
+          Defaults to `false` if not specified.
         required: false
         schema:
           type: boolean
@@ -1828,6 +1871,96 @@ components:
           type: string
           enum:
           - REDIRECT
+    EthernetInterfaceConfig:
+      type: object
+      description: Represents the configuration of a single ethernet interface.
+      required:
+      - ipv4_config
+      properties:
+        enabled:
+          type: boolean
+          description: A disabled interface is still present in the system configuration but will not be active.
+        ipv4_config:
+          $ref: '#/components/schemas/EthernetIpv4Config'
+          description: IPv4 configuration for this interface.
+    EthernetInterfaceState:
+      type: object
+      description: Represents the current state of an ethernet interface.
+      required:
+      - type
+      - ipv4
+      properties:
+        failover:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/InterfaceFailoverState'
+            description: Failover state, present only when failover is configured globally.
+        ipv4:
+          $ref: '#/components/schemas/Ipv4State'
+        type:
+          $ref: '#/components/schemas/EthernetInterfaceType'
+    EthernetInterfaceType:
+      type: string
+      description: The type of ethernet interface.
+      enum:
+      - ETHERNET
+      - USB
+    EthernetIpv4Config:
+      type: object
+      description: Represents the IPv4 configuration of an ethernet interface.
+      required:
+      - dhcp
+      - addresses
+      - gateway
+      - dns
+      properties:
+        addresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ipv4Subnet'
+          description: |-
+            The list of IPv4 addresses and their corresponding subnet masks for this interface.
+
+            If DHCP is disabled, at least one static IPv4 address must be specified.
+        dhcp:
+          type: boolean
+          description: Indicates whether DHCP is enabled for this interface.
+        dns:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ipv4String'
+          description: |-
+            DNS servers registered by this interface.
+
+            Note that the system DNS servers may differ from this, as interface state and metric influences the effective DNS resolution.
+        failover:
+          $ref: '#/components/schemas/FailoverInterfaceConfig'
+        gateway:
+          oneOf:
+          - type: 'null'
+          - type: string
+            format: ipv4
+            description: Represents an IPv4 address in a string format.
+          description: Optional gateway for this interface.
+        metric:
+          type: integer
+          format: int64
+          description: |-
+            Normal route metric (priority) for this interface. Lower values have higher priority.
+            If a value of -1 is specified, the system will choose the metric automatically.
+
+            If failover is enabled, the actual metric of the interface is
+            dynamic and may change between metric and `failed_metric` depending on the probe state.
+          example: 100
+          maximum: 2147483647
+          minimum: -1
+        shared_mode:
+          $ref: '#/components/schemas/SharedModeConfig'
+          description: |-
+            Shared mode configuration for this interface.
+
+            Note that using shared mode makes the interface ignore certain other settings.
+            See the documentation for `SharedModeConfig` for more details.
     FailoverGlobalConfig:
       type: object
       description: |-
@@ -2080,14 +2213,14 @@ components:
             type: array
             items:
               type: string
-              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard, or a bare '*'.
-              pattern: ^(?:\*|[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?)$
+              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard. Use an empty list to match all interfaces.
+              pattern: ^[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?$
           out_interface:
             type: array
             items:
               type: string
-              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard, or a bare '*'.
-              pattern: ^(?:\*|[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?)$
+              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard. Use an empty list to match all interfaces.
+              pattern: ^[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?$
     ForwardRule:
       type: object
       required:
@@ -2109,6 +2242,57 @@ components:
           format: int32
           description: Sort order of the rule. Lower values are evaluated first.
           minimum: 0
+    GenericIpv4Config:
+      type: object
+      description: |-
+        Represents a generic IPv4 configuration for a network interface.
+
+        This is used by all interface types, except for Ethernet.
+      required:
+      - dhcp
+      - addresses
+      - gateway
+      - dns
+      - metric
+      properties:
+        addresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ipv4Subnet'
+          description: |-
+            The list of IPv4 addresses and their corresponding subnet masks for this interface.
+
+            If DHCP is disabled, at least one static IPv4 address must be specified.
+        dhcp:
+          type: boolean
+          description: Indicates whether DHCP is enabled for this interface.
+        dns:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ipv4String'
+          description: |-
+            DNS servers registered by this interface.
+
+            Note that the system DNS servers may differ from this, as interface state and metric influences the effective DNS resolution.
+        gateway:
+          oneOf:
+          - type: 'null'
+          - type: string
+            format: ipv4
+            description: Represents an IPv4 address in a string format.
+          description: Optional gateway for this interface.
+        metric:
+          type: integer
+          format: int64
+          description: |-
+            Normal route metric (priority) for this interface. Lower values have higher priority.
+            If a value of -1 is specified, the system will choose the metric automatically.
+
+            If failover is enabled, the actual metric of the interface is
+            dynamic and may change between metric and `failed_metric` depending on the probe state.
+          example: 100
+          maximum: 2147483647
+          minimum: -1
     GlobalDnsServers:
       type: object
       description: |-
@@ -2239,8 +2423,8 @@ components:
             type: array
             items:
               type: string
-              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard, or a bare '*'.
-              pattern: ^(?:\*|[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?)$
+              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard. Use an empty list to match all interfaces.
+              pattern: ^[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?$
     InputRule:
       type: object
       required:
@@ -2262,16 +2446,6 @@ components:
           format: int32
           description: Sort order of the rule. Lower values are evaluated first.
           minimum: 0
-    InterfaceConfig:
-      type: object
-      description: Represents the configuration of a single network interface.
-      required:
-      - ipv4_config
-      properties:
-        enabled:
-          type: boolean
-        ipv4_config:
-          $ref: '#/components/schemas/Ipv4Config'
     InterfaceFailoverState:
       type: object
       description: Failover state of a single interface exposed via the network state endpoint.
@@ -2326,69 +2500,6 @@ components:
       - HEALTHY
       - PROBING
       - FAILED
-    InterfaceState:
-      type: object
-      description: Represents the current state of a network interface.
-      required:
-      - type
-      - ipv4
-      properties:
-        failover:
-          oneOf:
-          - type: 'null'
-          - $ref: '#/components/schemas/InterfaceFailoverState'
-            description: Failover state, present only when failover is configured globally.
-        ipv4:
-          $ref: '#/components/schemas/Ipv4State'
-        type:
-          $ref: '#/components/schemas/InterfaceType'
-    InterfaceType:
-      type: string
-      description: The type of network interface.
-      enum:
-      - ETHERNET
-      - USB
-    Ipv4Config:
-      type: object
-      description: Represents the IPv4 configuration of a network interface.
-      required:
-      - dhcp
-      - addresses
-      - gateway
-      - dns
-      properties:
-        addresses:
-          type: array
-          items:
-            $ref: '#/components/schemas/Ipv4Subnet'
-        dhcp:
-          type: boolean
-        dns:
-          type: array
-          items:
-            $ref: '#/components/schemas/Ipv4String'
-        failover:
-          $ref: '#/components/schemas/FailoverInterfaceConfig'
-        gateway:
-          oneOf:
-          - type: 'null'
-          - type: string
-            format: ipv4
-            description: Represents an IPv4 address in a string format.
-        metric:
-          type: integer
-          format: int64
-          description: |-
-            Normal route metric (priority) for this interface. Lower values have higher priority.
-            If a value of -1 is specified, the system will choose the metric automatically.
-
-            If failover is enabled, the actual metric of the interface is
-            dynamic and may change between metric and `failed_metric` depending on the probe state.
-          example: 100
-          maximum: 2147483647
-          minimum: -1
-        shared_mode:
-          $ref: '#/components/schemas/SharedModeConfig'
     Ipv4PrefixLength:
       type: integer
       format: int32
@@ -2568,6 +2679,39 @@ components:
             type: string
             description: Identifier of a firewall rule. Used as the map key and to reference it in patch operations.
             pattern: ^[A-Za-z0-9:._-]{1,63}$
+    NetworkBridgeConfig:
+      type: object
+      description: Represents the configuration of a single network bridge.
+      required:
+      - ipv4_config
+      properties:
+        ipv4_config:
+          $ref: '#/components/schemas/GenericIpv4Config'
+          description: IPv4 configuration for this network bridge.
+    NetworkBridgePortState:
+      type: object
+      description: Represents the current state of a network bridge port.
+      required:
+      - has_carrier
+      properties:
+        has_carrier:
+          type: boolean
+    NetworkBridgeState:
+      type: object
+      description: Represents the current state of a network bridge.
+      required:
+      - ipv4
+      - ports
+      properties:
+        ipv4:
+          $ref: '#/components/schemas/Ipv4State'
+        ports:
+          type: object
+          description: The current state of each port, keyed by interface name.
+          additionalProperties:
+            $ref: '#/components/schemas/NetworkBridgePortState'
+          propertyNames:
+            type: string
     NetworkConfig:
       type: object
       description: Used for writing the network configuration. All fields are required to be present, but can be empty in some cases.
@@ -2587,7 +2731,7 @@ components:
         interfaces:
           type: object
           additionalProperties:
-            $ref: '#/components/schemas/InterfaceConfig'
+            $ref: '#/components/schemas/EthernetInterfaceConfig'
           propertyNames:
             type: string
           example:
@@ -2602,14 +2746,14 @@ components:
                 - 8.8.8.8
                 failover:
                   enabled: true
-                  failed_metric: 20000
+                  failed_metric: 20001
                   probe_target: dns.google
                 gateway: 192.168.1.1
                 metric: 200
                 shared_mode:
                   dhcp_ip_range:
-                    end: 192.168.1.150
-                    start: 192.168.1.103
+                    end: 192.168.1.200
+                    start: 192.168.1.110
                   dhcp_lease_time_sec: 3600
                   enabled: true
             eth-x5:
@@ -2620,18 +2764,92 @@ components:
                 dns: []
                 failover:
                   enabled: true
-                  failed_metric: 20001
-                  probe_target: 1.1.1.1
+                  failed_metric: 20002
+                  probe_target: dns.google
                 gateway: null
                 metric: 100
                 shared_mode:
                   dhcp_ip_range: null
                   dhcp_lease_time_sec: null
                   enabled: false
+        network_bridges:
+          type: object
+          description: Contains all network bridges that are configured in the system.
+          additionalProperties:
+            $ref: '#/components/schemas/NetworkBridgeConfig'
+          propertyNames:
+            type: string
+          example:
+            br0:
+              ipv4_config:
+                addresses:
+                - ip: 192.168.1.102
+                  prefix_length: 24
+                dhcp: false
+                dns:
+                - 8.8.8.8
+                gateway: 192.168.1.1
+                metric: 200
         service_interface:
           oneOf:
           - type: 'null'
           - $ref: '#/components/schemas/ServiceInterfaceConfig'
+        vlan_interfaces:
+          type: object
+          description: |-
+            Contains all VLAN interfaces that are configured in the system.
+
+            This map is not static, but can be changed in order to add/remove VLAN interfaces.
+            To add a new VLAN interface, include it in this map with a unique key and provide the necessary configuration.
+            To remove it, remove the entry corresponding to the VLAN interface from this map.
+          additionalProperties:
+            $ref: '#/components/schemas/VlanInterfaceConfig'
+          propertyNames:
+            type: string
+          example:
+            eth-x4.10:
+              enabled: true
+              failover:
+                enabled: true
+                failed_metric: 20011
+                probe_target: dns.google
+              ipv4_config:
+                addresses:
+                - ip: 192.168.1.102
+                  prefix_length: 24
+                dhcp: false
+                dns:
+                - 8.8.8.8
+                gateway: 192.168.1.1
+                metric: 200
+              parent_interface: eth-x4
+              shared_mode:
+                dhcp_ip_range:
+                  end: 192.168.1.200
+                  start: 192.168.1.110
+                dhcp_lease_time_sec: 3600
+                enabled: true
+              vlan_id: 10
+            eth-x5.20:
+              enabled: true
+              failover:
+                enabled: true
+                failed_metric: 20022
+                probe_target: dns.google
+              ipv4_config:
+                addresses: []
+                dhcp: true
+                dns: []
+                gateway: null
+                metric: -1
+              parent_interface: eth-x5
+              shared_mode:
+                dhcp_ip_range:
+                  end: 192.168.1.200
+                  start: 192.168.1.110
+                dhcp_lease_time_sec: 3600
+                enabled: true
+              vlan_id: 20
     NetworkState:
       type: object
       description: |-
@@ -2642,13 +2860,16 @@ components:
       - dns_resolver
       - routes
       - interfaces
+      - vlan_interfaces
+      - network_bridges
       properties:
         dns_resolver:
           $ref: '#/components/schemas/GlobalDnsServers'
         interfaces:
           type: object
+          description: The current state of all Ethernet interfaces on the device.
           additionalProperties:
-            $ref: '#/components/schemas/InterfaceState'
+            $ref: '#/components/schemas/EthernetInterfaceState'
           propertyNames:
             type: string
           example:
@@ -2656,7 +2877,7 @@ components:
               ipv4:
                 activated: true
                 addresses:
-                - ip: 192.168.1.100
+                - ip: 192.168.0.101
                   prefix_length: 24
               type: ETHERNET
             eth-x5:
@@ -2666,10 +2887,50 @@ components:
                 - ip: 192.168.1.101
                   prefix_length: 24
               type: ETHERNET
+        network_bridges:
+          type: object
+          description: The current state of all network bridges on the device.
+          additionalProperties:
+            $ref: '#/components/schemas/NetworkBridgeState'
+          propertyNames:
+            type: string
+          example:
+            br0:
+              ipv4:
+                activated: true
+                addresses:
+                - ip: 192.168.30.101
+                  prefix_length: 24
+              ports:
+                swp-x4:
+                  has_carrier: true
+                swp-x5:
+                  has_carrier: false
         routes:
           type: array
           items:
             $ref: '#/components/schemas/Ipv4Route'
+          description: Global IPv4 routes configured on the system.
+        vlan_interfaces:
+          type: object
+          description: The current state of all VLAN interfaces on the device.
+          additionalProperties:
+            $ref: '#/components/schemas/VlanInterfaceState'
+          propertyNames:
+            type: string
+          example:
+            eth-x4.10:
+              ipv4:
+                activated: true
+                addresses:
+                - ip: 192.168.10.101
+                  prefix_length: 24
+            eth-x5.20:
+              ipv4:
+                activated: true
+                addresses:
+                - ip: 192.168.20.101
+                  prefix_length: 24
     NtpRuntimeState:
       type: object
       required:
@@ -2681,7 +2942,7 @@ components:
           type: string
           description: |-
             The NTP server currently used for time synchronisation.
-            The NTP servers are used in the following order if a server is unavailable: `link_servers` (DHCP) > configured servers > fallback server.
+            The NTP servers are used in the following order if a server is unavailable: `link_servers` (DHCP) > configured servers. The fallback servers will only be used when nothing else is configured.
             If no server is currently being used for synchronisation, this entry is empty.
         link_ntp_servers:
           type: array
@@ -2839,8 +3100,8 @@ components:
             type: array
             items:
               type: string
-              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard, or a bare '*'.
-              pattern: ^(?:\*|[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?)$
+              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard. Use an empty list to match all interfaces.
+              pattern: ^[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?$
     OutputReachability:
       type: string
       description: Reachability status of a syslog output destination.
@@ -2974,6 +3235,67 @@ components:
           type: string
           enum:
           - REDIRECT
+    PartialEthernetInterfaceConfig:
+      type: object
+      description: Represents the configuration of a single ethernet interface. (PATCH)
+      properties:
+        enabled:
+          type: boolean
+          description: A disabled interface is still present in the system configuration but will not be active.
+        ipv4_config:
+          $ref: '#/components/schemas/PartialEthernetIpv4Config'
+          description: IPv4 configuration for this interface.
+    PartialEthernetIpv4Config:
+      type: object
+      description: Represents the IPv4 configuration of an ethernet interface. (PATCH)
+      properties:
+        addresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ipv4Subnet'
+          description: |-
+            The list of IPv4 addresses and their corresponding subnet masks for this interface.
+
+            If DHCP is disabled, at least one static IPv4 address must be specified.
+        dhcp:
+          type: boolean
+          description: Indicates whether DHCP is enabled for this interface.
+        dns:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ipv4String'
+          description: |-
+            DNS servers registered by this interface.
+
+            Note that the system DNS servers may differ from this, as interface state and metric influences the effective DNS resolution.
+        failover:
+          $ref: '#/components/schemas/PartialFailoverInterfaceConfig'
+        gateway:
+          oneOf:
+          - type: 'null'
+          - type: string
+            format: ipv4
+            description: Represents an IPv4 address in a string format.
+          description: Optional gateway for this interface.
+        metric:
+          type: integer
+          format: int64
+          description: |-
+            Normal route metric (priority) for this interface. Lower values have higher priority.
+            If a value of -1 is specified, the system will choose the metric automatically.
+
+            If failover is enabled, the actual metric of the interface is
+            dynamic and may change between metric and `failed_metric` depending on the probe state.
+          example: 100
+          maximum: 2147483647
+          minimum: -1
+        shared_mode:
+          $ref: '#/components/schemas/PartialSharedModeConfig'
+          description: |-
+            Shared mode configuration for this interface.
+
+            Note that using shared mode makes the interface ignore certain other settings.
+            See the documentation for `SharedModeConfig` for more details.
     PartialFailoverGlobalConfig:
       type: object
       description: |-
@@ -3100,14 +3422,14 @@ components:
             type: array
             items:
               type: string
-              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard, or a bare '*'.
-              pattern: ^(?:\*|[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?)$
+              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard. Use an empty list to match all interfaces.
+              pattern: ^[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?$
           out_interface:
             type: array
             items:
               type: string
-              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard, or a bare '*'.
-              pattern: ^(?:\*|[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?)$
+              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard. Use an empty list to match all interfaces.
+              pattern: ^[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?$
     PartialForwardRule:
       type: object
       properties:
@@ -3124,6 +3446,51 @@ components:
           format: int32
           description: Sort order of the rule. Lower values are evaluated first.
           minimum: 0
+    PartialGenericIpv4Config:
+      type: object
+      description: |-
+        Represents a generic IPv4 configuration for a network interface.
+
+         This is used by all interface types, except for Ethernet. (PATCH)
+      properties:
+        addresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ipv4Subnet'
+          description: |-
+            The list of IPv4 addresses and their corresponding subnet masks for this interface.
+
+            If DHCP is disabled, at least one static IPv4 address must be specified.
+        dhcp:
+          type: boolean
+          description: Indicates whether DHCP is enabled for this interface.
+        dns:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ipv4String'
+          description: |-
+            DNS servers registered by this interface.
+
+            Note that the system DNS servers may differ from this, as interface state and metric influences the effective DNS resolution.
+        gateway:
+          oneOf:
+          - type: 'null'
+          - type: string
+            format: ipv4
+            description: Represents an IPv4 address in a string format.
+          description: Optional gateway for this interface.
+        metric:
+          type: integer
+          format: int64
+          description: |-
+            Normal route metric (priority) for this interface. Lower values have higher priority.
+            If a value of -1 is specified, the system will choose the metric automatically.
+
+            If failover is enabled, the actual metric of the interface is
+            dynamic and may change between metric and `failed_metric` depending on the probe state.
+          example: 100
+          maximum: 2147483647
+          minimum: -1
     PartialInboundMatch:
       allOf:
       - type: object
@@ -3169,8 +3536,8 @@ components:
             type: array
             items:
               type: string
-              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard, or a bare '*'.
-              pattern: ^(?:\*|[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?)$
+              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard. Use an empty list to match all interfaces.
+              pattern: ^[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?$
     PartialInputRule:
       type: object
       properties:
@@ -3187,14 +3554,6 @@ components:
           format: int32
           description: Sort order of the rule. Lower values are evaluated first.
           minimum: 0
-    PartialInterfaceConfig:
-      type: object
-      description: Represents the configuration of a single network interface. (PATCH)
-      properties:
-        enabled:
-          type: boolean
-        ipv4_config:
-          $ref: '#/components/schemas/PartialIpv4Config'
     PartialInterfacePolicy:
       type: object
       description: |-
@@ -3212,42 +3571,6 @@ components:
           $ref: '#/components/schemas/PolicyType'
         output:
           $ref: '#/components/schemas/PolicyType'
-    PartialIpv4Config:
-      type: object
-      description: Represents the IPv4 configuration of a network interface. (PATCH)
-      properties:
-        addresses:
-          type: array
-          items:
-            $ref: '#/components/schemas/Ipv4Subnet'
-        dhcp:
-          type: boolean
-        dns:
-          type: array
-          items:
-            $ref: '#/components/schemas/Ipv4String'
-        failover:
-          $ref: '#/components/schemas/PartialFailoverInterfaceConfig'
-        gateway:
-          oneOf:
-          - type: 'null'
-          - type: string
-            format: ipv4
-            description: Represents an IPv4 address in a string format.
-        metric:
-          type: integer
-          format: int64
-          description: |-
-            Normal route metric (priority) for this interface. Lower values have higher priority.
-            If a value of -1 is specified, the system will choose the metric automatically.
-
-            If failover is enabled, the actual metric of the interface is
-            dynamic and may change between metric and `failed_metric` depending on the probe state.
-          example: 100
-          maximum: 2147483647
-          minimum: -1
-        shared_mode:
-          $ref: '#/components/schemas/PartialSharedModeConfig'
     PartialNatRules:
       type: object
       properties:
@@ -3259,6 +3582,13 @@ components:
           type: object
           description: Prerouting DNAT rules
           additionalProperties: true
+    PartialNetworkBridgeConfig:
+      type: object
+      description: Represents the configuration of a single network bridge. (PATCH)
+      properties:
+        ipv4_config:
+          $ref: '#/components/schemas/PartialGenericIpv4Config'
+          description: IPv4 configuration for this network bridge.
     PartialNetworkConfig:
       type: object
       description: Used for writing the network configuration. All fields are required to be present, but can be empty in some cases. (PATCH)
@@ -3275,7 +3605,7 @@ components:
         interfaces:
           type: object
           additionalProperties:
-            $ref: '#/components/schemas/PartialInterfaceConfig'
+            $ref: '#/components/schemas/PartialEthernetInterfaceConfig'
           propertyNames:
             type: string
           example:
@@ -3289,10 +3619,52 @@ components:
               enabled: true
               ipv4_config:
                 dhcp: true
+        network_bridges:
+          type: object
+          description: Contains all network bridges that are configured in the system.
+          additionalProperties:
+            $ref: '#/components/schemas/PartialNetworkBridgeConfig'
+          propertyNames:
+            type: string
+          example:
+            br0:
+              ipv4_config:
+                dhcp: false
+                gateway: null
+            br1:
+              ipv4_config:
+                dhcp: false
+                gateway: null
         service_interface:
           oneOf:
           - type: 'null'
           - $ref: '#/components/schemas/PartialServiceInterfaceConfig'
+        vlan_interfaces:
+          type: object
+          description: |-
+            Contains all VLAN interfaces that are configured in the system.
+
+            This map is not static, but can be changed in order to add/remove VLAN interfaces.
+            To add a new VLAN interface, include it in this map with a unique key and provide the necessary configuration.
+            To remove it, remove the entry corresponding to the VLAN interface from this map.
+          additionalProperties: true
+          example:
+            eth-x4.10:
+              failover:
+                enabled: true
+              ipv4_config:
+                dhcp: false
+                gateway: null
+              shared_mode:
+                enabled: true
+              vlan_id: 12
+            eth-x6.22:
+              enabled: true
+              ipv4_config:
+                dhcp: false
+                gateway: null
+              parent_interface: eth-x6
+              vlan_id: 22
     PartialOutboundMatch:
       allOf:
       - type: object
@@ -3338,8 +3710,8 @@ components:
             type: array
             items:
               type: string
-              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard, or a bare '*'.
-              pattern: ^(?:\*|[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?)$
+              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard. Use an empty list to match all interfaces.
+              pattern: ^[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?$
     PartialOutputRule:
       type: object
       properties:
@@ -3616,6 +3988,46 @@ components:
           $ref: '#/components/schemas/PartialRemovableMediaUpdateConfig'
         signed_update:
           $ref: '#/components/schemas/PartialSignedUpdateConfig'
+    PartialVlanInterfaceConfig:
+      type: object
+      description: Represents the configuration of a single VLAN interface. (PATCH)
+      properties:
+        enabled:
+          type: boolean
+          description: |-
+            A disabled interface is still present in the system configuration but will not be active.
+
+            Unlike physical interfaces, a disabled VLAN interface may be completely removed from the system network stack
+            and therefore may not appear in the system state endpoint at all.
+        failover:
+          $ref: '#/components/schemas/PartialFailoverInterfaceConfig'
+          description: The failover settings for this VLAN interface.
+        ipv4_config:
+          $ref: '#/components/schemas/PartialGenericIpv4Config'
+          description: IPv4 configuration for this interface.
+        parent_interface:
+          type: string
+          description: |-
+            The name of the parent interface to which this VLAN is attached.
+
+            Currently, only physical interfaces are supported as parent interfaces.
+        shared_mode:
+          $ref: '#/components/schemas/PartialSharedModeConfig'
+          description: |-
+            Shared mode configuration for this interface.
+
+            Note that using shared mode makes the interface ignore certain other settings.
+            See the documentation for `SharedModeConfig` for more details.
+        vlan_id:
+          type: integer
+          format: int32
+          description: |-
+            The VLAN ID for this interface.
+
+            Must be unique per parent interface.
+          example: 10
+          maximum: 4094
+          minimum: 0
     PolicyType:
       type: string
       description: |-
@@ -4502,6 +4914,65 @@ components:
           $ref: '#/components/schemas/RemovableMediaUpdateConfig'
         signed_update:
           $ref: '#/components/schemas/SignedUpdateConfig'
+    VlanInterfaceConfig:
+      type: object
+      description: Represents the configuration of a single VLAN interface.
+      required:
+      - parent_interface
+      - vlan_id
+      - ipv4_config
+      - shared_mode
+      - failover
+      properties:
+        enabled:
+          type: boolean
+          description: |-
+            A disabled interface is still present in the system configuration but will not be active.
+
+            Unlike physical interfaces, a disabled VLAN interface may be completely removed from the system network stack
+            and therefore may not appear in the system state endpoint at all.
+        failover:
+          $ref: '#/components/schemas/FailoverInterfaceConfig'
+          description: The failover settings for this VLAN interface.
+        ipv4_config:
+          $ref: '#/components/schemas/GenericIpv4Config'
+          description: IPv4 configuration for this interface.
+        parent_interface:
+          type: string
+          description: |-
+            The name of the parent interface to which this VLAN is attached.
+
+            Currently, only physical interfaces are supported as parent interfaces.
+        shared_mode:
+          $ref: '#/components/schemas/SharedModeConfig'
+          description: |-
+            Shared mode configuration for this interface.
+
+            Note that using shared mode makes the interface ignore certain other settings.
+            See the documentation for `SharedModeConfig` for more details.
+        vlan_id:
+          type: integer
+          format: int32
+          description: |-
+            The VLAN ID for this interface.
+
+            Must be unique per parent interface.
+          example: 10
+          maximum: 4094
+          minimum: 0
+    VlanInterfaceState:
+      type: object
+      description: Represents the current state of single VLAN interface.
+      required:
+      - ipv4
+      properties:
+        failover:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/InterfaceFailoverState'
+            description: Failover state, present only when failover is configured globally.
+        ipv4:
+          $ref: '#/components/schemas/Ipv4State'
   securitySchemes:
     OAuth2:
       type: oauth2
