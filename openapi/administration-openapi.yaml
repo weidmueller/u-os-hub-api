@@ -405,8 +405,9 @@ paths:
         required: false
         schema:
           type: integer
-          format: int64
-          minimum: 0
+          format: int32
+          maximum: 65535
+          minimum: 1
       - name: sources
         in: query
         description: |-
@@ -538,11 +539,19 @@ paths:
       tags:
       - network
       summary: Get the current network configuration of the device.
-      description: This only returns fields that can be configured and changed via the HTTP API.
+      description: |-
+        This only returns fields that can be configured and changed via the HTTP API.
+        The response carries an `ETag` header derived from the configuration. Use its value in an
+        `If-Match` header on `PUT`/`PATCH` to guard against lost updates.
       operationId: get_network_config
       responses:
         '200':
           description: Network config
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: Opaque token identifying the current resource version. Return it unchanged in the `If-Match` header on subsequent `PUT`/`PATCH` requests to prevent lost updates (optimistic locking).
           content:
             application/json:
               schema:
@@ -569,6 +578,13 @@ paths:
         Note that some network properties are not yet supported by the API.
         These properties will be unaffected when applying the changes, thus preserving any manual changes.
       operationId: set_network_config
+      parameters:
+      - name: If-Match
+        in: header
+        description: Apply the request only if the current resource version matches this `ETag` (optimistic locking). If no match is found, 412 is returned.
+        required: false
+        schema:
+          type: string
       requestBody:
         content:
           application/json:
@@ -578,6 +594,11 @@ paths:
       responses:
         '200':
           description: Network config
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: Opaque token identifying the current resource version. Return it unchanged in the `If-Match` header on subsequent `PUT`/`PATCH` requests to prevent lost updates (optimistic locking).
           content:
             application/json:
               schema:
@@ -603,6 +624,13 @@ paths:
         Note that some network properties are not yet supported by the API.
         These properties will be unaffected when applying the changes, thus preserving any manual changes.
       operationId: update_network_config
+      parameters:
+      - name: If-Match
+        in: header
+        description: Apply the request only if the current resource version matches this `ETag` (optimistic locking). If no match is found, 412 is returned.
+        required: false
+        schema:
+          type: string
       requestBody:
         content:
           application/merge-patch+json:
@@ -612,6 +640,11 @@ paths:
       responses:
         '200':
           description: Network config
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: Opaque token identifying the current resource version. Return it unchanged in the `If-Match` header on subsequent `PUT`/`PATCH` requests to prevent lost updates (optimistic locking).
           content:
             application/json:
               schema:
@@ -660,7 +693,17 @@ paths:
       parameters:
       - name: do_reboot
         in: query
-        description: Whether the system should reboot after resetting the network settings.
+        description: |-
+          Whether the system should reboot after resetting the network settings.
+          Defaults to `false` if not specified.
+        required: false
+        schema:
+          type: boolean
+      - name: reset_firewall
+        in: query
+        description: |-
+          Whether the system should reset the firewall settings along with the network settings.
+          Defaults to `false` if not specified.
         required: false
         schema:
           type: boolean
@@ -858,6 +901,120 @@ paths:
       security:
       - OAuth2:
         - u-os-adm.recovery.readwrite
+  /redundancy/config:
+    get:
+      tags:
+      - redundancy
+      summary: Get the redundancy configuration for the system.
+      description: |-
+        Check the redundancy state endpoint to see the current state of the system.
+        This endpoint is only available on platforms with redundancy support (e.g. UC20-M4000-C).
+      operationId: get_redundancy_config
+      responses:
+        '200':
+          description: redundancy configuration read successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RedundancyConfig'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.redundancy.readonly
+      - OAuth2:
+        - u-os-adm.redundancy.readwrite
+    put:
+      tags:
+      - redundancy
+      summary: Set the redundancy configuration for the system.
+      description: This endpoint is only available on platforms with redundancy support (e.g. UC20-M4000-C).
+      operationId: set_redundancy_config
+      requestBody:
+        description: Redundancy configuration to update
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RedundancyConfig'
+        required: true
+      responses:
+        '200':
+          description: Redundancy configuration updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RedundancyConfig'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.redundancy.readwrite
+    patch:
+      tags:
+      - redundancy
+      summary: Modify the redundancy configuration of the device.
+      description: |-
+        This endpoint modifies the redundancy configuration of the device by applying a JSON merge patch (https://datatracker.ietf.org/doc/html/rfc7396)
+        to the current configuration.
+        Will return the updated configuration after applying the patch on success.
+      operationId: update_redundancy_config
+      requestBody:
+        content:
+          application/merge-patch+json:
+            schema:
+              $ref: '#/components/schemas/PartialRedundancyConfig'
+        required: true
+      responses:
+        '200':
+          description: Redundancy config
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RedundancyConfig'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.redundancy.readwrite
+  /redundancy/state:
+    get:
+      tags:
+      - redundancy
+      summary: Get the current redundancy state.
+      description: |-
+        The state will reflect the current state of the system, not the desired state after a reboot.
+        This endpoint is only available on platforms with redundancy support (e.g. UC20-M4000-C).
+      operationId: get_redundancy_state
+      responses:
+        '200':
+          description: redundancy state read successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RedundancyState'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 412, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.redundancy.readonly
+      - OAuth2:
+        - u-os-adm.redundancy.readwrite
   /security/config:
     get:
       tags:
@@ -1828,6 +1985,96 @@ components:
           type: string
           enum:
           - REDIRECT
+    EthernetInterfaceConfig:
+      type: object
+      description: Represents the configuration of a single ethernet interface.
+      required:
+      - ipv4_config
+      properties:
+        enabled:
+          type: boolean
+          description: A disabled interface is still present in the system configuration but will not be active.
+        ipv4_config:
+          $ref: '#/components/schemas/EthernetIpv4Config'
+          description: IPv4 configuration for this interface.
+    EthernetInterfaceState:
+      type: object
+      description: Represents the current state of an ethernet interface.
+      required:
+      - type
+      - ipv4
+      properties:
+        failover:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/InterfaceFailoverState'
+            description: Failover state, present only when failover is configured globally.
+        ipv4:
+          $ref: '#/components/schemas/Ipv4State'
+        type:
+          $ref: '#/components/schemas/EthernetInterfaceType'
+    EthernetInterfaceType:
+      type: string
+      description: The type of ethernet interface.
+      enum:
+      - ETHERNET
+      - USB
+    EthernetIpv4Config:
+      type: object
+      description: Represents the IPv4 configuration of an ethernet interface.
+      required:
+      - dhcp
+      - addresses
+      - gateway
+      - dns
+      properties:
+        addresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ipv4Subnet'
+          description: |-
+            The list of IPv4 addresses and their corresponding subnet masks for this interface.
+
+            If DHCP is disabled, at least one static IPv4 address must be specified.
+        dhcp:
+          type: boolean
+          description: Indicates whether DHCP is enabled for this interface.
+        dns:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ipv4String'
+          description: |-
+            DNS servers registered by this interface.
+
+            Note that the system DNS servers may differ from this, as interface state and metric influences the effective DNS resolution.
+        failover:
+          $ref: '#/components/schemas/FailoverInterfaceConfig'
+        gateway:
+          oneOf:
+          - type: 'null'
+          - type: string
+            format: ipv4
+            description: Represents an IPv4 address in a string format.
+          description: Optional gateway for this interface.
+        metric:
+          type: integer
+          format: int64
+          description: |-
+            Normal route metric (priority) for this interface. Lower values have higher priority.
+            If a value of -1 is specified, the system will choose the metric automatically.
+
+            If failover is enabled, the actual metric of the interface is
+            dynamic and may change between metric and `failed_metric` depending on the probe state.
+          example: 100
+          maximum: 2147483647
+          minimum: -1
+        shared_mode:
+          $ref: '#/components/schemas/SharedModeConfig'
+          description: |-
+            Shared mode configuration for this interface.
+
+            Note that using shared mode makes the interface ignore certain other settings.
+            See the documentation for `SharedModeConfig` for more details.
     FailoverGlobalConfig:
       type: object
       description: |-
@@ -1945,7 +2192,23 @@ components:
           $ref: '#/components/schemas/NatRules'
       example:
         filter:
-          forward: {}
+          forward:
+            allow-forward-to-192.168.3.122:
+              action: ACCEPT
+              description: Allow forwarding TCP port 80 to '192.168.3.122'
+              match:
+                destination:
+                - 192.168.3.122
+                dport:
+                - '80'
+                in_interface:
+                - eth-x4
+                out_interface:
+                - eth-x5
+                protocol: TCP
+                source: []
+                sport: []
+              priority: 100
           input:
             allow-192.168.1.120:
               action: ACCEPT
@@ -2080,14 +2343,14 @@ components:
             type: array
             items:
               type: string
-              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard, or a bare '*'.
-              pattern: ^(?:\*|[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?)$
+              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard. Use an empty list to match all interfaces.
+              pattern: ^[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?$
           out_interface:
             type: array
             items:
               type: string
-              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard, or a bare '*'.
-              pattern: ^(?:\*|[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?)$
+              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard. Use an empty list to match all interfaces.
+              pattern: ^[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?$
     ForwardRule:
       type: object
       required:
@@ -2109,6 +2372,57 @@ components:
           format: int32
           description: Sort order of the rule. Lower values are evaluated first.
           minimum: 0
+    GenericIpv4Config:
+      type: object
+      description: |-
+        Represents a generic IPv4 configuration for a network interface.
+
+        This is used by all interface types, except for Ethernet.
+      required:
+      - dhcp
+      - addresses
+      - gateway
+      - dns
+      - metric
+      properties:
+        addresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ipv4Subnet'
+          description: |-
+            The list of IPv4 addresses and their corresponding subnet masks for this interface.
+
+            If DHCP is disabled, at least one static IPv4 address must be specified.
+        dhcp:
+          type: boolean
+          description: Indicates whether DHCP is enabled for this interface.
+        dns:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ipv4String'
+          description: |-
+            DNS servers registered by this interface.
+
+            Note that the system DNS servers may differ from this, as interface state and metric influences the effective DNS resolution.
+        gateway:
+          oneOf:
+          - type: 'null'
+          - type: string
+            format: ipv4
+            description: Represents an IPv4 address in a string format.
+          description: Optional gateway for this interface.
+        metric:
+          type: integer
+          format: int64
+          description: |-
+            Normal route metric (priority) for this interface. Lower values have higher priority.
+            If a value of -1 is specified, the system will choose the metric automatically.
+
+            If failover is enabled, the actual metric of the interface is
+            dynamic and may change between metric and `failed_metric` depending on the probe state.
+          example: 100
+          maximum: 2147483647
+          minimum: -1
     GlobalDnsServers:
       type: object
       description: |-
@@ -2239,8 +2553,8 @@ components:
             type: array
             items:
               type: string
-              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard, or a bare '*'.
-              pattern: ^(?:\*|[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?)$
+              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard. Use an empty list to match all interfaces.
+              pattern: ^[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?$
     InputRule:
       type: object
       required:
@@ -2262,16 +2576,6 @@ components:
           format: int32
           description: Sort order of the rule. Lower values are evaluated first.
           minimum: 0
-    InterfaceConfig:
-      type: object
-      description: Represents the configuration of a single network interface.
-      required:
-      - ipv4_config
-      properties:
-        enabled:
-          type: boolean
-        ipv4_config:
-          $ref: '#/components/schemas/Ipv4Config'
     InterfaceFailoverState:
       type: object
       description: Failover state of a single interface exposed via the network state endpoint.
@@ -2326,69 +2630,6 @@ components:
       - HEALTHY
       - PROBING
       - FAILED
-    InterfaceState:
-      type: object
-      description: Represents the current state of a network interface.
-      required:
-      - type
-      - ipv4
-      properties:
-        failover:
-          oneOf:
-          - type: 'null'
-          - $ref: '#/components/schemas/InterfaceFailoverState'
-            description: Failover state, present only when failover is configured globally.
-        ipv4:
-          $ref: '#/components/schemas/Ipv4State'
-        type:
-          $ref: '#/components/schemas/InterfaceType'
-    InterfaceType:
-      type: string
-      description: The type of network interface.
-      enum:
-      - ETHERNET
-      - USB
-    Ipv4Config:
-      type: object
-      description: Represents the IPv4 configuration of a network interface.
-      required:
-      - dhcp
-      - addresses
-      - gateway
-      - dns
-      properties:
-        addresses:
-          type: array
-          items:
-            $ref: '#/components/schemas/Ipv4Subnet'
-        dhcp:
-          type: boolean
-        dns:
-          type: array
-          items:
-            $ref: '#/components/schemas/Ipv4String'
-        failover:
-          $ref: '#/components/schemas/FailoverInterfaceConfig'
-        gateway:
-          oneOf:
-          - type: 'null'
-          - type: string
-            format: ipv4
-            description: Represents an IPv4 address in a string format.
-        metric:
-          type: integer
-          format: int64
-          description: |-
-            Normal route metric (priority) for this interface. Lower values have higher priority.
-            If a value of -1 is specified, the system will choose the metric automatically.
-
-            If failover is enabled, the actual metric of the interface is
-            dynamic and may change between metric and `failed_metric` depending on the probe state.
-          example: 100
-          maximum: 2147483647
-          minimum: -1
-        shared_mode:
-          $ref: '#/components/schemas/SharedModeConfig'
     Ipv4PrefixLength:
       type: integer
       format: int32
@@ -2568,6 +2809,39 @@ components:
             type: string
             description: Identifier of a firewall rule. Used as the map key and to reference it in patch operations.
             pattern: ^[A-Za-z0-9:._-]{1,63}$
+    NetworkBridgeConfig:
+      type: object
+      description: Represents the configuration of a single network bridge.
+      required:
+      - ipv4_config
+      properties:
+        ipv4_config:
+          $ref: '#/components/schemas/GenericIpv4Config'
+          description: IPv4 configuration for this network bridge.
+    NetworkBridgePortState:
+      type: object
+      description: Represents the current state of a network bridge port.
+      required:
+      - has_carrier
+      properties:
+        has_carrier:
+          type: boolean
+    NetworkBridgeState:
+      type: object
+      description: Represents the current state of a network bridge.
+      required:
+      - ipv4
+      - ports
+      properties:
+        ipv4:
+          $ref: '#/components/schemas/Ipv4State'
+        ports:
+          type: object
+          description: The current state of each port, keyed by interface name.
+          additionalProperties:
+            $ref: '#/components/schemas/NetworkBridgePortState'
+          propertyNames:
+            type: string
     NetworkConfig:
       type: object
       description: Used for writing the network configuration. All fields are required to be present, but can be empty in some cases.
@@ -2587,7 +2861,7 @@ components:
         interfaces:
           type: object
           additionalProperties:
-            $ref: '#/components/schemas/InterfaceConfig'
+            $ref: '#/components/schemas/EthernetInterfaceConfig'
           propertyNames:
             type: string
           example:
@@ -2602,14 +2876,14 @@ components:
                 - 8.8.8.8
                 failover:
                   enabled: true
-                  failed_metric: 20000
+                  failed_metric: 20001
                   probe_target: dns.google
                 gateway: 192.168.1.1
                 metric: 200
                 shared_mode:
                   dhcp_ip_range:
-                    end: 192.168.1.150
-                    start: 192.168.1.103
+                    end: 192.168.1.200
+                    start: 192.168.1.110
                   dhcp_lease_time_sec: 3600
                   enabled: true
             eth-x5:
@@ -2620,18 +2894,92 @@ components:
                 dns: []
                 failover:
                   enabled: true
-                  failed_metric: 20001
-                  probe_target: 1.1.1.1
+                  failed_metric: 20002
+                  probe_target: dns.google
                 gateway: null
                 metric: 100
                 shared_mode:
                   dhcp_ip_range: null
                   dhcp_lease_time_sec: null
                   enabled: false
+        network_bridges:
+          type: object
+          description: Contains all network bridges that are configured in the system.
+          additionalProperties:
+            $ref: '#/components/schemas/NetworkBridgeConfig'
+          propertyNames:
+            type: string
+          example:
+            br0:
+              ipv4_config:
+                addresses:
+                - ip: 192.168.1.102
+                  prefix_length: 24
+                dhcp: false
+                dns:
+                - 8.8.8.8
+                gateway: 192.168.1.1
+                metric: 200
         service_interface:
           oneOf:
           - type: 'null'
           - $ref: '#/components/schemas/ServiceInterfaceConfig'
+        vlan_interfaces:
+          type: object
+          description: |-
+            Contains all VLAN interfaces that are configured in the system.
+
+            This map is not static, but can be changed in order to add/remove VLAN interfaces.
+            To add a new VLAN interface, include it in this map with a unique key and provide the necessary configuration.
+            To remove it, remove the entry corresponding to the VLAN interface from this map.
+          additionalProperties:
+            $ref: '#/components/schemas/VlanInterfaceConfig'
+          propertyNames:
+            type: string
+          example:
+            eth-x4.10:
+              enabled: true
+              failover:
+                enabled: true
+                failed_metric: 20011
+                probe_target: dns.google
+              ipv4_config:
+                addresses:
+                - ip: 192.168.1.102
+                  prefix_length: 24
+                dhcp: false
+                dns:
+                - 8.8.8.8
+                gateway: 192.168.1.1
+                metric: 200
+              parent_interface: eth-x4
+              shared_mode:
+                dhcp_ip_range:
+                  end: 192.168.1.200
+                  start: 192.168.1.110
+                dhcp_lease_time_sec: 3600
+                enabled: true
+              vlan_id: 10
+            eth-x5.20:
+              enabled: true
+              failover:
+                enabled: true
+                failed_metric: 20022
+                probe_target: dns.google
+              ipv4_config:
+                addresses: []
+                dhcp: true
+                dns: []
+                gateway: null
+                metric: -1
+              parent_interface: eth-x5
+              shared_mode:
+                dhcp_ip_range:
+                  end: 192.168.1.200
+                  start: 192.168.1.110
+                dhcp_lease_time_sec: 3600
+                enabled: true
+              vlan_id: 20
     NetworkState:
       type: object
       description: |-
@@ -2642,13 +2990,16 @@ components:
       - dns_resolver
       - routes
       - interfaces
+      - vlan_interfaces
+      - network_bridges
       properties:
         dns_resolver:
           $ref: '#/components/schemas/GlobalDnsServers'
         interfaces:
           type: object
+          description: The current state of all Ethernet interfaces on the device.
           additionalProperties:
-            $ref: '#/components/schemas/InterfaceState'
+            $ref: '#/components/schemas/EthernetInterfaceState'
           propertyNames:
             type: string
           example:
@@ -2656,7 +3007,7 @@ components:
               ipv4:
                 activated: true
                 addresses:
-                - ip: 192.168.1.100
+                - ip: 192.168.0.101
                   prefix_length: 24
               type: ETHERNET
             eth-x5:
@@ -2666,10 +3017,50 @@ components:
                 - ip: 192.168.1.101
                   prefix_length: 24
               type: ETHERNET
+        network_bridges:
+          type: object
+          description: The current state of all network bridges on the device.
+          additionalProperties:
+            $ref: '#/components/schemas/NetworkBridgeState'
+          propertyNames:
+            type: string
+          example:
+            br0:
+              ipv4:
+                activated: true
+                addresses:
+                - ip: 192.168.30.101
+                  prefix_length: 24
+              ports:
+                swp-x4:
+                  has_carrier: true
+                swp-x5:
+                  has_carrier: false
         routes:
           type: array
           items:
             $ref: '#/components/schemas/Ipv4Route'
+          description: Global IPv4 routes configured on the system.
+        vlan_interfaces:
+          type: object
+          description: The current state of all VLAN interfaces on the device.
+          additionalProperties:
+            $ref: '#/components/schemas/VlanInterfaceState'
+          propertyNames:
+            type: string
+          example:
+            eth-x4.10:
+              ipv4:
+                activated: true
+                addresses:
+                - ip: 192.168.10.101
+                  prefix_length: 24
+            eth-x5.20:
+              ipv4:
+                activated: true
+                addresses:
+                - ip: 192.168.20.101
+                  prefix_length: 24
     NtpRuntimeState:
       type: object
       required:
@@ -2681,7 +3072,7 @@ components:
           type: string
           description: |-
             The NTP server currently used for time synchronisation.
-            The NTP servers are used in the following order if a server is unavailable: `link_servers` (DHCP) > configured servers > fallback server.
+            The NTP servers are used in the following order if a server is unavailable: `link_servers` (DHCP) > configured servers. The fallback servers will only be used when nothing else is configured.
             If no server is currently being used for synchronisation, this entry is empty.
         link_ntp_servers:
           type: array
@@ -2839,8 +3230,8 @@ components:
             type: array
             items:
               type: string
-              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard, or a bare '*'.
-              pattern: ^(?:\*|[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?)$
+              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard. Use an empty list to match all interfaces.
+              pattern: ^[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?$
     OutputReachability:
       type: string
       description: Reachability status of a syslog output destination.
@@ -2884,6 +3275,19 @@ components:
             - `error` — The output is experiencing delivery failures and is currently retrying.
             - `pending` — Reachability cannot be determined yet, because no logs have been
               attempted to be sent so far (e.g. just started or filter-config filtered out all logs).
+    P2pState:
+      type: string
+      enum:
+      - YES
+      - NO
+      - AUTO
+    PState:
+      type: string
+      enum:
+      - FORWARDING
+      - BLOCKING
+      - DISCARDING
+      - LEARNING
     PartialCanInterfaceConfig:
       type: object
       properties:
@@ -2974,6 +3378,67 @@ components:
           type: string
           enum:
           - REDIRECT
+    PartialEthernetInterfaceConfig:
+      type: object
+      description: Represents the configuration of a single ethernet interface. (PATCH)
+      properties:
+        enabled:
+          type: boolean
+          description: A disabled interface is still present in the system configuration but will not be active.
+        ipv4_config:
+          $ref: '#/components/schemas/PartialEthernetIpv4Config'
+          description: IPv4 configuration for this interface.
+    PartialEthernetIpv4Config:
+      type: object
+      description: Represents the IPv4 configuration of an ethernet interface. (PATCH)
+      properties:
+        addresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ipv4Subnet'
+          description: |-
+            The list of IPv4 addresses and their corresponding subnet masks for this interface.
+
+            If DHCP is disabled, at least one static IPv4 address must be specified.
+        dhcp:
+          type: boolean
+          description: Indicates whether DHCP is enabled for this interface.
+        dns:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ipv4String'
+          description: |-
+            DNS servers registered by this interface.
+
+            Note that the system DNS servers may differ from this, as interface state and metric influences the effective DNS resolution.
+        failover:
+          $ref: '#/components/schemas/PartialFailoverInterfaceConfig'
+        gateway:
+          oneOf:
+          - type: 'null'
+          - type: string
+            format: ipv4
+            description: Represents an IPv4 address in a string format.
+          description: Optional gateway for this interface.
+        metric:
+          type: integer
+          format: int64
+          description: |-
+            Normal route metric (priority) for this interface. Lower values have higher priority.
+            If a value of -1 is specified, the system will choose the metric automatically.
+
+            If failover is enabled, the actual metric of the interface is
+            dynamic and may change between metric and `failed_metric` depending on the probe state.
+          example: 100
+          maximum: 2147483647
+          minimum: -1
+        shared_mode:
+          $ref: '#/components/schemas/PartialSharedModeConfig'
+          description: |-
+            Shared mode configuration for this interface.
+
+            Note that using shared mode makes the interface ignore certain other settings.
+            See the documentation for `SharedModeConfig` for more details.
     PartialFailoverGlobalConfig:
       type: object
       description: |-
@@ -3100,14 +3565,14 @@ components:
             type: array
             items:
               type: string
-              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard, or a bare '*'.
-              pattern: ^(?:\*|[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?)$
+              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard. Use an empty list to match all interfaces.
+              pattern: ^[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?$
           out_interface:
             type: array
             items:
               type: string
-              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard, or a bare '*'.
-              pattern: ^(?:\*|[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?)$
+              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard. Use an empty list to match all interfaces.
+              pattern: ^[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?$
     PartialForwardRule:
       type: object
       properties:
@@ -3124,6 +3589,51 @@ components:
           format: int32
           description: Sort order of the rule. Lower values are evaluated first.
           minimum: 0
+    PartialGenericIpv4Config:
+      type: object
+      description: |-
+        Represents a generic IPv4 configuration for a network interface.
+
+         This is used by all interface types, except for Ethernet. (PATCH)
+      properties:
+        addresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ipv4Subnet'
+          description: |-
+            The list of IPv4 addresses and their corresponding subnet masks for this interface.
+
+            If DHCP is disabled, at least one static IPv4 address must be specified.
+        dhcp:
+          type: boolean
+          description: Indicates whether DHCP is enabled for this interface.
+        dns:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ipv4String'
+          description: |-
+            DNS servers registered by this interface.
+
+            Note that the system DNS servers may differ from this, as interface state and metric influences the effective DNS resolution.
+        gateway:
+          oneOf:
+          - type: 'null'
+          - type: string
+            format: ipv4
+            description: Represents an IPv4 address in a string format.
+          description: Optional gateway for this interface.
+        metric:
+          type: integer
+          format: int64
+          description: |-
+            Normal route metric (priority) for this interface. Lower values have higher priority.
+            If a value of -1 is specified, the system will choose the metric automatically.
+
+            If failover is enabled, the actual metric of the interface is
+            dynamic and may change between metric and `failed_metric` depending on the probe state.
+          example: 100
+          maximum: 2147483647
+          minimum: -1
     PartialInboundMatch:
       allOf:
       - type: object
@@ -3169,8 +3679,8 @@ components:
             type: array
             items:
               type: string
-              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard, or a bare '*'.
-              pattern: ^(?:\*|[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?)$
+              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard. Use an empty list to match all interfaces.
+              pattern: ^[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?$
     PartialInputRule:
       type: object
       properties:
@@ -3187,14 +3697,6 @@ components:
           format: int32
           description: Sort order of the rule. Lower values are evaluated first.
           minimum: 0
-    PartialInterfaceConfig:
-      type: object
-      description: Represents the configuration of a single network interface. (PATCH)
-      properties:
-        enabled:
-          type: boolean
-        ipv4_config:
-          $ref: '#/components/schemas/PartialIpv4Config'
     PartialInterfacePolicy:
       type: object
       description: |-
@@ -3212,42 +3714,6 @@ components:
           $ref: '#/components/schemas/PolicyType'
         output:
           $ref: '#/components/schemas/PolicyType'
-    PartialIpv4Config:
-      type: object
-      description: Represents the IPv4 configuration of a network interface. (PATCH)
-      properties:
-        addresses:
-          type: array
-          items:
-            $ref: '#/components/schemas/Ipv4Subnet'
-        dhcp:
-          type: boolean
-        dns:
-          type: array
-          items:
-            $ref: '#/components/schemas/Ipv4String'
-        failover:
-          $ref: '#/components/schemas/PartialFailoverInterfaceConfig'
-        gateway:
-          oneOf:
-          - type: 'null'
-          - type: string
-            format: ipv4
-            description: Represents an IPv4 address in a string format.
-        metric:
-          type: integer
-          format: int64
-          description: |-
-            Normal route metric (priority) for this interface. Lower values have higher priority.
-            If a value of -1 is specified, the system will choose the metric automatically.
-
-            If failover is enabled, the actual metric of the interface is
-            dynamic and may change between metric and `failed_metric` depending on the probe state.
-          example: 100
-          maximum: 2147483647
-          minimum: -1
-        shared_mode:
-          $ref: '#/components/schemas/PartialSharedModeConfig'
     PartialNatRules:
       type: object
       properties:
@@ -3259,6 +3725,13 @@ components:
           type: object
           description: Prerouting DNAT rules
           additionalProperties: true
+    PartialNetworkBridgeConfig:
+      type: object
+      description: Represents the configuration of a single network bridge. (PATCH)
+      properties:
+        ipv4_config:
+          $ref: '#/components/schemas/PartialGenericIpv4Config'
+          description: IPv4 configuration for this network bridge.
     PartialNetworkConfig:
       type: object
       description: Used for writing the network configuration. All fields are required to be present, but can be empty in some cases. (PATCH)
@@ -3275,7 +3748,7 @@ components:
         interfaces:
           type: object
           additionalProperties:
-            $ref: '#/components/schemas/PartialInterfaceConfig'
+            $ref: '#/components/schemas/PartialEthernetInterfaceConfig'
           propertyNames:
             type: string
           example:
@@ -3289,10 +3762,52 @@ components:
               enabled: true
               ipv4_config:
                 dhcp: true
+        network_bridges:
+          type: object
+          description: Contains all network bridges that are configured in the system.
+          additionalProperties:
+            $ref: '#/components/schemas/PartialNetworkBridgeConfig'
+          propertyNames:
+            type: string
+          example:
+            br0:
+              ipv4_config:
+                dhcp: false
+                gateway: null
+            br1:
+              ipv4_config:
+                dhcp: false
+                gateway: null
         service_interface:
           oneOf:
           - type: 'null'
           - $ref: '#/components/schemas/PartialServiceInterfaceConfig'
+        vlan_interfaces:
+          type: object
+          description: |-
+            Contains all VLAN interfaces that are configured in the system.
+
+            This map is not static, but can be changed in order to add/remove VLAN interfaces.
+            To add a new VLAN interface, include it in this map with a unique key and provide the necessary configuration.
+            To remove it, remove the entry corresponding to the VLAN interface from this map.
+          additionalProperties: true
+          example:
+            eth-x4.10:
+              failover:
+                enabled: true
+              ipv4_config:
+                dhcp: false
+                gateway: null
+              shared_mode:
+                enabled: true
+              vlan_id: 12
+            eth-x6.22:
+              enabled: true
+              ipv4_config:
+                dhcp: false
+                gateway: null
+              parent_interface: eth-x6
+              vlan_id: 22
     PartialOutboundMatch:
       allOf:
       - type: object
@@ -3338,8 +3853,8 @@ components:
             type: array
             items:
               type: string
-              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard, or a bare '*'.
-              pattern: ^(?:\*|[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?)$
+              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard. Use an empty list to match all interfaces.
+              pattern: ^[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?$
     PartialOutputRule:
       type: object
       properties:
@@ -3439,6 +3954,11 @@ components:
                 ...
                 -----END PGP PUBLIC KEY BLOCK-----
             delete-me: null
+    PartialRedundancyConfig:
+      type: object
+      properties:
+        rstp:
+          $ref: '#/components/schemas/PartialRstpConfig'
     PartialRemovableMediaUpdateConfig:
       type: object
       properties:
@@ -3490,6 +4010,85 @@ components:
         mapping:
           RS232: '#/components/schemas/PartialRs232Config'
           RS485: '#/components/schemas/PartialRs485Config'
+    PartialRstpBridgeConfig:
+      type: object
+      properties:
+        forward_delay_seconds:
+          type: integer
+          format: int32
+          description: 'Forward delay: the time a bridge waits before transitioning a port to the forwarding state.'
+          maximum: 30
+          minimum: 4
+        max_age_seconds:
+          type: integer
+          format: int32
+          description: 'Bridge Max Age: received root information is accepted only while Message Age (+1 per bridge/hop) < Max Age.'
+          maximum: 40
+          minimum: 6
+        ports:
+          type: object
+          description: A map of Port names to their respective configurations.
+          additionalProperties: true
+        priority:
+          type: integer
+          format: int32
+          description: The priority of the bridge. Effective = value * 4096
+          maximum: 15
+          minimum: 0
+        transmit_hold_count:
+          type: integer
+          format: int32
+          description: 'Transmit hold count: the maximum number of BPDUs that can be transmitted per port per hello time.'
+          maximum: 10
+          minimum: 1
+    PartialRstpConfig:
+      type: object
+      properties:
+        bridges:
+          type: object
+          description: A map of bridge names to their respective configurations.
+          additionalProperties: true
+    PartialRstpPortConfig:
+      type: object
+      properties:
+        admin_edge:
+          type: boolean
+          description: Port starts as edge port. A received BPDU clears edge status.
+        auto_edge:
+          type: boolean
+          description: Enables automatic edge port detection. The port becomes an edge port when no BPDU is received.
+        bpdu_filter:
+          type: boolean
+          description: |2-
+             Controlls the BPDU filter capability. BPDU Filter: no BPDUs sent, received BPDUs dropped and counted. Port acts as if no bridge is attached:
+            it becomes designated and forwarding (loop risk).
+        bpdu_guard:
+          type: boolean
+          description: Controlls the bpduguard configuration. Any received BPDU sets the port interface administratively down.
+        network_port:
+          type: boolean
+          description: Controlls the bridge assurance capability. BPDUs sent regardless of port role.
+        path_cost:
+          type: integer
+          format: int32
+          description: The path cost of the port. A value of 0 indicates that the path cost is set to "auto". On auto the effective path costs depends on the link speed and can be shown in the state endpoint.
+          maximum: 200000000
+          minimum: 0
+        point_to_point:
+          $ref: '#/components/schemas/P2pState'
+          description: Controlls the point to point detection mode.
+        priority:
+          type: integer
+          format: int32
+          description: The priority of the port. effective = value * 16.
+          maximum: 15
+          minimum: 0
+        restrict_root_role:
+          type: boolean
+          description: Controlls the ability to take root role. Port is never selected as root port, even with the best information; becomes alternate instead (root guard).
+        restrict_topology_change:
+          type: boolean
+          description: Controlls the port restriction for propagation of topology change notifications. Topology changes received on this port (TCN or TC flag) are not propagated to other ports.
     PartialSerialInterfacesConfig:
       type: object
       description: Configuration settings for all serial interfaces (CAN, RS-232, RS-485) on the system. (PATCH)
@@ -3616,6 +4215,46 @@ components:
           $ref: '#/components/schemas/PartialRemovableMediaUpdateConfig'
         signed_update:
           $ref: '#/components/schemas/PartialSignedUpdateConfig'
+    PartialVlanInterfaceConfig:
+      type: object
+      description: Represents the configuration of a single VLAN interface. (PATCH)
+      properties:
+        enabled:
+          type: boolean
+          description: |-
+            A disabled interface is still present in the system configuration but will not be active.
+
+            Unlike physical interfaces, a disabled VLAN interface may be completely removed from the system network stack
+            and therefore may not appear in the system state endpoint at all.
+        failover:
+          $ref: '#/components/schemas/PartialFailoverInterfaceConfig'
+          description: The failover settings for this VLAN interface.
+        ipv4_config:
+          $ref: '#/components/schemas/PartialGenericIpv4Config'
+          description: IPv4 configuration for this interface.
+        parent_interface:
+          type: string
+          description: |-
+            The name of the parent interface to which this VLAN is attached.
+
+            Currently, only physical interfaces are supported as parent interfaces.
+        shared_mode:
+          $ref: '#/components/schemas/PartialSharedModeConfig'
+          description: |-
+            Shared mode configuration for this interface.
+
+            Note that using shared mode makes the interface ignore certain other settings.
+            See the documentation for `SharedModeConfig` for more details.
+        vlan_id:
+          type: integer
+          format: int32
+          description: |-
+            The VLAN ID for this interface.
+
+            Must be unique per parent interface.
+          example: 10
+          maximum: 4094
+          minimum: 0
     PolicyType:
       type: string
       description: |-
@@ -3631,6 +4270,14 @@ components:
       - DROP
       - ACCEPT
       - OS_DEFAULT
+    PortRole:
+      type: string
+      enum:
+      - ROOT
+      - DESIGNATED
+      - ALTERNATED
+      - DISABLED
+      - BACKUP
     PostroutingAction:
       oneOf:
       - $ref: '#/components/schemas/MasqueradeAction'
@@ -3760,6 +4407,119 @@ components:
 
                 ...
                 -----END PGP PUBLIC KEY BLOCK-----
+    RedundancyConfig:
+      type: object
+      required:
+      - rstp
+      properties:
+        rstp:
+          $ref: '#/components/schemas/RstpConfig'
+      example:
+        rstp:
+          bridges:
+            br0:
+              forward_delay_seconds: 15
+              max_age_seconds: 6
+              ports:
+                swp-x4:
+                  admin_edge: false
+                  auto_edge: false
+                  bpdu_filter: false
+                  bpdu_guard: false
+                  network_port: false
+                  path_cost: 1
+                  point_to_point: YES
+                  priority: 2
+                  restrict_root_role: false
+                  restrict_topology_change: false
+                swp-x5:
+                  admin_edge: false
+                  auto_edge: false
+                  bpdu_filter: false
+                  bpdu_guard: false
+                  network_port: false
+                  path_cost: 1
+                  point_to_point: YES
+                  priority: 0
+                  restrict_root_role: false
+                  restrict_topology_change: false
+              priority: 0
+              transmit_hold_count: 10
+    RedundancyState:
+      type: object
+      required:
+      - rstp
+      properties:
+        rstp:
+          $ref: '#/components/schemas/RstpState'
+          description: All RSTP supported bridge of the device
+      example:
+        rstp:
+          bridges:
+            br0:
+              bridge_identifier: 8.000.B6:8E:48:44:99:B6
+              designated_root: 8.000.B6:8E:48:44:99:B6
+              enabled: true
+              forward_delay_seconds: 15
+              max_age_seconds: 20
+              ports:
+                swp-x4:
+                  bpdu_guard_error: false
+                  bridge_assurance_inconsistent: false
+                  counter:
+                    blocking_transitions: 1972
+                    bpdu_received: 0
+                    bpdu_received_filtered: 0
+                    bpdu_sent: 5
+                    forward_transitions: 1971
+                    tcn_received: 0
+                    tcn_sent: 0
+                  designated_bridge: 8.000.B6:8E:48:44:99:B6
+                  designated_cost: 0
+                  designated_port: '8.001'
+                  designated_root: 8.000.B6:8E:48:44:99:B6
+                  disputed: false
+                  enabled: false
+                  oper_edge_port: false
+                  point_to_point: true
+                  port_identifier: '8.001'
+                  port_path_cost: 20000
+                  role: DISABLED
+                  send_rstp: true
+                  state: DISCARDING
+                  topology_change_ack: false
+                swp-x5:
+                  bpdu_guard_error: false
+                  bridge_assurance_inconsistent: false
+                  counter:
+                    blocking_transitions: 1
+                    bpdu_received: 0
+                    bpdu_received_filtered: 0
+                    bpdu_sent: 29352
+                    forward_transitions: 1
+                    tcn_received: 0
+                    tcn_sent: 2
+                  designated_bridge: 8.000.B6:8E:48:44:99:B6
+                  designated_cost: 0
+                  designated_port: '8.002'
+                  designated_root: 8.000.B6:8E:48:44:99:B6
+                  disputed: false
+                  enabled: true
+                  oper_edge_port: false
+                  point_to_point: true
+                  port_identifier: '8.002'
+                  port_path_cost: 20000
+                  role: DESIGNATED
+                  send_rstp: true
+                  state: FORWARDING
+                  topology_change_ack: false
+              root_path_cost: 0
+              root_port: null
+              topology_change:
+                last_topology_change_port: swp-x5
+                time_since_topology_change_seconds: 57026
+                topology_change: false
+                topology_change_count: 0
     RemovableMediaUpdateConfig:
       type: object
       required:
@@ -3854,6 +4614,323 @@ components:
           example:
           - RS232
           - RS485
+    RstpBridgeConfig:
+      type: object
+      required:
+      - ports
+      - priority
+      - max_age_seconds
+      - forward_delay_seconds
+      - transmit_hold_count
+      properties:
+        forward_delay_seconds:
+          type: integer
+          format: int32
+          description: 'Forward delay: the time a bridge waits before transitioning a port to the forwarding state.'
+          maximum: 30
+          minimum: 4
+        max_age_seconds:
+          type: integer
+          format: int32
+          description: 'Bridge Max Age: received root information is accepted only while Message Age (+1 per bridge/hop) < Max Age.'
+          maximum: 40
+          minimum: 6
+        ports:
+          type: object
+          description: A map of Port names to their respective configurations.
+          additionalProperties:
+            $ref: '#/components/schemas/RstpPortConfig'
+          propertyNames:
+            type: string
+            description: Name of an Ethernet interface. Limited to 1..=15 printable ASCII characters, excluding '/' and whitespace.
+            pattern: ^(?:[!-\-0-~][!-.0-~]{0,14}|\.[!-\-0-~][!-.0-~]{0,13}|\.\.[!-.0-~]{1,13})$
+        priority:
+          type: integer
+          format: int32
+          description: The priority of the bridge. Effective = value * 4096
+          maximum: 15
+          minimum: 0
+        transmit_hold_count:
+          type: integer
+          format: int32
+          description: 'Transmit hold count: the maximum number of BPDUs that can be transmitted per port per hello time.'
+          maximum: 10
+          minimum: 1
+    RstpBridgeState:
+      type: object
+      required:
+      - ports
+      - enabled
+      - bridge_identifier
+      - designated_root
+      - root_path_cost
+      - max_age_seconds
+      - forward_delay_seconds
+      - topology_change
+      properties:
+        bridge_identifier:
+          type: string
+          description: Bridge Identifier of this bridge. 2 Bytes Priority und 6 Bytes MAC Address.
+        designated_root:
+          type: string
+          description: 'Designated Root: Bridge Identifier of the current root bridge.'
+        enabled:
+          type: boolean
+          description: Indicates whether the Bridge is currently enabled.
+        forward_delay_seconds:
+          type: integer
+          format: int32
+          description: 'Forward Delay: The time spent in the listening and learning states. Forward Delay currently in use: learned from the root, or this bridge''s configured ``bridge_forward_delay_seconds`` when this bridge is root. Used for STP-compatible port transitions and the RSTP recent-root timer.'
+          maximum: 30
+          minimum: 4
+        max_age_seconds:
+          type: integer
+          format: int32
+          description: 'Max Age: The maximum age of received BPDU information. Max Age currently in use: learned from the root, or this bridge''s configured ``bridge_max_age_seconds`` when this bridge is root. Limits the Message Age of propagated root information.'
+          maximum: 40
+          minimum: 6
+        ports:
+          type: object
+          description: Ports associated with this bridge.
+          additionalProperties:
+            $ref: '#/components/schemas/RstpPortState'
+          propertyNames:
+            type: string
+        root_path_cost:
+          type: integer
+          format: int32
+          description: 'Root Path Cost: The cost of the path to the root bridge. Sum of port path costs to the root. 0 = this bridge is root.'
+          minimum: 0
+        root_port:
+          type:
+          - string
+          - 'null'
+          description: 'Root Port: The port through which the root bridge is reachable. `null` if this bridge is root.'
+        topology_change:
+          $ref: '#/components/schemas/RstpTopologyChange'
+          description: Details regarding topology change
+    RstpConfig:
+      type: object
+      required:
+      - bridges
+      properties:
+        bridges:
+          type: object
+          description: A map of bridge names to their respective configurations.
+          additionalProperties:
+            $ref: '#/components/schemas/RstpBridgeConfig'
+          propertyNames:
+            type: string
+    RstpCounter:
+      type: object
+      required:
+      - forward_transitions
+      - blocking_transitions
+      - bpdu_sent
+      - bpdu_received
+      - bpdu_received_filtered
+      - tcn_sent
+      - tcn_received
+      properties:
+        blocking_transitions:
+          type: integer
+          format: int32
+          description: Number of times the port has transitioned to the blocking state since bridge enable.
+          minimum: 0
+        bpdu_received:
+          type: integer
+          format: int32
+          description: BPDUs received since link up, including filtered, BPDU-Guard-triggering and invalid ones.
+          minimum: 0
+        bpdu_received_filtered:
+          type: integer
+          format: int32
+          description: Received BPDUs dropped by `bpdu_filter` since link up or filter change.
+          minimum: 0
+        bpdu_sent:
+          type: integer
+          format: int32
+          description: BPDUs sent since link up.
+          minimum: 0
+        forward_transitions:
+          type: integer
+          format: int32
+          description: Number of times the port has transitioned to the forwarding state since bridge enable.
+          minimum: 0
+        tcn_received:
+          type: integer
+          format: int32
+          description: TCN (Topology Change Notification) BPDUs plus BPDUs with TC flag received since link up.
+          minimum: 0
+        tcn_sent:
+          type: integer
+          format: int32
+          description: TCN (Topology Change Notification) BPDUs plus BPDUs with TC flag sent since link up.
+          minimum: 0
+    RstpPortConfig:
+      type: object
+      required:
+      - path_cost
+      - priority
+      - admin_edge
+      - auto_edge
+      - point_to_point
+      - restrict_root_role
+      - restrict_topology_change
+      - bpdu_guard
+      - bpdu_filter
+      - network_port
+      properties:
+        admin_edge:
+          type: boolean
+          description: Port starts as edge port. A received BPDU clears edge status.
+        auto_edge:
+          type: boolean
+          description: Enables automatic edge port detection. The port becomes an edge port when no BPDU is received.
+        bpdu_filter:
+          type: boolean
+          description: |2-
+             Controlls the BPDU filter capability. BPDU Filter: no BPDUs sent, received BPDUs dropped and counted. Port acts as if no bridge is attached:
+            it becomes designated and forwarding (loop risk).
+        bpdu_guard:
+          type: boolean
+          description: Controlls the bpduguard configuration. Any received BPDU sets the port interface administratively down.
+        network_port:
+          type: boolean
+          description: Controlls the bridge assurance capability. BPDUs sent regardless of port role.
+        path_cost:
+          type: integer
+          format: int32
+          description: The path cost of the port. A value of 0 indicates that the path cost is set to "auto". On auto the effective path costs depends on the link speed and can be shown in the state endpoint.
+          maximum: 200000000
+          minimum: 0
+        point_to_point:
+          $ref: '#/components/schemas/P2pState'
+          description: Controlls the point to point detection mode.
+        priority:
+          type: integer
+          format: int32
+          description: The priority of the port. effective = value * 16.
+          maximum: 15
+          minimum: 0
+        restrict_root_role:
+          type: boolean
+          description: Controlls the ability to take root role. Port is never selected as root port, even with the best information; becomes alternate instead (root guard).
+        restrict_topology_change:
+          type: boolean
+          description: Controlls the port restriction for propagation of topology change notifications. Topology changes received on this port (TCN or TC flag) are not propagated to other ports.
+    RstpPortState:
+      type: object
+      required:
+      - enabled
+      - role
+      - state
+      - port_identifier
+      - port_path_cost
+      - designated_root
+      - designated_cost
+      - designated_bridge
+      - designated_port
+      - topology_change_ack
+      - oper_edge_port
+      - point_to_point
+      - disputed
+      - send_rstp
+      - bpdu_guard_error
+      - bridge_assurance_inconsistent
+      - counter
+      properties:
+        bpdu_guard_error:
+          type: boolean
+          description: Indicates whether a BPDU guard error has occurred on the port.
+        bridge_assurance_inconsistent:
+          type: boolean
+          description: Indicates whether there is a bridge assurance inconsistency on the port.
+        counter:
+          $ref: '#/components/schemas/RstpCounter'
+        designated_bridge:
+          type: string
+          description: Designated bridge for this port. Bridge with the best known spanning-tree information on this port's segment. May be this bridge or a neighbor.
+        designated_cost:
+          type: integer
+          format: int32
+          description: Cost to reach the designated root bridge. Root path cost of the designated bridge on this segment. This value excludes this port's path cost.
+          minimum: 0
+        designated_port:
+          type: string
+          description: Port Identifier of the designated port on this segment.
+        designated_root:
+          type: string
+          description: Designated root bridge for this port.
+        disputed:
+          type: boolean
+          description: Indicates whether the port is in a disputed state. (i.e., there is a conflict with another RSTP member regarding the port's role)
+        enabled:
+          type: boolean
+          description: Indicates whether the port is currently enabled.
+        oper_edge_port:
+          type: boolean
+          description: Indicates whether the port is an operational edge port.
+        point_to_point:
+          type: boolean
+          description: Indicates whether the port is a point-to-point link.
+        port_identifier:
+          type: string
+          description: Identifier of the port.
+        port_path_cost:
+          type: integer
+          format: int32
+          description: Path cost associated with the port.
+          maximum: 2000000
+          minimum: 1
+        role:
+          $ref: '#/components/schemas/PortRole'
+          description: Role of the port in the spanning tree.
+        send_rstp:
+          type: boolean
+          description: Indicates whether the port is sending RSTP BPDUs. False indicates STP compatible mode.
+        state:
+          $ref: '#/components/schemas/PState'
+          description: Current state of the port.
+        topology_change_ack:
+          type: boolean
+          description: Topology Change Acknowledge pending.
+    RstpState:
+      type: object
+      required:
+      - bridges
+      properties:
+        bridges:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/RstpBridgeState'
+          propertyNames:
+            type: string
+    RstpTopologyChange:
+      type: object
+      required:
+      - topology_change
+      - topology_change_count
+      - time_since_topology_change_seconds
+      properties:
+        last_topology_change_port:
+          type:
+          - string
+          - 'null'
+          description: Port through which the last topology change was detected. `null` if none was detected.
+        time_since_topology_change_seconds:
+          type: integer
+          format: int32
+          description: Time elapsed since the last topology change, in seconds.
+          minimum: 0
+        topology_change:
+          type: boolean
+          description: true while this bridge is propagating a topology change.
+        topology_change_count:
+          type: integer
+          format: int32
+          description: Number of topology changes that have occurred.
+          minimum: 0
     RuleAction:
       type: string
       description: |-
@@ -4502,6 +5579,65 @@ components:
           $ref: '#/components/schemas/RemovableMediaUpdateConfig'
         signed_update:
           $ref: '#/components/schemas/SignedUpdateConfig'
+    VlanInterfaceConfig:
+      type: object
+      description: Represents the configuration of a single VLAN interface.
+      required:
+      - parent_interface
+      - vlan_id
+      - ipv4_config
+      - shared_mode
+      - failover
+      properties:
+        enabled:
+          type: boolean
+          description: |-
+            A disabled interface is still present in the system configuration but will not be active.
+
+            Unlike physical interfaces, a disabled VLAN interface may be completely removed from the system network stack
+            and therefore may not appear in the system state endpoint at all.
+        failover:
+          $ref: '#/components/schemas/FailoverInterfaceConfig'
+          description: The failover settings for this VLAN interface.
+        ipv4_config:
+          $ref: '#/components/schemas/GenericIpv4Config'
+          description: IPv4 configuration for this interface.
+        parent_interface:
+          type: string
+          description: |-
+            The name of the parent interface to which this VLAN is attached.
+
+            Currently, only physical interfaces are supported as parent interfaces.
+        shared_mode:
+          $ref: '#/components/schemas/SharedModeConfig'
+          description: |-
+            Shared mode configuration for this interface.
+
+            Note that using shared mode makes the interface ignore certain other settings.
+            See the documentation for `SharedModeConfig` for more details.
+        vlan_id:
+          type: integer
+          format: int32
+          description: |-
+            The VLAN ID for this interface.
+
+            Must be unique per parent interface.
+          example: 10
+          maximum: 4094
+          minimum: 0
+    VlanInterfaceState:
+      type: object
+      description: Represents the current state of single VLAN interface.
+      required:
+      - ipv4
+      properties:
+        failover:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/InterfaceFailoverState'
+            description: Failover state, present only when failover is configured globally.
+        ipv4:
+          $ref: '#/components/schemas/Ipv4State'
   securitySchemes:
     OAuth2:
       type: oauth2
@@ -4517,6 +5653,8 @@ components:
             u-os-adm.realtime.readonly: Read access for realtime endpoints
             u-os-adm.realtime.readwrite: Read and write access for realtime endpoints
             u-os-adm.recovery.readwrite: Read and write access for recovery endpoints
+            u-os-adm.redundancy.readonly: Read access for redundancy endpoints
+            u-os-adm.redundancy.readwrite: Read and write access for redundancy endpoints
             u-os-adm.security.readonly: Read access for security endpoints
             u-os-adm.security.readwrite: Read and write access for security endpoints
             u-os-adm.serial-interfaces.readonly: Read access for serial interface configuration endpoints
@@ -4559,3 +5697,5 @@ tags:
   description: API for u-OS serial interface settings
 - name: ping
   description: API for checking the availability of u-os-adm
+- name: redundancy
+  description: API for redundancy settings and state of u-OS
