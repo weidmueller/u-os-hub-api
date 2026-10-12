@@ -1,0 +1,4086 @@
+# SPDX-FileCopyrightText: 2025 - 2026 Weidmueller Interface GmbH & Co. KG <oss@weidmueller.com>
+#
+# SPDX-License-Identifier: MIT
+
+openapi: 3.1.0
+info:
+  title: Administration API
+  description: HTTP API for administrating a u-OS device.
+  contact:
+    name: Weidmüller
+  license:
+    name: MIT
+    identifier: MIT
+  version: 1.5.0
+servers:
+- url: /u-os-adm/api/v1
+paths:
+  /firewall/active-config:
+    get:
+      tags:
+      - firewall
+      summary: Get the currently active firewall configuration.
+      description: |-
+        Check the `Persistence`- and `Rollback-At`-Header for the status of the configuration (persistent, temporary, time until rollback).
+
+        The response carries an `ETag` header derived from the configuration. Use its value in an
+        `If-Match` header when calling `PUT`/`PATCH` to guard against lost updates.
+
+        The `Persistence` header indicates whether the active configuration is persistent or a temporary test configuration.
+
+        The `Rollback-At` header (if present) specifies when the automatic rollback will occur.
+        The timestamp is expressed in the device's system time.
+        Clients should compare it with the `Date` header rather than their local clock when calculating the time remaining until the rollback.
+      operationId: get_firewall_active_config
+      responses:
+        '200':
+          description: The currently active firewall configuration
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: Opaque token identifying the current resource version. Return it unchanged in the `If-Match` header on subsequent `PUT`/`PATCH` requests to prevent lost updates (optimistic locking).
+            Persistence:
+              schema:
+                type: string
+              description: 'Persistence state of the configuration: `Persistent` (persisted across reboots) or `Temporary`.'
+            Rollback-At:
+              schema:
+                type: string
+              description: Only present when a `Temporary` configuration has a scheduled rollback. The time at which the configuration will automatically revert to the persistent configuration, represented as an HTTP-date (for example, `Sun, 06 Nov 2025 08:49:37 GMT`). The timestamp is expressed in the device's system time. Clients SHOULD compare it with the HTTP `Date` response header rather than their local clock when calculating the time remaining until the rollback.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FirewallConfig'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.firewall.readonly
+      - OAuth2:
+        - u-os-adm.firewall.readwrite
+    put:
+      tags:
+      - firewall
+      summary: Set a temporary override on the active firewall configuration.
+      description: |-
+        This endpoint is intended to test a configuration before applying it persistently to prevent
+        misconfigurations that could lock the user out of the system.
+
+        Note that due to conntrack, existing connections will be kept intact even if the new configuration would block them.
+        Only new connections will be subject to the new rules.
+
+        The config will be applied directly and temporarily.
+        Please use `/firewall/config` to apply a configuration persistently.
+
+        By default the temporary config will be rolled back after reboot or `/firewall:reload`,
+        but you can also set a timeout for the automatic rollback to the persistent configuration with the "timeout" query parameter (in seconds).
+
+        Provide an `If-Match` header with the `ETag` of the currently active configuration to apply the
+        change only if the active configuration has not been modified in the meantime (optimistic locking).
+      operationId: set_firewall_active_config
+      parameters:
+      - name: timeout
+        in: query
+        description: |-
+          Number of seconds after which the temporary configuration
+          is automatically rolled back to the persistent configuration.
+        required: false
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      - name: If-Match
+        in: header
+        description: Apply the request only if the current resource version matches this `ETag` (optimistic locking). If no match is found, 412 is returned.
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FirewallConfig'
+        required: true
+      responses:
+        '200':
+          description: The firewall config has been applied temporarily
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: Opaque token identifying the current resource version. Return it unchanged in the `If-Match` header on subsequent `PUT`/`PATCH` requests to prevent lost updates (optimistic locking).
+            Persistence:
+              schema:
+                type: string
+              description: 'Persistence state of the configuration: `Persistent` (persisted across reboots) or `Temporary`.'
+            Rollback-At:
+              schema:
+                type: string
+              description: Only present when a `Temporary` configuration has a scheduled rollback. The time at which the configuration will automatically revert to the persistent configuration, represented as an HTTP-date (for example, `Sun, 06 Nov 2025 08:49:37 GMT`). The timestamp is expressed in the device's system time. Clients SHOULD compare it with the HTTP `Date` response header rather than their local clock when calculating the time remaining until the rollback.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FirewallConfig'
+        '412':
+          description: The supplied `If-Match` precondition did not match the current resource version. The resource was modified by someone else in the meantime. Re-fetch the resource to obtain the current `ETag` and retry.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.firewall.readwrite
+    head:
+      tags:
+      - firewall
+      summary: |-
+        Check active firewall configuration metadata.
+        Returns `ETag`, persistence state, and scheduled rollback time without transferring the configuration body.
+      description: |-
+        Returns the same `ETag`, `Persistence` and `Rollback-At` headers as `GET /firewall/active-config`
+        but without a response body. Useful for cheaply polling the configuration's entity tag and
+        rollback state.
+      operationId: head_firewall_active_config
+      responses:
+        '200':
+          description: Headers describing the active firewall configuration
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: Opaque token identifying the current resource version. Return it unchanged in the `If-Match` header on subsequent `PUT`/`PATCH` requests to prevent lost updates (optimistic locking).
+            Persistence:
+              schema:
+                type: string
+              description: 'Persistence state of the configuration: `Persistent` (persisted across reboots) or `Temporary`.'
+            Rollback-At:
+              schema:
+                type: string
+              description: Only present when a `Temporary` configuration has a scheduled rollback. The time at which the configuration will automatically revert to the persistent configuration, represented as an HTTP-date (for example, `Sun, 06 Nov 2025 08:49:37 GMT`). The timestamp is expressed in the device's system time. Clients SHOULD compare it with the HTTP `Date` response header rather than their local clock when calculating the time remaining until the rollback.
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.firewall.readonly
+      - OAuth2:
+        - u-os-adm.firewall.readwrite
+    patch:
+      tags:
+      - firewall
+      summary: Modify the active firewall configuration with a temporary override.
+      description: |-
+        Same as the `PUT /firewall/active-config` endpoint but allows partial updates.
+        If no temporary configuration is active, the persistent configuration is used as
+        the basis for the PATCH and rolled out temporarily along with the change.
+
+        See the `PUT /firewall/active-config` endpoint for details on the behavior of temporary configurations and the `If-Match` header.
+      operationId: update_firewall_active_config
+      parameters:
+      - name: timeout
+        in: query
+        description: |-
+          Number of seconds after which the temporary configuration
+          is automatically rolled back to the persistent configuration.
+        required: false
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      - name: If-Match
+        in: header
+        description: Apply the request only if the current resource version matches this `ETag` (optimistic locking). If no match is found, 412 is returned.
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PartialFirewallConfig'
+        required: true
+      responses:
+        '200':
+          description: The new active firewall config has been applied temporary
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: Opaque token identifying the current resource version. Return it unchanged in the `If-Match` header on subsequent `PUT`/`PATCH` requests to prevent lost updates (optimistic locking).
+            Persistence:
+              schema:
+                type: string
+              description: 'Persistence state of the configuration: `Persistent` (persisted across reboots) or `Temporary`.'
+            Rollback-At:
+              schema:
+                type: string
+              description: Only present when a `Temporary` configuration has a scheduled rollback. The time at which the configuration will automatically revert to the persistent configuration, represented as an HTTP-date (for example, `Sun, 06 Nov 2025 08:49:37 GMT`). The timestamp is expressed in the device's system time. Clients SHOULD compare it with the HTTP `Date` response header rather than their local clock when calculating the time remaining until the rollback.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FirewallConfig'
+        '412':
+          description: The supplied `If-Match` precondition did not match the current resource version. The resource was modified by someone else in the meantime. Re-fetch the resource to obtain the current `ETag` and retry.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.firewall.readwrite
+  /firewall/config:
+    get:
+      tags:
+      - firewall
+      summary: Get the persistent firewall configuration.
+      description: |-
+        The persistent firewall configuration is permanently stored on the device and applied after each boot.
+
+        The firewall configuration may have been overridden by a temporary configuration.
+        Use the `/firewall/active-config` endpoint to get the currently active config.
+
+        The response carries an `ETag` header derived from the persistent configuration. Use its value
+        in an `If-Match` header on `PUT`/`PATCH` to guard against lost updates.
+      operationId: get_firewall_config
+      responses:
+        '200':
+          description: The current persistent firewall config
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: Opaque token identifying the current resource version. Return it unchanged in the `If-Match` header on subsequent `PUT`/`PATCH` requests to prevent lost updates (optimistic locking).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FirewallConfig'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.firewall.readonly
+      - OAuth2:
+        - u-os-adm.firewall.readwrite
+    put:
+      tags:
+      - firewall
+      summary: Set the persistent firewall configuration.
+      description: |-
+        This will be applied directly and persistently. Please use `/firewall/active-config` beforehand to test a configuration without applying it persistently.
+        A call to this endpoint also removes the temporary configuration if it exists.
+      operationId: set_firewall_config
+      parameters:
+      - name: If-Match
+        in: header
+        description: Apply the request only if the current resource version matches this `ETag` (optimistic locking). If no match is found, 412 is returned.
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FirewallConfig'
+        required: true
+      responses:
+        '200':
+          description: The new persistent firewall config has been applied
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: Opaque token identifying the current resource version. Return it unchanged in the `If-Match` header on subsequent `PUT`/`PATCH` requests to prevent lost updates (optimistic locking).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FirewallConfig'
+        '412':
+          description: The supplied `If-Match` precondition did not match the current resource version. The resource was modified by someone else in the meantime. Re-fetch the resource to obtain the current `ETag` and retry.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.firewall.readwrite
+    patch:
+      tags:
+      - firewall
+      summary: Modify the persistent firewall configuration.
+      description: Same as the `PUT /firewall/config` endpoint but allows partial updates.
+      operationId: update_firewall_config
+      parameters:
+      - name: If-Match
+        in: header
+        description: Apply the request only if the current resource version matches this `ETag` (optimistic locking). If no match is found, 412 is returned.
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PartialFirewallConfig'
+        required: true
+      responses:
+        '200':
+          description: The new persistent firewall config has been applied
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: Opaque token identifying the current resource version. Return it unchanged in the `If-Match` header on subsequent `PUT`/`PATCH` requests to prevent lost updates (optimistic locking).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FirewallConfig'
+        '412':
+          description: The supplied `If-Match` precondition did not match the current resource version. The resource was modified by someone else in the meantime. Re-fetch the resource to obtain the current `ETag` and retry.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.firewall.readwrite
+  /firewall:reload:
+    post:
+      tags:
+      - firewall
+      summary: Reloads the firewall configuration, which deletes the temporary config and rolls back to the persistent config.
+      description: |-
+        But does nothing if no temporary firewall configuration is active.
+
+        The temporary config will be deleted! Use `/firewall/config` to persist the temporary config if you want to keep the changes.
+      operationId: reload_firewall_config
+      responses:
+        '200':
+          description: The temporary firewall config has been deleted and the persistent config has been applied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FirewallConfig'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.firewall.readwrite
+  /logging/entries:
+    get:
+      tags:
+      - logging
+      summary: Get all log entries.
+      description: The entries can be filtered and accessed via pagination.
+      operationId: get_logging_entries
+      parameters:
+      - name: cursor
+        in: query
+        description: |-
+          The cursor is used to paginate through the log entries.
+          It's empty for the first page.
+        required: false
+        schema:
+          type: string
+      - name: limit
+        in: query
+        description: |-
+          Number of requested entries.
+          Default is 100.
+        required: false
+        schema:
+          type: integer
+          format: int64
+          minimum: 0
+      - name: sources
+        in: query
+        description: |-
+          Filter parameter for log sources.
+          The exact name of the source must be indicated.
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+      - name: filter_msgs
+        in: query
+        description: |-
+          Only include log entries whose message contains all filter-strings.
+          Not case sensitive. If not set or empty, all messages will be included.
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+      responses:
+        '200':
+          description: Log entries found sucessfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogEntryResponse'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.logging.readonly
+  /logging/reports:
+    post:
+      tags:
+      - logging
+      summary: Trigger the generation of a report.
+      description: |-
+        The report will contain the current system logs.
+        The report generation is a long-running operation.
+        You can poll the status of the operation using the `/operations/{operation_id}` endpoint.
+      operationId: create_logging_report
+      responses:
+        '202':
+          description: The generation of the report has been started successfully.
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URL of the operation resource to poll for status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateLogReportResponse'
+        '409':
+          description: A report generation is already in progress.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.logging.readonly
+  /logging/reports/{report_id}:
+    get:
+      tags:
+      - logging
+      summary: Get the report by the given report_id.
+      description: |-
+        The report is a gzipped tar archive containing all system logs.
+        You need to trigger the report generation first using the `/logging/reports` endpoint.
+      operationId: get_logging_report
+      parameters:
+      - name: report_id
+        in: path
+        description: ID of the report to retrieve
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Report found sucessfully
+          content:
+            application/octet-stream: {}
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.logging.readonly
+  /logging/sources:
+    get:
+      tags:
+      - logging
+      summary: Get available log sources.
+      description: All log sources will be listed here, for examples all systemd services.
+      operationId: get_logging_sources
+      responses:
+        '200':
+          description: Log sources retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogSourcesResponse'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.logging.readonly
+  /network/config:
+    get:
+      tags:
+      - network
+      summary: Get the current network configuration of the device.
+      description: This only returns fields that can be configured and changed via the HTTP API.
+      operationId: get_network_config
+      responses:
+        '200':
+          description: Network config
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetworkConfig'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.network.readonly
+      - OAuth2:
+        - u-os-adm.network.readwrite
+    put:
+      tags:
+      - network
+      summary: Set the full network configuration of the device.
+      description: |-
+        This endpoint sets the network configuration of the device. Must include all supported settings and interfaces.
+        Will return the updated configuration on success.
+
+        Note that some network properties are not yet supported by the API.
+        These properties will be unaffected when applying the changes, thus preserving any manual changes.
+      operationId: set_network_config
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NetworkConfig'
+        required: true
+      responses:
+        '200':
+          description: Network config
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetworkConfig'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.network.readwrite
+    patch:
+      tags:
+      - network
+      summary: Modify the network configuration of the device.
+      description: |-
+        This endpoint modifies the network configuration of the device by applying a JSON merge patch (https://datatracker.ietf.org/doc/html/rfc7396)
+        to the current configuration.
+        Will return the updated configuration after applying the patch on success.
+
+        Note that some network properties are not yet supported by the API.
+        These properties will be unaffected when applying the changes, thus preserving any manual changes.
+      operationId: update_network_config
+      requestBody:
+        content:
+          application/merge-patch+json:
+            schema:
+              $ref: '#/components/schemas/PartialNetworkConfig'
+        required: true
+      responses:
+        '200':
+          description: Network config
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetworkConfig'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.network.readwrite
+  /network/state:
+    get:
+      tags:
+      - network
+      summary: Get the current network state of the device.
+      description: This includes properties that can not be configured via the HTTP API, like the current IP addresses and routing table.
+      operationId: get_network_state
+      responses:
+        '200':
+          description: Network state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetworkState'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.network.readonly
+      - OAuth2:
+        - u-os-adm.network.readwrite
+  /openapi.json:
+    get:
+      tags:
+      - openapi
+      summary: Get the current API spec
+      description: Returns the current OpenAPI specification of the u-OS Admin API. This is useful for clients to discover the API endpoints and their parameters.
+      operationId: get_openapi
+      responses:
+        '200':
+          description: OpenAPI specification JSON
+          content:
+            application/json: {}
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2: []
+  /operations/{operation_id}:
+    get:
+      tags:
+      - operations
+      summary: Get the status of a long running operation by its ID.
+      description: The operation ID can only be retained at the time it is created.
+      operationId: get_operation
+      parameters:
+      - name: operation_id
+        in: path
+        description: ID of the operation
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Status of the long running operation
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URL of the created resource as result of the long running operation. This is only the case when the process has been completed and a resource has been created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationState'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2: []
+  /recovery:factory-reset:
+    post:
+      tags:
+      - recovery
+      summary: Triggers a factory reset.
+      description: Triggers a factory reset, which erases all user data on the system.
+      operationId: recovery_factory_reset
+      responses:
+        '202':
+          description: Factory reset initiated successfully.
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.recovery.readwrite
+  /security/config:
+    get:
+      tags:
+      - security
+      summary: Get the security configuration for the system.
+      description: Get the security configuration for the system.
+      operationId: get_security_settings
+      responses:
+        '200':
+          description: Security configuration found successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecuritySettings'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.security.readonly
+      - OAuth2:
+        - u-os-adm.security.readwrite
+    put:
+      tags:
+      - security
+      summary: Set the security configuration for the system.
+      description: Set the security configuration for the system.
+      operationId: set_security_settings
+      requestBody:
+        description: Security configuration to update
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SecuritySettings'
+        required: true
+      responses:
+        '200':
+          description: Security configuration updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecuritySettings'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.security.readwrite
+  /serial-interfaces/config:
+    get:
+      tags:
+      - serial-interfaces
+      summary: Read the serial interface configuration for the system.
+      description: |-
+        Note that the config may contain interfaces that are currently not present on the system, e.g. from u-extend modules.
+        This allows to configure interfaces before they get connected.
+      operationId: get_serial_interface_config
+      responses:
+        '200':
+          description: Configuration read successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SerialInterfacesConfig'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.serial-interfaces.readonly
+      - OAuth2:
+        - u-os-adm.serial-interfaces.readwrite
+    put:
+      tags:
+      - serial-interfaces
+      summary: Set the serial interface configuration for the system.
+      description: |-
+        Note that the config may contain interfaces that are currently not present on the system, e.g. from u-extend modules.
+        This allows to configure interfaces before they get connected.
+
+        You must always at least include all interfaces that are currently present on the system in the request payload.
+      operationId: set_serial_interface_config
+      requestBody:
+        description: Configuration to update
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SerialInterfacesConfig'
+        required: true
+      responses:
+        '200':
+          description: Configuration updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SerialInterfacesConfig'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.serial-interfaces.readwrite
+    patch:
+      tags:
+      - serial-interfaces
+      summary: Update the serial interface configuration for the system.
+      description: |-
+        Note that the config may contain interfaces that are currently not present on the system, e.g. from u-extend modules.
+        This allows to configure interfaces before they get connected.
+      operationId: update_serial_interface_config
+      requestBody:
+        description: Configuration to update
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PartialSerialInterfacesConfig'
+        required: true
+      responses:
+        '200':
+          description: Configuration updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SerialInterfacesConfig'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.serial-interfaces.readwrite
+  /serial-interfaces/state:
+    get:
+      tags:
+      - serial-interfaces
+      summary: Get the current state of the serial interfaces on the system.
+      description: The state only includes interfaces that are currently present on the system and contains their current, active state.
+      operationId: get_serial_interface_state
+      responses:
+        '200':
+          description: State read successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SerialInterfacesState'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.serial-interfaces.readonly
+      - OAuth2:
+        - u-os-adm.serial-interfaces.readwrite
+  /syslog/certificates:
+    get:
+      tags:
+      - syslog
+      summary: Get all uploaded certificates.
+      description: Returns all certificates organized by type with their content.
+      operationId: get_certificates
+      responses:
+        '200':
+          description: Certificate store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Certificates'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.syslog.readonly
+      - OAuth2:
+        - u-os-adm.syslog.readwrite
+    put:
+      tags:
+      - syslog
+      summary: Set all certificates
+      description: |-
+        Replaces the entire certificate store. Any previously uploaded
+        certificate not included in the request will be deleted.
+
+        To ensure that certificates are unused after deletion, please reboot the device.
+        Deleting a currently used certificate results in an invalid syslog configuration.
+
+        **Certificate types:**
+        - `server-ca`: CA certificate to verify the syslog server
+        - `client-cert`: Client certificate for mTLS authentication
+        - `client-key`: Client private key for mTLS authentication
+      operationId: set_certificates
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Certificates'
+        required: true
+      responses:
+        '200':
+          description: Certificates applied successfully
+        '400':
+          description: Invalid certificate data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.syslog.readwrite
+    patch:
+      tags:
+      - syslog
+      summary: Partially update certificates
+      description: |-
+        Applies a patch to the certificate store using JSON Merge Patch semantics:
+        - **Absent type**: no changes to that category
+        - **Entry with content**: add or overwrite that certificate
+        - **Entry set to `null`**: delete that certificate
+
+        To ensure that certificates are unused after deletion, please reboot the device.
+        Deleting a currently used certificate results in an invalid syslog configuration.
+
+        Example — add a new server CA and delete an old one:
+        ```json
+        {
+            "server-ca": {
+                "new-ca.pem": { "content": "-----BEGIN CERTIFICATE-----\n..." },
+                "old-ca.pem": null
+            }
+        }
+        ```
+      operationId: patch_certificates
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PartialCertificates'
+        required: true
+      responses:
+        '200':
+          description: Certificates updated successfully
+        '400':
+          description: Invalid certificate data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.syslog.readwrite
+  /syslog/config:
+    get:
+      tags:
+      - syslog
+      summary: Get syslog forwarding configuration.
+      description: Returns the current configuration for syslog forwarding.
+      operationId: get_config
+      responses:
+        '200':
+          description: Syslog forwarding configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyslogConfig'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.syslog.readonly
+      - OAuth2:
+        - u-os-adm.syslog.readwrite
+    put:
+      tags:
+      - syslog
+      summary: Set syslog forwarding configuration.
+      description: Updates the syslog forwarding configuration with the provided settings.
+      operationId: set_config
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SyslogConfig'
+        required: true
+      responses:
+        '200':
+          description: Configuration applied successfully
+        '400':
+          description: Invalid configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.syslog.readwrite
+  /syslog/state:
+    get:
+      tags:
+      - syslog
+      summary: Get syslog forwarding service state.
+      description: |-
+        Returns the runtime status of the syslog forwarding service
+        and summary information about the current configuration.
+      operationId: get_state
+      responses:
+        '200':
+          description: Syslog forwarding service state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyslogState'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.syslog.readonly
+      - OAuth2:
+        - u-os-adm.syslog.readwrite
+  /system/disks:
+    get:
+      tags:
+      - system
+      summary: This endpoint returns disk information
+      description: Returns a list of all storage disks in the system and their respective properties.
+      operationId: get_system_disks
+      responses:
+        '200':
+          description: Disk information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Disks'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.system.readonly
+      - OAuth2:
+        - u-os-adm.system.readwrite
+  /system/info:
+    get:
+      tags:
+      - system
+      summary: This endpoint returns static system information (such as cpu architecture, firmware info, ...)
+      description: |-
+        Some hardware information can only be read out if the device was booted via uboot.
+        Everything that could not be determined is returned as None (these information are marked as optional).
+      operationId: get_system_info
+      responses:
+        '200':
+          description: System information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemInformation'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.system.readonly
+      - OAuth2:
+        - u-os-adm.system.readwrite
+  /system/nameplate:
+    get:
+      tags:
+      - system
+      summary: Returns the digital nameplate information of the device.
+      description: Returns nameplate information according to the IDTA digital nameplate specification 3.0.
+      operationId: get_system_nameplate
+      responses:
+        '200':
+          description: Nameplate information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceNameplate'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.system.readonly
+      - OAuth2:
+        - u-os-adm.system.readwrite
+  /system:reboot:
+    post:
+      tags:
+      - system
+      summary: Triggers a system reboot.
+      description: Triggers a reboot. System will be unavailable for a while after triggering this.
+      operationId: system_reboot
+      responses:
+        '202':
+          description: System reboot initiated successfully.
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.system.readwrite
+  /update/config:
+    get:
+      tags:
+      - update
+      summary: Get the update configuration for the system.
+      description: The update configuration contains settings related to updating a u-OS device.
+      operationId: get_update_settings
+      responses:
+        '200':
+          description: Update configuration found successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateSettings'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.update.readonly
+      - OAuth2:
+        - u-os-adm.update.readwrite
+    put:
+      tags:
+      - update
+      summary: Set the update configuration for the system.
+      description: |-
+        The update configuration contains settings related to updating a u-OS device.
+        Updating the configuration will restart the update service to apply new settings.
+      operationId: set_update_settings
+      requestBody:
+        description: Update configuration to update
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSettings'
+        required: true
+      responses:
+        '200':
+          description: Update configuration updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateSettings'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.update.readwrite
+    patch:
+      tags:
+      - update
+      summary: Modify the update configuration of the device.
+      description: |-
+        This endpoint modifies the update configuration of the device by applying a JSON merge patch (<https://datatracker.ietf.org/doc/html/rfc7396>)
+        to the current configuration.
+        Will return the updated configuration after applying the patch on success.
+      operationId: update_update_settings
+      requestBody:
+        content:
+          application/merge-patch+json:
+            schema:
+              $ref: '#/components/schemas/PartialUpdateSettings'
+        required: true
+      responses:
+        '200':
+          description: The updated configuration after applying the merge patch
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateSettings'
+        default:
+          description: Common HTTP Error codes may be thrown by this method, such as 400, 401, 403, 404, 422 or 500. See body for detailed error info.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpErrorPayload'
+      security:
+      - OAuth2:
+        - u-os-adm.update.readwrite
+components:
+  schemas:
+    AddressInformation:
+      type: object
+      description: Contains the address information of the device. Part of the device nameplate.
+      required:
+      - Street
+      - Zipcode
+      - CityTown
+      - NationalCode
+      properties:
+        CityTown:
+          type: string
+        NationalCode:
+          type: string
+        Street:
+          type: string
+        Zipcode:
+          type: string
+    AllowedRsMode:
+      type: string
+      description: |-
+        Represents the allowed operation modes for a RS interface.
+
+        This determines which config variants are allowed for the interface.
+        For example, some interfaces may only support RS-232 or RS-485 mode. For example, tty-x3 on R-Series only supports RS-485 mode.
+      enum:
+      - RS232
+      - RS485
+    CanInterfaceConfig:
+      type: object
+      required:
+      - enable_termination_resistor
+      properties:
+        enable_termination_resistor:
+          type: boolean
+          description: If set to true, a termination resistor will be enabled on the CAN interface. If set to false, the termination resistor will be disabled.
+    CanInterfaceState:
+      type: object
+      required:
+      - name
+      - alt_names
+      - termination_resistance_ohm
+      properties:
+        alt_names:
+          type: array
+          items:
+            type: string
+          description: List of alternate names for the CAN interface, if any
+          example:
+          - can0
+        name:
+          type: string
+          description: Primary name of the CAN interface
+          example: can-fm0-em0
+        termination_resistance_ohm:
+          type: integer
+          format: int32
+          description: |-
+            Current termination resistor value for the CAN interface, in Ohms. A value of 0 indicates that the termination resistor is disabled.
+
+            Reports the terminator controlled by the local interface, not the effective resistance of the entire bus.
+          example: 120
+          minimum: 0
+    CertificateEntry:
+      type: object
+      description: A single certificate entry.
+      required:
+      - content
+      properties:
+        content:
+          type: string
+          description: PEM-encoded certificate or key content.
+    Certificates:
+      type: object
+      description: |-
+        All certificates organized by type.
+
+        Each certificate type maps certificate names (keys) to their entries.
+      required:
+      - server_ca
+      - client_cert
+      - client_key
+      properties:
+        client_cert:
+          type: object
+          description: Client certificates for mutual TLS authentication.
+          additionalProperties:
+            $ref: '#/components/schemas/CertificateEntry'
+          propertyNames:
+            type: string
+        client_key:
+          type: object
+          description: Client private keys for mutual TLS authentication.
+          additionalProperties:
+            $ref: '#/components/schemas/CertificateEntry'
+          propertyNames:
+            type: string
+        server_ca:
+          type: object
+          description: CA certificates for verifying the syslog server's identity.
+          additionalProperties:
+            $ref: '#/components/schemas/CertificateEntry'
+          propertyNames:
+            type: string
+      example:
+        client_cert:
+          device.pem:
+            content: |-
+              -----BEGIN CERTIFICATE-----
+              ...
+              -----END CERTIFICATE-----
+        client_key:
+          device-key.pem:
+            content: M15UP3RS5CR3T
+        server_ca:
+          my-ca.pem:
+            content: |-
+              -----BEGIN CERTIFICATE-----
+              ...
+              -----END CERTIFICATE-----
+    CreateLogReportResponse:
+      type: object
+      required:
+      - operation_id
+      properties:
+        operation_id:
+          type: string
+          format: uuid
+    DeviceNameplate:
+      type: object
+      description: |-
+        Contains the device nameplate information.
+
+        Based on [IDTA 02006-3-0 Digital Nameplate for industrial equipment specification](https://github.com/admin-shell-io/submodel-templates/tree/main/published/Digital%20nameplate/3/0)
+      required:
+      - URIOfTheProduct
+      - ManufacturerName
+      - ManufacturerProductDesignation
+      - AddressInformation
+      - OrderCodeOfManufacturer
+      properties:
+        AddressInformation:
+          $ref: '#/components/schemas/AddressInformation'
+        HardwareVersion:
+          type:
+          - string
+          - 'null'
+        ManufacturerName:
+          type: string
+        ManufacturerProductDesignation:
+          type: string
+        ManufacturerProductType:
+          type:
+          - string
+          - 'null'
+        OrderCodeOfManufacturer:
+          type: string
+        SerialNumber:
+          type:
+          - string
+          - 'null'
+        SoftwareVersion:
+          type:
+          - string
+          - 'null'
+        URIOfTheProduct:
+          type: string
+        YearOfConstruction:
+          type:
+          - string
+          - 'null'
+    DhcpIpv4Range:
+      type: object
+      description: Represents a range of IPv4 addresses
+      required:
+      - start
+      - end
+      properties:
+        end:
+          $ref: '#/components/schemas/Ipv4String'
+          description: End of the range (inclusive)
+        start:
+          $ref: '#/components/schemas/Ipv4String'
+          description: Start of the range (inclusive)
+    Disk:
+      type: object
+      required:
+      - device_path
+      - mount_points
+      - file_system
+      - total_size
+      - free_size
+      - storage_type
+      properties:
+        device_path:
+          type: string
+        file_system:
+          type: string
+        free_size:
+          type: integer
+          format: int64
+          minimum: 0
+        mount_points:
+          type: array
+          items:
+            type: string
+        storage_type:
+          $ref: '#/components/schemas/StorageType'
+        total_size:
+          type: integer
+          format: int64
+          minimum: 0
+    Disks:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Disk'
+    DnatAction:
+      oneOf:
+      - $ref: '#/components/schemas/DnatActionForward'
+      - $ref: '#/components/schemas/DnatActionRedirect'
+      discriminator:
+        propertyName: mode
+        mapping:
+          FORWARD: '#/components/schemas/DnatActionForward'
+          REDIRECT: '#/components/schemas/DnatActionRedirect'
+    DnatActionForward:
+      type: object
+      description: Forward to another host/port.
+      required:
+      - mode
+      - new_destination
+      properties:
+        mode:
+          type: string
+          enum:
+          - FORWARD
+        new_destination:
+          type: string
+          description: IPv4 address only. Accepts 'A.B.C.D'.
+        new_dport:
+          type:
+          - integer
+          - 'null'
+          format: int32
+          maximum: 65535
+          minimum: 0
+    DnatActionRedirect:
+      type: object
+      description: Redirect to the firewall host itself
+      required:
+      - mode
+      - local_dport
+      properties:
+        local_dport:
+          type: integer
+          format: int32
+          maximum: 65535
+          minimum: 0
+        mode:
+          type: string
+          enum:
+          - REDIRECT
+    FailoverGlobalConfig:
+      type: object
+      description: |-
+        Global failover configuration.
+
+        Controls the probe loop that monitors all configured interfaces and adjusts
+        their route metrics based on connectivity probe results.
+      required:
+      - probe_interval_seconds
+      - failure_threshold
+      - success_threshold
+      properties:
+        failure_threshold:
+          type: integer
+          format: int32
+          description: Number of consecutive failed probes before an interface is considered failed and penalised.
+          example: 3
+          minimum: 1
+        probe_interval_seconds:
+          type: integer
+          format: int64
+          description: Interval between failover probes in seconds.
+          example: 10
+          minimum: 1
+        success_threshold:
+          type: integer
+          format: int32
+          description: Number of consecutive successful probes before an interface is considered healthy and unpenalised.
+          example: 3
+          minimum: 1
+    FailoverInterfaceConfig:
+      type: object
+      description: |-
+        Failover configuration for a single monitored interface.
+
+        When enabled, the probe loop checks connectivity on this interface. If
+        `failure_threshold` consecutive probes fail the interface is penalised by
+        settings its active metric to `failed_metric`. Once `success_threshold`
+        consecutive probes succeed the metric is restored to the interface's
+        configured `metric` value.
+      required:
+      - enabled
+      - probe_target
+      - failed_metric
+      properties:
+        enabled:
+          type: boolean
+          description: Whether failover probing is enabled for this interface.
+        failed_metric:
+          type: integer
+          format: int32
+          description: |-
+            Network interface metric (priority) that is applied when the interface has failed probing.
+            Should be higher than all normal interface metrics to ensure traffic is routed through healthy interfaces.
+          example: 20000
+          maximum: 2147483647
+          minimum: 1
+        probe_target:
+          $ref: '#/components/schemas/ProbeTarget'
+          description: Probe target for connectivity checks (IPv4 address or hostname, optionally with port e.g. "1.1.1.1:5000").
+    FilterRules:
+      type: object
+      required:
+      - policy
+      - input
+      - output
+      - forward
+      properties:
+        forward:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ForwardRule'
+          propertyNames:
+            type: string
+            description: Identifier of a firewall rule. Used as the map key and to reference it in patch operations.
+            pattern: ^[A-Za-z0-9:._-]{1,63}$
+        input:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/InputRule'
+          propertyNames:
+            type: string
+            description: Identifier of a firewall rule. Used as the map key and to reference it in patch operations.
+            pattern: ^[A-Za-z0-9:._-]{1,63}$
+        output:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/OutputRule'
+          propertyNames:
+            type: string
+            description: Identifier of a firewall rule. Used as the map key and to reference it in patch operations.
+            pattern: ^[A-Za-z0-9:._-]{1,63}$
+        policy:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/InterfacePolicy'
+          propertyNames:
+            type: string
+    FirewallConfig:
+      type: object
+      description: |-
+        Custom firewall configuration. Contains filter and nat rules.
+
+        If an array is empty, it means "match all".
+        For example, an `InputRule` with an empty `source` matches packets from any source address.
+
+        Connections in the established or related conntrack state are accepted automatically. Therefore, no explicit rules are required for the return path.
+      required:
+      - filter
+      - nat
+      properties:
+        filter:
+          $ref: '#/components/schemas/FilterRules'
+        nat:
+          $ref: '#/components/schemas/NatRules'
+      example:
+        filter:
+          forward: {}
+          input:
+            allow-192.168.1.120:
+              action: ACCEPT
+              description: Allow packets from '192.168.1.120'
+              match:
+                destination: []
+                dport: []
+                in_interface:
+                - eth-x4
+                protocol: ANY
+                source:
+                - 192.168.1.120
+                sport: []
+              priority: 100
+          output:
+            allow-192.168.1.120:
+              action: ACCEPT
+              description: Allow packets to '192.168.1.120
+              match:
+                destination:
+                - 192.168.1.120
+                dport: []
+                out_interface:
+                - eth-x4
+                protocol: ANY
+                source: []
+                sport: []
+              priority: 100
+          policy:
+            eth-x4:
+              forward: DROP
+              input: DROP
+              output: DROP
+            eth-x5:
+              forward: OS_DEFAULT
+              input: OS_DEFAULT
+              output: OS_DEFAULT
+        nat:
+          postrouting:
+            masquerade-to-192.168.3.122:
+              action:
+                mode: MASQUERADE
+              description: Masquerade forwarded packets so replies return via the firewall
+              match:
+                destination:
+                - 192.168.3.122
+                dport: []
+                out_interface:
+                - eth-x5
+                protocol: ANY
+                source: []
+                sport: []
+              priority: 100
+          prerouting:
+            forward-8080-to-192.168.3.122:
+              action:
+                mode: FORWARD
+                new_destination: 192.168.3.122
+                new_dport: 80
+              description: Forward incoming TCP port 8080 to '192.168.3.122:80'
+              match:
+                destination: []
+                dport:
+                - '8080'
+                in_interface:
+                - eth-x4
+                protocol: TCP
+                source: []
+                sport: []
+              priority: 100
+    Firmware:
+      type: object
+      required:
+      - name
+      - version
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+    ForwardMatch:
+      allOf:
+      - type: object
+        required:
+        - protocol
+        - dport
+        - sport
+        - source
+        - destination
+        properties:
+          destination:
+            type: array
+            items:
+              type: string
+              description: |-
+                IPv4 address, CIDR subnet, or address range. Accepts 'A.B.C.D', 'A.B.C.D/N',
+                or 'A.B.C.D-A.B.C.D'.
+          dport:
+            type: array
+            items:
+              type: string
+              description: TCP/UDP port (0..=65535) or inclusive port range. Accepts 'PORT' or 'START-END'.
+          protocol:
+            type: string
+            description: |-
+              Specifying `sport` or `dport` with the protocol set to `ANY` implicitly limits protocol matching
+              to TCP, UDP, SCTP, and DCCP, as only these protocols support port numbers.
+              Otherwise, `ANY` matches all protocols.
+            enum:
+            - ANY
+            - TCP
+            - UDP
+            - ICMP
+          source:
+            type: array
+            items:
+              type: string
+              description: |-
+                IPv4 address, CIDR subnet, or address range. Accepts 'A.B.C.D', 'A.B.C.D/N',
+                or 'A.B.C.D-A.B.C.D'.
+          sport:
+            type: array
+            items:
+              type: string
+              description: TCP/UDP port (0..=65535) or inclusive port range. Accepts 'PORT' or 'START-END'.
+      - type: object
+        required:
+        - in_interface
+        - out_interface
+        properties:
+          in_interface:
+            type: array
+            items:
+              type: string
+              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard, or a bare '*'.
+              pattern: ^(?:\*|[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?)$
+          out_interface:
+            type: array
+            items:
+              type: string
+              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard, or a bare '*'.
+              pattern: ^(?:\*|[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?)$
+    ForwardRule:
+      type: object
+      required:
+      - description
+      - priority
+      - match
+      - action
+      properties:
+        action:
+          $ref: '#/components/schemas/RuleAction'
+        description:
+          type: string
+          description: Human-readable comment for a firewall rule. The value is restricted to printable ASCII without quotes or backslashes.
+          pattern: ^[ -!#-\[\]-~]{0,128}$
+        match:
+          $ref: '#/components/schemas/ForwardMatch'
+        priority:
+          type: integer
+          format: int32
+          description: Sort order of the rule. Lower values are evaluated first.
+          minimum: 0
+    GlobalDnsServers:
+      type: object
+      description: |-
+        Represents the global DNS servers used by the system.
+
+        The order of the servers represents their priority, with the first one being the primary DNS server unless an interface overrides it.
+      required:
+      - servers
+      - searches
+      properties:
+        searches:
+          type: array
+          items:
+            type: string
+          example:
+          - .
+        servers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ipv4String'
+    GpgKey:
+      type: object
+      description: The content of a GPG public key file in ASCII armor format.
+      required:
+      - content
+      properties:
+        content:
+          type: string
+          description: 'Hint: Newlines are forbidden in JSON strings, so you need to escape them.'
+          example: |-
+            -----BEGIN PGP PUBLIC KEY BLOCK-----
+
+            ...
+            -----END PGP PUBLIC KEY BLOCK-----
+    HttpErrorPayload:
+      type: object
+      description: |-
+        Common error payload structure for HTTP responses.
+
+        Based on [RFC 9457](https://datatracker.ietf.org/doc/html/rfc9457)
+      required:
+      - type
+      - title
+      - status
+      properties:
+        detail:
+          type:
+          - string
+          - 'null'
+          description: Optional details about the error
+          example: 'Low Level OS Error #1234'
+        instance:
+          type:
+          - string
+          - 'null'
+          format: uri-reference
+          description: A human-readable explanation specific to this occurrence of the problem
+          example: null
+        status:
+          type: integer
+          format: int32
+          description: The HTTP status code generated by the origin server for this occurrence of the problem
+          example: 500
+          maximum: 599
+          minimum: 100
+        title:
+          type: string
+          description: Human-readable error message.
+          example: Something went wrong in the backend.
+        type:
+          type: string
+          format: uri-reference
+          description: |-
+            A URI reference that identifies the problem type
+
+            The last part of the URI is always a `ErrorId`
+          example: /u-os-adm/api/v1/errors/set-security-settings
+    InboundMatch:
+      allOf:
+      - type: object
+        required:
+        - protocol
+        - dport
+        - sport
+        - source
+        - destination
+        properties:
+          destination:
+            type: array
+            items:
+              type: string
+              description: |-
+                IPv4 address, CIDR subnet, or address range. Accepts 'A.B.C.D', 'A.B.C.D/N',
+                or 'A.B.C.D-A.B.C.D'.
+          dport:
+            type: array
+            items:
+              type: string
+              description: TCP/UDP port (0..=65535) or inclusive port range. Accepts 'PORT' or 'START-END'.
+          protocol:
+            type: string
+            description: |-
+              Specifying `sport` or `dport` with the protocol set to `ANY` implicitly limits protocol matching
+              to TCP, UDP, SCTP, and DCCP, as only these protocols support port numbers.
+              Otherwise, `ANY` matches all protocols.
+            enum:
+            - ANY
+            - TCP
+            - UDP
+            - ICMP
+          source:
+            type: array
+            items:
+              type: string
+              description: |-
+                IPv4 address, CIDR subnet, or address range. Accepts 'A.B.C.D', 'A.B.C.D/N',
+                or 'A.B.C.D-A.B.C.D'.
+          sport:
+            type: array
+            items:
+              type: string
+              description: TCP/UDP port (0..=65535) or inclusive port range. Accepts 'PORT' or 'START-END'.
+      - type: object
+        required:
+        - in_interface
+        properties:
+          in_interface:
+            type: array
+            items:
+              type: string
+              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard, or a bare '*'.
+              pattern: ^(?:\*|[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?)$
+    InputRule:
+      type: object
+      required:
+      - description
+      - priority
+      - match
+      - action
+      properties:
+        action:
+          $ref: '#/components/schemas/RuleAction'
+        description:
+          type: string
+          description: Human-readable comment for a firewall rule. The value is restricted to printable ASCII without quotes or backslashes.
+          pattern: ^[ -!#-\[\]-~]{0,128}$
+        match:
+          $ref: '#/components/schemas/InboundMatch'
+        priority:
+          type: integer
+          format: int32
+          description: Sort order of the rule. Lower values are evaluated first.
+          minimum: 0
+    InterfaceConfig:
+      type: object
+      description: Represents the configuration of a single network interface.
+      required:
+      - ipv4_config
+      properties:
+        enabled:
+          type: boolean
+        ipv4_config:
+          $ref: '#/components/schemas/Ipv4Config'
+    InterfaceFailoverState:
+      type: object
+      description: Failover state of a single interface exposed via the network state endpoint.
+      required:
+      - state
+      - fail_count
+      - success_count
+      properties:
+        fail_count:
+          type: integer
+          format: int32
+          description: Number of consecutive failed probes since the last success.
+          minimum: 0
+        state:
+          $ref: '#/components/schemas/InterfaceProbeState'
+          description: Current probe state of this interface.
+        success_count:
+          type: integer
+          format: int32
+          description: Number of consecutive successful probes since the last failure.
+          minimum: 0
+    InterfacePolicy:
+      type: object
+      description: |-
+        Specifies the default action for packets that do not match any rule on a specific interface.
+
+        This allows you to configure whether the rules are an allowlist or a blocklist.
+
+        All physical interfaces must have a policy defined.
+        But also non existing interfaces can be defined in the policy.
+        This allows to configure policies for interfaces that may be added while runtime.
+      required:
+      - input
+      - output
+      - forward
+      properties:
+        forward:
+          $ref: '#/components/schemas/PolicyType'
+        input:
+          $ref: '#/components/schemas/PolicyType'
+        output:
+          $ref: '#/components/schemas/PolicyType'
+    InterfaceProbeState:
+      type: string
+      description: |-
+        The current failover probe state of a monitored interface.
+
+        - `HEALTHY`: Enabled and passing probes.
+        - `PROBING`: Transitional state on the path to failure or recovery.
+        - `FAILED`: Penalised — using an elevated metric because probes are failing.
+      enum:
+      - HEALTHY
+      - PROBING
+      - FAILED
+    InterfaceState:
+      type: object
+      description: Represents the current state of a network interface.
+      required:
+      - type
+      - ipv4
+      properties:
+        failover:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/InterfaceFailoverState'
+            description: Failover state, present only when failover is configured globally.
+        ipv4:
+          $ref: '#/components/schemas/Ipv4State'
+        type:
+          $ref: '#/components/schemas/InterfaceType'
+    InterfaceType:
+      type: string
+      description: The type of network interface.
+      enum:
+      - ETHERNET
+      - USB
+    Ipv4Config:
+      type: object
+      description: Represents the IPv4 configuration of a network interface.
+      required:
+      - dhcp
+      - addresses
+      - gateway
+      - dns
+      properties:
+        addresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ipv4Subnet'
+        dhcp:
+          type: boolean
+        dns:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ipv4String'
+        failover:
+          $ref: '#/components/schemas/FailoverInterfaceConfig'
+        gateway:
+          oneOf:
+          - type: 'null'
+          - type: string
+            format: ipv4
+            description: Represents an IPv4 address in a string format.
+        metric:
+          type: integer
+          format: int64
+          description: |-
+            Normal route metric (priority) for this interface. Lower values have higher priority.
+            If a value of -1 is specified, the system will choose the metric automatically.
+
+            If failover is enabled, the actual metric of the interface is
+            dynamic and may change between metric and `failed_metric` depending on the probe state.
+          example: 100
+          maximum: 2147483647
+          minimum: -1
+        shared_mode:
+          $ref: '#/components/schemas/SharedModeConfig'
+    Ipv4PrefixLength:
+      type: integer
+      format: int32
+      examples:
+      - '24'
+      maximum: 32
+      minimum: 0
+    Ipv4Route:
+      type: object
+      description: An IP route entry in the IPv4 routing table.
+      required:
+      - destination
+      - gateway
+      - interface
+      - metric
+      properties:
+        destination:
+          $ref: '#/components/schemas/Ipv4Subnet'
+        gateway:
+          $ref: '#/components/schemas/Ipv4String'
+        interface:
+          type: string
+          example: eth-x4
+        metric:
+          type: integer
+          format: int32
+          example: 103
+          minimum: 0
+    Ipv4State:
+      type: object
+      description: Represents the IPv4 state of a network interface.
+      required:
+      - activated
+      properties:
+        activated:
+          type: boolean
+          description: Activated is true when the connection is active and a cable is plugged in. Otherwise false.
+        addresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ipv4Subnet'
+    Ipv4String:
+      type: string
+      format: ipv4
+      description: Represents an IPv4 address in a string format.
+    Ipv4Subnet:
+      type: object
+      description: |-
+        Ipv4 address with prefix length.
+
+        The prefix length is used to determine the network mask.
+      required:
+      - ip
+      - prefix_length
+      properties:
+        ip:
+          $ref: '#/components/schemas/Ipv4String'
+        prefix_length:
+          $ref: '#/components/schemas/Ipv4PrefixLength'
+    LogEntry:
+      type: object
+      required:
+      - timestamp
+      - message
+      - source
+      properties:
+        message:
+          type: string
+          example: Log message
+        source:
+          $ref: '#/components/schemas/LogSource'
+        timestamp:
+          type: string
+          format: date-time
+    LogEntryResponse:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/LogEntry'
+        next_cursor:
+          type:
+          - string
+          - 'null'
+    LogSource:
+      type: object
+      required:
+      - id
+      properties:
+        id:
+          type: string
+          example: u-os-adm
+    LogSourcesResponse:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/LogSource'
+    MasqueradeAction:
+      type: object
+      description: |-
+        The source address is replaced depending on the routing destination
+        (e.g. with the outgoing interface's IP address).
+      required:
+      - mode
+      properties:
+        mode:
+          type: string
+          enum:
+          - MASQUERADE
+    Memory:
+      type: object
+      required:
+      - total_size
+      - available_size
+      properties:
+        available_size:
+          type: integer
+          format: int64
+          minimum: 0
+        total_size:
+          type: integer
+          format: int64
+          minimum: 0
+    NatRules:
+      type: object
+      required:
+      - prerouting
+      - postrouting
+      properties:
+        postrouting:
+          type: object
+          description: Postrouting masquerade and snat rules
+          additionalProperties:
+            $ref: '#/components/schemas/PostroutingRule'
+          propertyNames:
+            type: string
+            description: Identifier of a firewall rule. Used as the map key and to reference it in patch operations.
+            pattern: ^[A-Za-z0-9:._-]{1,63}$
+        prerouting:
+          type: object
+          description: Prerouting DNAT rules
+          additionalProperties:
+            $ref: '#/components/schemas/PreroutingRule'
+          propertyNames:
+            type: string
+            description: Identifier of a firewall rule. Used as the map key and to reference it in patch operations.
+            pattern: ^[A-Za-z0-9:._-]{1,63}$
+    NetworkConfig:
+      type: object
+      description: Used for writing the network configuration. All fields are required to be present, but can be empty in some cases.
+      required:
+      - hostname
+      - interfaces
+      properties:
+        failover:
+          $ref: '#/components/schemas/FailoverGlobalConfig'
+          description: Global failover probe settings.
+        hostname:
+          type: string
+          format: hostname
+          example: wm-uc20-m3000
+          maxLength: 63
+          minLength: 1
+        interfaces:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/InterfaceConfig'
+          propertyNames:
+            type: string
+          example:
+            eth-x4:
+              enabled: true
+              ipv4_config:
+                addresses:
+                - ip: 192.168.1.102
+                  prefix_length: 24
+                dhcp: false
+                dns:
+                - 8.8.8.8
+                failover:
+                  enabled: true
+                  failed_metric: 20000
+                  probe_target: dns.google
+                gateway: 192.168.1.1
+                metric: 200
+                shared_mode:
+                  dhcp_ip_range:
+                    end: 192.168.1.150
+                    start: 192.168.1.103
+                  dhcp_lease_time_sec: 3600
+                  enabled: true
+            eth-x5:
+              enabled: false
+              ipv4_config:
+                addresses: []
+                dhcp: true
+                dns: []
+                failover:
+                  enabled: true
+                  failed_metric: 20001
+                  probe_target: 1.1.1.1
+                gateway: null
+                metric: 100
+                shared_mode:
+                  dhcp_ip_range: null
+                  dhcp_lease_time_sec: null
+                  enabled: false
+        service_interface:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/ServiceInterfaceConfig'
+    NetworkState:
+      type: object
+      description: |-
+        The current network state on the device.
+
+        Note that this may differ from the configuration, e.g. a DHCP interface has an address in the state, but not in the configuration.
+      required:
+      - dns_resolver
+      - routes
+      - interfaces
+      properties:
+        dns_resolver:
+          $ref: '#/components/schemas/GlobalDnsServers'
+        interfaces:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/InterfaceState'
+          propertyNames:
+            type: string
+          example:
+            eth-x4:
+              ipv4:
+                activated: true
+                addresses:
+                - ip: 192.168.1.100
+                  prefix_length: 24
+              type: ETHERNET
+            eth-x5:
+              ipv4:
+                activated: true
+                addresses:
+                - ip: 192.168.1.101
+                  prefix_length: 24
+              type: ETHERNET
+        routes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ipv4Route'
+    OperationState:
+      oneOf:
+      - $ref: '#/components/schemas/OperationStatePending'
+      - $ref: '#/components/schemas/OperationStateCompleted'
+      - $ref: '#/components/schemas/OperationStateFailed'
+      description: Represents the entire state of a long-running operation.
+      discriminator:
+        propertyName: status
+        mapping:
+          COMPLETED: '#/components/schemas/OperationStateCompleted'
+          FAILED: '#/components/schemas/OperationStateFailed'
+          PENDING: '#/components/schemas/OperationStatePending'
+    OperationStateCompleted:
+      type: object
+      required:
+      - status
+      - created_at
+      - completed_at
+      properties:
+        completed_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        resource_id:
+          type: string
+        resource_url:
+          type: string
+          format: url
+        status:
+          type: string
+          enum:
+          - COMPLETED
+    OperationStateFailed:
+      type: object
+      required:
+      - status
+      - created_at
+      - failed_at
+      properties:
+        created_at:
+          type: string
+          format: date-time
+        failed_at:
+          type: string
+          format: date-time
+        resource_url:
+          type: string
+          format: url
+        status:
+          type: string
+          enum:
+          - FAILED
+    OperationStatePending:
+      type: object
+      required:
+      - status
+      - created_at
+      properties:
+        created_at:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum:
+          - PENDING
+    OutboundMatch:
+      allOf:
+      - type: object
+        required:
+        - protocol
+        - dport
+        - sport
+        - source
+        - destination
+        properties:
+          destination:
+            type: array
+            items:
+              type: string
+              description: |-
+                IPv4 address, CIDR subnet, or address range. Accepts 'A.B.C.D', 'A.B.C.D/N',
+                or 'A.B.C.D-A.B.C.D'.
+          dport:
+            type: array
+            items:
+              type: string
+              description: TCP/UDP port (0..=65535) or inclusive port range. Accepts 'PORT' or 'START-END'.
+          protocol:
+            type: string
+            description: |-
+              Specifying `sport` or `dport` with the protocol set to `ANY` implicitly limits protocol matching
+              to TCP, UDP, SCTP, and DCCP, as only these protocols support port numbers.
+              Otherwise, `ANY` matches all protocols.
+            enum:
+            - ANY
+            - TCP
+            - UDP
+            - ICMP
+          source:
+            type: array
+            items:
+              type: string
+              description: |-
+                IPv4 address, CIDR subnet, or address range. Accepts 'A.B.C.D', 'A.B.C.D/N',
+                or 'A.B.C.D-A.B.C.D'.
+          sport:
+            type: array
+            items:
+              type: string
+              description: TCP/UDP port (0..=65535) or inclusive port range. Accepts 'PORT' or 'START-END'.
+      - type: object
+        required:
+        - out_interface
+        properties:
+          out_interface:
+            type: array
+            items:
+              type: string
+              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard, or a bare '*'.
+              pattern: ^(?:\*|[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?)$
+    OutputReachability:
+      type: string
+      description: Reachability status of a syslog output destination.
+      enum:
+      - CONNECTED
+      - ERROR
+      - PENDING
+    OutputRule:
+      type: object
+      required:
+      - description
+      - priority
+      - match
+      - action
+      properties:
+        action:
+          $ref: '#/components/schemas/RuleAction'
+        description:
+          type: string
+          description: Human-readable comment for a firewall rule. The value is restricted to printable ASCII without quotes or backslashes.
+          pattern: ^[ -!#-\[\]-~]{0,128}$
+        match:
+          $ref: '#/components/schemas/OutboundMatch'
+        priority:
+          type: integer
+          format: int32
+          description: Sort order of the rule. Lower values are evaluated first.
+          minimum: 0
+    OutputState:
+      type: object
+      description: Health information for a single syslog output.
+      required:
+      - reachable
+      properties:
+        reachable:
+          $ref: '#/components/schemas/OutputReachability'
+          description: |-
+            Reachability status of the output destination.
+
+            - `connected` — The output has successfully sent its most recent batch of logs.
+            - `error` — The output is experiencing delivery failures and is currently retrying.
+            - `pending` — Reachability cannot be determined yet, because no logs have been
+              attempted to be sent so far (e.g. just started or filter-config filtered out all logs).
+    PartialCanInterfaceConfig:
+      type: object
+      properties:
+        enable_termination_resistor:
+          type: boolean
+          description: If set to true, a termination resistor will be enabled on the CAN interface. If set to false, the termination resistor will be disabled.
+    PartialCertificateEntry:
+      type: object
+      description: A single certificate entry. (PATCH)
+      properties:
+        content:
+          type: string
+          description: PEM-encoded certificate or key content.
+    PartialCertificates:
+      type: object
+      description: |-
+        All certificates organized by type.
+
+         Each certificate type maps certificate names (keys) to their entries. (PATCH)
+      properties:
+        client_cert:
+          type: object
+          description: Client certificates for mutual TLS authentication.
+          additionalProperties: true
+        client_key:
+          type: object
+          description: Client private keys for mutual TLS authentication.
+          additionalProperties: true
+        server_ca:
+          type: object
+          description: CA certificates for verifying the syslog server's identity.
+          additionalProperties: true
+    PartialDhcpIpv4Range:
+      type: object
+      description: Represents a range of IPv4 addresses (PATCH)
+      properties:
+        end:
+          $ref: '#/components/schemas/Ipv4String'
+          description: End of the range (inclusive)
+        start:
+          $ref: '#/components/schemas/Ipv4String'
+          description: Start of the range (inclusive)
+    PartialDnatAction:
+      oneOf:
+      - $ref: '#/components/schemas/PartialDnatActionForward'
+      - $ref: '#/components/schemas/PartialDnatActionRedirect'
+      discriminator:
+        propertyName: mode
+        mapping:
+          FORWARD: '#/components/schemas/PartialDnatActionForward'
+          REDIRECT: '#/components/schemas/PartialDnatActionRedirect'
+    PartialDnatActionForward:
+      type: object
+      description: Forward to another host/port. (PATCH)
+      required:
+      - mode
+      properties:
+        mode:
+          type: string
+          enum:
+          - FORWARD
+        new_destination:
+          type: string
+          description: IPv4 address only. Accepts 'A.B.C.D'.
+        new_dport:
+          type:
+          - integer
+          - 'null'
+          format: int32
+          maximum: 65535
+          minimum: 0
+    PartialDnatActionRedirect:
+      type: object
+      description: Redirect to the firewall host itself (PATCH)
+      required:
+      - mode
+      properties:
+        local_dport:
+          type: integer
+          format: int32
+          maximum: 65535
+          minimum: 0
+        mode:
+          type: string
+          enum:
+          - REDIRECT
+    PartialFailoverGlobalConfig:
+      type: object
+      description: |-
+        Global failover configuration.
+
+         Controls the probe loop that monitors all configured interfaces and adjusts
+         their route metrics based on connectivity probe results. (PATCH)
+      properties:
+        failure_threshold:
+          type: integer
+          format: int32
+          description: Number of consecutive failed probes before an interface is considered failed and penalised.
+          example: 3
+          minimum: 1
+        probe_interval_seconds:
+          type: integer
+          format: int64
+          description: Interval between failover probes in seconds.
+          example: 10
+          minimum: 1
+        success_threshold:
+          type: integer
+          format: int32
+          description: Number of consecutive successful probes before an interface is considered healthy and unpenalised.
+          example: 3
+          minimum: 1
+    PartialFailoverInterfaceConfig:
+      type: object
+      description: |-
+        Failover configuration for a single monitored interface.
+
+         When enabled, the probe loop checks connectivity on this interface. If
+         `failure_threshold` consecutive probes fail the interface is penalised by
+         settings its active metric to `failed_metric`. Once `success_threshold`
+         consecutive probes succeed the metric is restored to the interface's
+         configured `metric` value. (PATCH)
+      properties:
+        enabled:
+          type: boolean
+          description: Whether failover probing is enabled for this interface.
+        failed_metric:
+          type: integer
+          format: int32
+          description: |-
+            Network interface metric (priority) that is applied when the interface has failed probing.
+            Should be higher than all normal interface metrics to ensure traffic is routed through healthy interfaces.
+          example: 20000
+          maximum: 2147483647
+          minimum: 1
+        probe_target:
+          $ref: '#/components/schemas/ProbeTarget'
+          description: Probe target for connectivity checks (IPv4 address or hostname, optionally with port e.g. "1.1.1.1:5000").
+    PartialFilterRules:
+      type: object
+      properties:
+        forward:
+          type: object
+          additionalProperties: true
+        input:
+          type: object
+          additionalProperties: true
+        output:
+          type: object
+          additionalProperties: true
+        policy:
+          type: object
+          additionalProperties: true
+    PartialFirewallConfig:
+      type: object
+      description: |-
+        Custom firewall configuration. Contains filter and nat rules.
+
+         If an array is empty, it means "match all".
+         For example, an `InputRule` with an empty `source` matches packets from any source address.
+
+         Connections in the established or related conntrack state are accepted automatically. Therefore, no explicit rules are required for the return path. (PATCH)
+      properties:
+        filter:
+          $ref: '#/components/schemas/PartialFilterRules'
+        nat:
+          $ref: '#/components/schemas/PartialNatRules'
+    PartialForwardMatch:
+      allOf:
+      - type: object
+        properties:
+          destination:
+            type: array
+            items:
+              type: string
+              description: |-
+                IPv4 address, CIDR subnet, or address range. Accepts 'A.B.C.D', 'A.B.C.D/N',
+                or 'A.B.C.D-A.B.C.D'.
+          dport:
+            type: array
+            items:
+              type: string
+              description: TCP/UDP port (0..=65535) or inclusive port range. Accepts 'PORT' or 'START-END'.
+          protocol:
+            type: string
+            description: |-
+              Specifying `sport` or `dport` with the protocol set to `ANY` implicitly limits protocol matching
+              to TCP, UDP, SCTP, and DCCP, as only these protocols support port numbers.
+              Otherwise, `ANY` matches all protocols.
+            enum:
+            - ANY
+            - TCP
+            - UDP
+            - ICMP
+          source:
+            type: array
+            items:
+              type: string
+              description: |-
+                IPv4 address, CIDR subnet, or address range. Accepts 'A.B.C.D', 'A.B.C.D/N',
+                or 'A.B.C.D-A.B.C.D'.
+          sport:
+            type: array
+            items:
+              type: string
+              description: TCP/UDP port (0..=65535) or inclusive port range. Accepts 'PORT' or 'START-END'.
+      - type: object
+        properties:
+          in_interface:
+            type: array
+            items:
+              type: string
+              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard, or a bare '*'.
+              pattern: ^(?:\*|[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?)$
+          out_interface:
+            type: array
+            items:
+              type: string
+              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard, or a bare '*'.
+              pattern: ^(?:\*|[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?)$
+    PartialForwardRule:
+      type: object
+      properties:
+        action:
+          $ref: '#/components/schemas/RuleAction'
+        description:
+          type: string
+          description: Human-readable comment for a firewall rule. The value is restricted to printable ASCII without quotes or backslashes.
+          pattern: ^[ -!#-\[\]-~]{0,128}$
+        match:
+          $ref: '#/components/schemas/PartialForwardMatch'
+        priority:
+          type: integer
+          format: int32
+          description: Sort order of the rule. Lower values are evaluated first.
+          minimum: 0
+    PartialInboundMatch:
+      allOf:
+      - type: object
+        properties:
+          destination:
+            type: array
+            items:
+              type: string
+              description: |-
+                IPv4 address, CIDR subnet, or address range. Accepts 'A.B.C.D', 'A.B.C.D/N',
+                or 'A.B.C.D-A.B.C.D'.
+          dport:
+            type: array
+            items:
+              type: string
+              description: TCP/UDP port (0..=65535) or inclusive port range. Accepts 'PORT' or 'START-END'.
+          protocol:
+            type: string
+            description: |-
+              Specifying `sport` or `dport` with the protocol set to `ANY` implicitly limits protocol matching
+              to TCP, UDP, SCTP, and DCCP, as only these protocols support port numbers.
+              Otherwise, `ANY` matches all protocols.
+            enum:
+            - ANY
+            - TCP
+            - UDP
+            - ICMP
+          source:
+            type: array
+            items:
+              type: string
+              description: |-
+                IPv4 address, CIDR subnet, or address range. Accepts 'A.B.C.D', 'A.B.C.D/N',
+                or 'A.B.C.D-A.B.C.D'.
+          sport:
+            type: array
+            items:
+              type: string
+              description: TCP/UDP port (0..=65535) or inclusive port range. Accepts 'PORT' or 'START-END'.
+      - type: object
+        properties:
+          in_interface:
+            type: array
+            items:
+              type: string
+              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard, or a bare '*'.
+              pattern: ^(?:\*|[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?)$
+    PartialInputRule:
+      type: object
+      properties:
+        action:
+          $ref: '#/components/schemas/RuleAction'
+        description:
+          type: string
+          description: Human-readable comment for a firewall rule. The value is restricted to printable ASCII without quotes or backslashes.
+          pattern: ^[ -!#-\[\]-~]{0,128}$
+        match:
+          $ref: '#/components/schemas/PartialInboundMatch'
+        priority:
+          type: integer
+          format: int32
+          description: Sort order of the rule. Lower values are evaluated first.
+          minimum: 0
+    PartialInterfaceConfig:
+      type: object
+      description: Represents the configuration of a single network interface. (PATCH)
+      properties:
+        enabled:
+          type: boolean
+        ipv4_config:
+          $ref: '#/components/schemas/PartialIpv4Config'
+    PartialInterfacePolicy:
+      type: object
+      description: |-
+        Specifies the default action for packets that do not match any rule on a specific interface.
+
+         This allows you to configure whether the rules are an allowlist or a blocklist.
+
+         All physical interfaces must have a policy defined.
+         But also non existing interfaces can be defined in the policy.
+         This allows to configure policies for interfaces that may be added while runtime. (PATCH)
+      properties:
+        forward:
+          $ref: '#/components/schemas/PolicyType'
+        input:
+          $ref: '#/components/schemas/PolicyType'
+        output:
+          $ref: '#/components/schemas/PolicyType'
+    PartialIpv4Config:
+      type: object
+      description: Represents the IPv4 configuration of a network interface. (PATCH)
+      properties:
+        addresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ipv4Subnet'
+        dhcp:
+          type: boolean
+        dns:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ipv4String'
+        failover:
+          $ref: '#/components/schemas/PartialFailoverInterfaceConfig'
+        gateway:
+          oneOf:
+          - type: 'null'
+          - type: string
+            format: ipv4
+            description: Represents an IPv4 address in a string format.
+        metric:
+          type: integer
+          format: int64
+          description: |-
+            Normal route metric (priority) for this interface. Lower values have higher priority.
+            If a value of -1 is specified, the system will choose the metric automatically.
+
+            If failover is enabled, the actual metric of the interface is
+            dynamic and may change between metric and `failed_metric` depending on the probe state.
+          example: 100
+          maximum: 2147483647
+          minimum: -1
+        shared_mode:
+          $ref: '#/components/schemas/PartialSharedModeConfig'
+    PartialNatRules:
+      type: object
+      properties:
+        postrouting:
+          type: object
+          description: Postrouting masquerade and snat rules
+          additionalProperties: true
+        prerouting:
+          type: object
+          description: Prerouting DNAT rules
+          additionalProperties: true
+    PartialNetworkConfig:
+      type: object
+      description: Used for writing the network configuration. All fields are required to be present, but can be empty in some cases. (PATCH)
+      properties:
+        failover:
+          $ref: '#/components/schemas/PartialFailoverGlobalConfig'
+          description: Global failover probe settings.
+        hostname:
+          type: string
+          format: hostname
+          example: wm-uc20-m3000
+          maxLength: 63
+          minLength: 1
+        interfaces:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/PartialInterfaceConfig'
+          propertyNames:
+            type: string
+          example:
+            eth-x4:
+              ipv4_config:
+                dhcp: false
+                gateway: null
+                shared_mode:
+                  enabled: true
+            eth-x5:
+              enabled: true
+              ipv4_config:
+                dhcp: true
+        service_interface:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/PartialServiceInterfaceConfig'
+    PartialOutboundMatch:
+      allOf:
+      - type: object
+        properties:
+          destination:
+            type: array
+            items:
+              type: string
+              description: |-
+                IPv4 address, CIDR subnet, or address range. Accepts 'A.B.C.D', 'A.B.C.D/N',
+                or 'A.B.C.D-A.B.C.D'.
+          dport:
+            type: array
+            items:
+              type: string
+              description: TCP/UDP port (0..=65535) or inclusive port range. Accepts 'PORT' or 'START-END'.
+          protocol:
+            type: string
+            description: |-
+              Specifying `sport` or `dport` with the protocol set to `ANY` implicitly limits protocol matching
+              to TCP, UDP, SCTP, and DCCP, as only these protocols support port numbers.
+              Otherwise, `ANY` matches all protocols.
+            enum:
+            - ANY
+            - TCP
+            - UDP
+            - ICMP
+          source:
+            type: array
+            items:
+              type: string
+              description: |-
+                IPv4 address, CIDR subnet, or address range. Accepts 'A.B.C.D', 'A.B.C.D/N',
+                or 'A.B.C.D-A.B.C.D'.
+          sport:
+            type: array
+            items:
+              type: string
+              description: TCP/UDP port (0..=65535) or inclusive port range. Accepts 'PORT' or 'START-END'.
+      - type: object
+        properties:
+          out_interface:
+            type: array
+            items:
+              type: string
+              description: Name of an Ethernet interface or wildcard. Limited to 1..=15 visible characters with an optional trailing '*' wildcard, or a bare '*'.
+              pattern: ^(?:\*|[A-Za-z0-9_.][A-Za-z0-9_.-]{0,14}\*?)$
+    PartialOutputRule:
+      type: object
+      properties:
+        action:
+          $ref: '#/components/schemas/RuleAction'
+        description:
+          type: string
+          description: Human-readable comment for a firewall rule. The value is restricted to printable ASCII without quotes or backslashes.
+          pattern: ^[ -!#-\[\]-~]{0,128}$
+        match:
+          $ref: '#/components/schemas/PartialOutboundMatch'
+        priority:
+          type: integer
+          format: int32
+          description: Sort order of the rule. Lower values are evaluated first.
+          minimum: 0
+    PartialPostroutingAction:
+      oneOf:
+      - $ref: '#/components/schemas/MasqueradeAction'
+      - $ref: '#/components/schemas/PartialSnatAction'
+      description: |-
+        Specifies the action to take for packets that match a postrouting rule.
+
+         Masquerade replaces the source address with the outgoing interface's IP address.
+         Snat replaces the source address with a specific IP address and optional port. (PATCH)
+      discriminator:
+        propertyName: mode
+        mapping:
+          MASQUERADE: '#/components/schemas/MasqueradeAction'
+          SNAT: '#/components/schemas/PartialSnatAction'
+    PartialPostroutingRule:
+      type: object
+      properties:
+        action:
+          $ref: '#/components/schemas/PartialPostroutingAction'
+        description:
+          type: string
+          description: Human-readable comment for a firewall rule. The value is restricted to printable ASCII without quotes or backslashes.
+          pattern: ^[ -!#-\[\]-~]{0,128}$
+        match:
+          $ref: '#/components/schemas/PartialOutboundMatch'
+        priority:
+          type: integer
+          format: int32
+          description: Sort order of the rule. Lower values are evaluated first.
+          minimum: 0
+    PartialPreroutingRule:
+      type: object
+      properties:
+        action:
+          $ref: '#/components/schemas/PartialDnatAction'
+        description:
+          type: string
+          description: Human-readable comment for a firewall rule. The value is restricted to printable ASCII without quotes or backslashes.
+          pattern: ^[ -!#-\[\]-~]{0,128}$
+        match:
+          $ref: '#/components/schemas/PartialInboundMatch'
+        priority:
+          type: integer
+          format: int32
+          description: Sort order of the rule. Lower values are evaluated first.
+          minimum: 0
+    PartialRecipeSigning:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          description: |-
+            True if removable media update signing is enabled, false otherwise.
+
+            If enabled, the recipe file of the removable media update must be signed with a GPG key that
+            is added to the `user_gpg_keys` list in order to be accepted by the system.
+
+            Note: Removable media update signing is always disabled before initial setup is complete.
+        user_gpg_keys:
+          type: object
+          description: User specific GPG public keys that are used to verify removable media updates.
+          additionalProperties: true
+          example:
+            another-gpg-key:
+              content: |-
+                -----BEGIN PGP PUBLIC KEY BLOCK-----
+
+                ...
+                -----END PGP PUBLIC KEY BLOCK-----
+            delete-me: null
+    PartialRs232Config:
+      type: object
+      required:
+      - mode
+      properties:
+        mode:
+          type: string
+          enum:
+          - RS232
+    PartialRs485Config:
+      type: object
+      required:
+      - mode
+      properties:
+        enable_termination_resistor:
+          type: boolean
+          description: If set to true, a termination resistor will be enabled on the RS-485 interface. If set to false, the termination resistor will be disabled.
+        mode:
+          type: string
+          enum:
+          - RS485
+    PartialRsInterfaceConfig:
+      oneOf:
+      - $ref: '#/components/schemas/PartialRs232Config'
+      - $ref: '#/components/schemas/PartialRs485Config'
+      description: |-
+        Current operation mode of a RS interface (RS-232 or RS-485). The `mode` field is the discriminator selecting the variant.
+
+         For RS-485 interfaces, this also includes whether the termination resistor is enabled or disabled.
+         Please note that some interfaces may only support RS-232 or RS-485 mode. For example, tty-x3 on R-Series only supports RS-485 mode. (PATCH)
+      examples:
+      - enable_termination_resistor: true
+        mode: RS485
+      discriminator:
+        propertyName: mode
+        mapping:
+          RS232: '#/components/schemas/PartialRs232Config'
+          RS485: '#/components/schemas/PartialRs485Config'
+    PartialSerialInterfacesConfig:
+      type: object
+      description: Configuration settings for all serial interfaces (CAN, RS-232, RS-485) on the system. (PATCH)
+      properties:
+        can_interfaces:
+          type: object
+          description: |-
+            Configuration settings for all CAN interfaces on the system, keyed by interface name.
+
+            Keys may contain interfaces that are currently not present on the system.
+            For each existing interface, a configuration must be provided. If an interface is missing, the request will be rejected.
+            You may delete configuration of interfaces which are no longer present, e.g. for u-extend modules.
+          additionalProperties: true
+          example:
+            can-fm0-em0:
+              enable_termination_resistor: true
+        rs_interfaces:
+          type: object
+          description: |-
+            Configuration settings for all RS interfaces (RS-232, RS-485) on the system, keyed by u-OS interface name.
+
+            Keys may contain interfaces that are currently not present on the system.
+            For each existing interface, a configuration must be provided. If an interface is missing, the request will be rejected.
+            You may delete configuration of interfaces which are no longer present, e.g. for u-extend modules.
+
+            Note that the  u-OS interface name is not the same as the device path in `/dev`. The u-OS interface name is used to configure the interface, while
+            the device path is used to open the interface for reading/writing. You can obtain the device path from the state endpoint.
+          additionalProperties: true
+          example:
+            tty-fm0-em1:
+              enable_termination_resistor: false
+              mode: RS485
+            tty-fm1-em1: null
+    PartialServiceInterfaceConfig:
+      type: object
+      description: Represents the configuration of the service interface. (PATCH)
+      properties:
+        enabled:
+          type: boolean
+    PartialSharedModeConfig:
+      type: object
+      description: Configuration options for interface sharing (PATCH)
+      properties:
+        dhcp_ip_range:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/PartialDhcpIpv4Range'
+            description: |-
+              Configure the DHCP server IP range.
+
+              The IP range must be in the same subnet as the server address, otherwise an error will be returned.
+              If not set, an IP range adjacent to the server address will be used.
+              Should not contain network address or broadcast address.
+        dhcp_lease_time_sec:
+          type:
+          - integer
+          - 'null'
+          format: int32
+          description: |-
+            Configure the DHCP server lease time in seconds.
+
+            Allowed values:
+
+            - 0 or empty: Default lease time (1h)
+            - 2147483647 (max int32): Infinite lease time
+            - 120-31536000: Valid range between 2 minutes and 1 year
+          minimum: 0
+        enabled:
+          type: boolean
+          description: |-
+            If enabled, this device acts as a mini router and may provide internet access to other devices connected to it.
+            This includes enabling a DHCP server on the device, which will assign IP addresses to connected devices, as well as hosting a DNS server.
+            Traffic will be forwarded through the outbound interface with the highest priority (lowest route metric).
+
+            If enabled, all other properties of the interface are ignored, except for the first IP address in the addresses list,
+            which is used as the server address for the DHCP server.
+    PartialSignedUpdateConfig:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          description: True if signed updates are enabled, false otherwise.
+        preinstalled_gpg_keys:
+          oneOf:
+          - type: object
+            properties:
+              enabled:
+                type: boolean
+                description: |-
+                  True if Preinstalled GPG keys are enabled, false otherwise.
+
+                  All devices come with preinstalled preinstalled GPG keys to verify updates.
+                  If this is set to false, those keys will be ignored during update verification.
+                  User must upload their own GPG keys to verify updates in this case.
+          description: |-
+            Can be used to enable or disable preinstalled Preinstalled GPG keys.
+            This can be useful e.g. to only allow custom, self signed updates to the device.
+        user_gpg_keys:
+          type: object
+          description: User specific GPG public keys that are used to verify software updates.
+          additionalProperties: true
+          example:
+            another-gpg-key:
+              content: |-
+                -----BEGIN PGP PUBLIC KEY BLOCK-----
+
+                ...
+                -----END PGP PUBLIC KEY BLOCK-----
+            delete-me: null
+    PartialSnatAction:
+      type: object
+      description: Write a specific source address to the packet. (PATCH)
+      required:
+      - mode
+      properties:
+        mode:
+          type: string
+          enum:
+          - SNAT
+        new_source:
+          type: string
+          description: IPv4 address only. Accepts 'A.B.C.D'.
+        new_sport:
+          type:
+          - integer
+          - 'null'
+          format: int32
+          minimum: 0
+    PartialUpdateSettings:
+      type: object
+      description: Represents the update configuration for the system used in get and put. (PATCH)
+      properties:
+        removable_media_update:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+              description: |-
+                True if removable media updates are enabled, false otherwise.
+
+                Note: Removable media updates are always enabled before initial setup is complete.
+                This value shows only the state after the initial setup.
+            recipe_signing:
+              $ref: '#/components/schemas/PartialRecipeSigning'
+              description: Settings related to signing of removable media updates.
+        signed_update:
+          $ref: '#/components/schemas/PartialSignedUpdateConfig'
+    PolicyType:
+      type: string
+      description: |-
+        `OSDefault` - All custom firewall rules will be ignored! Uses the default policy and firewall rules of u-OS.
+        Currently, this means input=Accept, output=Accept, forward=Drop but this may change in the future.
+
+        `Accept` - By default, all packets are accepted by the firewall. If packets should be blocked, rules with DROP action need to be explicitly added.
+        Allows to build a 'Block List' by adding new firewall filter rules.
+
+        `Drop` - By default, the firewall blocks all packets, unless there is an explicit rule added that allows the packet.
+        Allows to build an 'Allow List' by adding new firewall filter rules. Be careful, this may lock you out of your system unless you add an explicit allow rule!
+      enum:
+      - DROP
+      - ACCEPT
+      - OS_DEFAULT
+    PostroutingAction:
+      oneOf:
+      - $ref: '#/components/schemas/MasqueradeAction'
+      - $ref: '#/components/schemas/SnatAction'
+      description: |-
+        Specifies the action to take for packets that match a postrouting rule.
+
+        Masquerade replaces the source address with the outgoing interface's IP address.
+        Snat replaces the source address with a specific IP address and optional port.
+      discriminator:
+        propertyName: mode
+        mapping:
+          MASQUERADE: '#/components/schemas/MasqueradeAction'
+          SNAT: '#/components/schemas/SnatAction'
+    PostroutingRule:
+      type: object
+      required:
+      - description
+      - priority
+      - match
+      - action
+      properties:
+        action:
+          $ref: '#/components/schemas/PostroutingAction'
+        description:
+          type: string
+          description: Human-readable comment for a firewall rule. The value is restricted to printable ASCII without quotes or backslashes.
+          pattern: ^[ -!#-\[\]-~]{0,128}$
+        match:
+          $ref: '#/components/schemas/OutboundMatch'
+        priority:
+          type: integer
+          format: int32
+          description: Sort order of the rule. Lower values are evaluated first.
+          minimum: 0
+    PreroutingRule:
+      type: object
+      required:
+      - description
+      - priority
+      - match
+      - action
+      properties:
+        action:
+          $ref: '#/components/schemas/DnatAction'
+        description:
+          type: string
+          description: Human-readable comment for a firewall rule. The value is restricted to printable ASCII without quotes or backslashes.
+          pattern: ^[ -!#-\[\]-~]{0,128}$
+        match:
+          $ref: '#/components/schemas/InboundMatch'
+        priority:
+          type: integer
+          format: int32
+          description: Sort order of the rule. Lower values are evaluated first.
+          minimum: 0
+    ProbeTarget:
+      type: string
+      description: IPv4 address or hostname used as the probe target, optionally with a port (e.g. "1.1.1.1:5000"). If no port is specified, port 443 is used. IPv4 addresses are recommended for deterministic failover behavior. Hostname targets require DNS resolution before probing; DNS failures cause the probe to fail.
+      examples:
+      - 8.8.8.8
+      - 1.1.1.1:5000
+      - example.com
+      maxLength: 253
+      minLength: 1
+    RecipeSigning:
+      type: object
+      required:
+      - enabled
+      - user_gpg_keys
+      properties:
+        enabled:
+          type: boolean
+          description: |-
+            True if removable media update signing is enabled, false otherwise.
+
+            If enabled, the recipe file of the removable media update must be signed with a GPG key that
+            is added to the `user_gpg_keys` list in order to be accepted by the system.
+
+            Note: Removable media update signing is always disabled before initial setup is complete.
+        user_gpg_keys:
+          type: object
+          description: User specific GPG public keys that are used to verify removable media updates.
+          additionalProperties:
+            $ref: '#/components/schemas/GpgKey'
+          propertyNames:
+            type: string
+            description: A GPG key ID that acts as a unique identifier for the key
+            examples:
+            - custom-gpg-key
+            maxLength: 255
+            minLength: 1
+            pattern: ^[a-z][a-z\-0-9]*$
+          example:
+            another-gpg-key:
+              content: |-
+                -----BEGIN PGP PUBLIC KEY BLOCK-----
+
+                ...
+                -----END PGP PUBLIC KEY BLOCK-----
+    Rs232Config:
+      type: object
+      description: RS-232 mode configuration.
+      required:
+      - mode
+      properties:
+        mode:
+          type: string
+          enum:
+          - RS232
+    Rs485Config:
+      type: object
+      description: RS-485 mode configuration.
+      required:
+      - mode
+      - enable_termination_resistor
+      properties:
+        enable_termination_resistor:
+          type: boolean
+          description: If set to true, a termination resistor will be enabled on the RS-485 interface. If set to false, the termination resistor will be disabled.
+        mode:
+          type: string
+          enum:
+          - RS485
+    RsInterfaceConfig:
+      oneOf:
+      - $ref: '#/components/schemas/Rs232Config'
+      - $ref: '#/components/schemas/Rs485Config'
+      description: |-
+        Current operation mode of a RS interface (RS-232 or RS-485). The `mode` field is the discriminator selecting the variant.
+
+        For RS-485 interfaces, this also includes whether the termination resistor is enabled or disabled.
+        Please note that some interfaces may only support RS-232 or RS-485 mode. For example, tty-x3 on R-Series only supports RS-485 mode.
+      examples:
+      - enable_termination_resistor: true
+        mode: RS485
+      discriminator:
+        propertyName: mode
+        mapping:
+          RS232: '#/components/schemas/Rs232Config'
+          RS485: '#/components/schemas/Rs485Config'
+    RsInterfaceState:
+      type: object
+      required:
+      - name
+      - device_path
+      - supported_modes
+      - state
+      properties:
+        device_path:
+          type: string
+          description: The device path in /dev that belong to the RS interface. This is the path that should be used to open the interface for reading/writing.
+          example: /dev/tty-x3
+        name:
+          type: string
+          description: Name of the RS interface. Used for configuration.
+          example: tty-x3
+        state:
+          $ref: '#/components/schemas/RsInterfaceConfig'
+          description: Current configuration of the RS interface (RS-232 or RS-485)
+        supported_modes:
+          type: array
+          items:
+            $ref: '#/components/schemas/AllowedRsMode'
+          description: |-
+            Returns the supported operation modes for this interface.
+
+            Some interfaces may only support RS-232 or RS-485 mode. For example, tty-x3 on R-Series only supports RS-485 mode.
+          example:
+          - RS232
+          - RS485
+    RuleAction:
+      type: string
+      description: |-
+        Specifies if the matching packets should be dropped, accepted.
+        If a packet is accepted or dropped, no further rules are evaluated for that packet.
+        You can use the rule priority to control the order of rule evaluation. Lower values are evaluated first.
+      enum:
+      - DROP
+      - ACCEPT
+    SecuritySettings:
+      type: object
+      required:
+      - root_access
+      properties:
+        root_access:
+          type: object
+          required:
+          - enabled
+          properties:
+            enabled:
+              type: boolean
+    SerialInterfacesConfig:
+      type: object
+      description: Configuration settings for all serial interfaces (CAN, RS-232, RS-485) on the system.
+      required:
+      - can_interfaces
+      - rs_interfaces
+      properties:
+        can_interfaces:
+          type: object
+          description: |-
+            Configuration settings for all CAN interfaces on the system, keyed by interface name.
+
+            Keys may contain interfaces that are currently not present on the system.
+            For each existing interface, a configuration must be provided. If an interface is missing, the request will be rejected.
+            You may delete configuration of interfaces which are no longer present, e.g. for u-extend modules.
+          additionalProperties:
+            $ref: '#/components/schemas/CanInterfaceConfig'
+          propertyNames:
+            type: string
+          example:
+            can-fm0-em0:
+              enable_termination_resistor: true
+            can-fm0-em1:
+              enable_termination_resistor: false
+        rs_interfaces:
+          type: object
+          description: |-
+            Configuration settings for all RS interfaces (RS-232, RS-485) on the system, keyed by u-OS interface name.
+
+            Keys may contain interfaces that are currently not present on the system.
+            For each existing interface, a configuration must be provided. If an interface is missing, the request will be rejected.
+            You may delete configuration of interfaces which are no longer present, e.g. for u-extend modules.
+
+            Note that the  u-OS interface name is not the same as the device path in `/dev`. The u-OS interface name is used to configure the interface, while
+            the device path is used to open the interface for reading/writing. You can obtain the device path from the state endpoint.
+          additionalProperties:
+            $ref: '#/components/schemas/RsInterfaceConfig'
+          propertyNames:
+            type: string
+          example:
+            tty-fm0-em1:
+              mode: RS232
+            tty-x3:
+              enable_termination_resistor: true
+              mode: RS485
+    SerialInterfacesState:
+      type: object
+      description: |-
+        Current state of all serial interfaces (CAN, RS-232, RS-485) on the system.
+
+        Unlike the configuration struct, this only contains interfaces that are currently present on the system.
+      required:
+      - can_interfaces
+      - rs_interfaces
+      properties:
+        can_interfaces:
+          type: array
+          items:
+            $ref: '#/components/schemas/CanInterfaceState'
+          description: Current state of all CAN interfaces on the system.
+        rs_interfaces:
+          type: array
+          items:
+            $ref: '#/components/schemas/RsInterfaceState'
+          description: Current state of all RS interfaces (RS-232, RS-485) on the system.
+    ServerCa:
+      oneOf:
+      - $ref: '#/components/schemas/ServerCaVerify'
+      - $ref: '#/components/schemas/ServerCaVerifyWithCa'
+      - $ref: '#/components/schemas/ServerCaNoVerify'
+      description: Server certificate verification configuration.
+    ServerCaNoVerify:
+      type: object
+      description: Do not verify the server's certificate (insecure, use only for testing).
+      required:
+      - mode
+      properties:
+        mode:
+          type: string
+          enum:
+          - NO_VERIFY
+    ServerCaVerify:
+      type: object
+      description: Verify the server's certificate using the system's CA certificate store.
+      required:
+      - mode
+      properties:
+        mode:
+          type: string
+          enum:
+          - VERIFY
+    ServerCaVerifyWithCa:
+      type: object
+      description: |-
+        Verify the server's certificate using a custom CA certificate.
+        The CA certificate must be uploaded via PUT /syslog/certificates.
+      required:
+      - mode
+      - ca
+      properties:
+        ca:
+          type: string
+          description: Name of the CA certificate file.
+          example: my-corp-ca.pem
+        mode:
+          type: string
+          enum:
+          - VERIFY_WITH_CA
+    ServiceInterfaceConfig:
+      type: object
+      description: Represents the configuration of the service interface.
+      required:
+      - enabled
+      properties:
+        enabled:
+          type: boolean
+    ServiceStatus:
+      type: string
+      description: Systemd service status.
+      enum:
+      - ACTIVE
+      - INACTIVE
+      - FAILED
+      - ACTIVATING
+      - DEACTIVATING
+      - UNKNOWN
+    SharedModeConfig:
+      type: object
+      description: Configuration options for interface sharing
+      required:
+      - enabled
+      properties:
+        dhcp_ip_range:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/DhcpIpv4Range'
+            description: |-
+              Configure the DHCP server IP range.
+
+              The IP range must be in the same subnet as the server address, otherwise an error will be returned.
+              If not set, an IP range adjacent to the server address will be used.
+              Should not contain network address or broadcast address.
+        dhcp_lease_time_sec:
+          type:
+          - integer
+          - 'null'
+          format: int32
+          description: |-
+            Configure the DHCP server lease time in seconds.
+
+            Allowed values:
+
+            - 0 or empty: Default lease time (1h)
+            - 2147483647 (max int32): Infinite lease time
+            - 120-31536000: Valid range between 2 minutes and 1 year
+          minimum: 0
+        enabled:
+          type: boolean
+          description: |-
+            If enabled, this device acts as a mini router and may provide internet access to other devices connected to it.
+            This includes enabling a DHCP server on the device, which will assign IP addresses to connected devices, as well as hosting a DNS server.
+            Traffic will be forwarded through the outbound interface with the highest priority (lowest route metric).
+
+            If enabled, all other properties of the interface are ignored, except for the first IP address in the addresses list,
+            which is used as the server address for the DHCP server.
+    SignedUpdateConfig:
+      type: object
+      required:
+      - enabled
+      properties:
+        enabled:
+          type: boolean
+          description: True if signed updates are enabled, false otherwise.
+        preinstalled_gpg_keys:
+          oneOf:
+          - type: object
+            required:
+            - enabled
+            properties:
+              enabled:
+                type: boolean
+                description: |-
+                  True if Preinstalled GPG keys are enabled, false otherwise.
+
+                  All devices come with preinstalled preinstalled GPG keys to verify updates.
+                  If this is set to false, those keys will be ignored during update verification.
+                  User must upload their own GPG keys to verify updates in this case.
+          description: |-
+            Can be used to enable or disable preinstalled Preinstalled GPG keys.
+            This can be useful e.g. to only allow custom, self signed updates to the device.
+        user_gpg_keys:
+          type: object
+          description: User specific GPG public keys that are used to verify software updates.
+          additionalProperties:
+            $ref: '#/components/schemas/GpgKey'
+          propertyNames:
+            type: string
+            description: A GPG key ID that acts as a unique identifier for the key
+            examples:
+            - custom-gpg-key
+            maxLength: 255
+            minLength: 1
+            pattern: ^[a-z][a-z\-0-9]*$
+          example:
+            another-gpg-key:
+              content: |-
+                -----BEGIN PGP PUBLIC KEY BLOCK-----
+
+                ...
+                -----END PGP PUBLIC KEY BLOCK-----
+    SnatAction:
+      type: object
+      description: Write a specific source address to the packet.
+      required:
+      - mode
+      - new_source
+      properties:
+        mode:
+          type: string
+          enum:
+          - SNAT
+        new_source:
+          type: string
+          description: IPv4 address only. Accepts 'A.B.C.D'.
+        new_sport:
+          type:
+          - integer
+          - 'null'
+          format: int32
+          minimum: 0
+    StorageType:
+      type: string
+      enum:
+      - Internal
+      - Removable
+    SyslogConfig:
+      type: object
+      description: Main configuration for syslog forwarding.
+      required:
+      - enabled
+      - outputs
+      properties:
+        enabled:
+          type: boolean
+          description: Whether syslog forwarding is enabled. If false, the service is stopped.
+        outputs:
+          type: object
+          description: |-
+            Map of output name to output configuration.
+            Output names must be 1-32 characters, containing only lowercase letters, numbers, and hyphens.
+            Cannot start or end with a hyphen.
+          additionalProperties:
+            $ref: '#/components/schemas/SyslogOutputConfig'
+          propertyNames:
+            type: string
+          example:
+            my-log-server:
+              destination:
+                format: RFC5424
+                host: 192.168.1.123
+                port: 6514
+                tls:
+                  mode: ENABLED
+                  server_ca:
+                    ca: my-corp-ca.pem
+                    mode: VERIFY_WITH_CA
+                transport: TCP
+              filter:
+                facilities:
+                - AUTH
+                identifiers:
+                - sudo
+                - kernel
+                levels:
+                - ERR
+                - WARNING
+                units:
+                - nginx.service
+    SyslogDestination:
+      type: object
+      description: Destination server configuration.
+      required:
+      - host
+      - port
+      - transport
+      - tls
+      - format
+      properties:
+        format:
+          $ref: '#/components/schemas/SyslogFormat'
+          description: Syslog message format.
+        host:
+          type: string
+          description: Server hostname or IP address.
+          example: 192.168.1.100
+        port:
+          type: integer
+          format: int32
+          description: Server port number (514 for plain syslog, 6514 for TLS is common).
+          example: 6514
+          minimum: 0
+        tls:
+          $ref: '#/components/schemas/TlsConfig'
+          description: TLS configuration. Determines whether TLS encryption is used (TCP only).
+        transport:
+          $ref: '#/components/schemas/Transport'
+          description: 'Transport protocol: TCP or UDP.'
+    SyslogFacility:
+      type: string
+      description: Standard syslog facilities as defined in RFC 5424.
+      enum:
+      - KERN
+      - USER
+      - MAIL
+      - DAEMON
+      - AUTH
+      - SYSLOG
+      - LPR
+      - NEWS
+      - UUCP
+      - CRON
+      - AUTHPRIV
+      - FTP
+      - NTP
+      - AUDIT
+      - ALERT
+      - CLOCK
+      - LOCAL0
+      - LOCAL1
+      - LOCAL2
+      - LOCAL3
+      - LOCAL4
+      - LOCAL5
+      - LOCAL6
+      - LOCAL7
+    SyslogFilter:
+      type: object
+      description: |-
+        Syslog filter criteria.
+
+        Filtering uses systemd journal's native logic:
+        - Within a field: values are OR'd (e.g., level=err OR level=warning)
+        - Across fields: conditions are AND'd (e.g., level=err AND facility=auth)
+        - Empty fields match everything
+      required:
+      - levels
+      - facilities
+      - units
+      - identifiers
+      properties:
+        facilities:
+          type: array
+          items:
+            $ref: '#/components/schemas/SyslogFacility'
+          description: |-
+            Syslog facilities to include. Standard RFC 5424 facility codes.
+            If empty, logs from all facilities are included.
+            Your services can use local0-local7 for custom categorization.
+        identifiers:
+          type: array
+          items:
+            type: string
+          description: |-
+            Specific `SYSLOG_IDENTIFIER` values to include (e.g. 'kernel').
+
+            Each identifier must:
+            - Be at most 128 characters
+            - Contain only: ASCII letters (a-z, A-Z), digits (0-9), '-', '_', '.'
+            - Not be empty
+
+            If empty, logs from all identifiers are included.
+          example:
+          - sudo
+          - kernel
+        levels:
+          type: array
+          items:
+            $ref: '#/components/schemas/SyslogLevel'
+          description: |-
+            Log severity levels to include. Only logs with these exact levels are forwarded.
+            If empty, logs of all severity levels are included.
+        units:
+          type: array
+          items:
+            type: string
+          description: |-
+            Specific systemd units to include.
+
+            Each unit name must:
+            - Be at most 255 characters
+            - Contain only: ASCII letters (a-z, A-Z), digits (0-9), ':', '-', '_', '.', '@'
+            - End with a valid unit suffix: .service, .socket, .device, .mount,
+              .automount, .swap, .target, .path, .timer, .slice, or .scope
+
+            Examples: "nginx.service", "sshd.socket", "user@1000.service"
+
+            If empty, logs from all units are included.
+          example:
+          - nginx.service
+          - fluent-bit.service
+    SyslogFormat:
+      type: string
+      description: Syslog message format standard.
+      enum:
+      - RFC5424
+      - RFC3164
+    SyslogLevel:
+      type: string
+      description: Syslog severity levels as defined in RFC 5424.
+      enum:
+      - EMERG
+      - ALERT
+      - CRIT
+      - ERR
+      - WARNING
+      - NOTICE
+      - INFO
+      - DEBUG
+    SyslogOutputConfig:
+      type: object
+      description: |-
+        A single syslog output destination with its filter criteria.
+        The output name (map key) must be 1-32 characters, containing only lowercase letters,
+        numbers, and hyphens. Cannot start or end with a hyphen.
+      required:
+      - destination
+      - filter
+      properties:
+        destination:
+          $ref: '#/components/schemas/SyslogDestination'
+          description: The destination server configuration.
+        filter:
+          $ref: '#/components/schemas/SyslogFilter'
+          description: Filter criteria - which logs to send to this output.
+    SyslogState:
+      type: object
+      description: Runtime state of the syslog forwarding service.
+      required:
+      - status
+      properties:
+        outputs:
+          type: object
+          description: |-
+            Per-output health information.
+            Only populated when the service is active and the monitoring API is reachable.
+          additionalProperties:
+            $ref: '#/components/schemas/OutputState'
+          propertyNames:
+            type: string
+        status:
+          $ref: '#/components/schemas/ServiceStatus'
+          description: Current service status from systemd.
+      example:
+        outputs:
+          audit-logs:
+            reachable: CONNECTED
+          kernel-logs:
+            reachable: ERROR
+          my-app-logs:
+            reachable: PENDING
+        status: ACTIVE
+    SystemInformation:
+      type: object
+      required:
+      - cpu_architecture
+      - firmware
+      - memory
+      properties:
+        cpu_architecture:
+          type: string
+        firmware:
+          $ref: '#/components/schemas/Firmware'
+        memory:
+          $ref: '#/components/schemas/Memory'
+    TlsConfig:
+      oneOf:
+      - $ref: '#/components/schemas/TlsDisabled'
+      - $ref: '#/components/schemas/TlsEnabled'
+      - $ref: '#/components/schemas/TlsEnabledWithMtls'
+      description: |-
+        TLS configuration for encrypted syslog transport.
+        Certificates are managed separately via the certificates endpoint.
+    TlsDisabled:
+      type: object
+      description: TLS is disabled (plain-text transport).
+      required:
+      - mode
+      properties:
+        mode:
+          type: string
+          enum:
+          - DISABLED
+    TlsEnabled:
+      type: object
+      description: TLS is enabled with the given settings.
+      required:
+      - mode
+      - server_ca
+      properties:
+        mode:
+          type: string
+          enum:
+          - ENABLED
+        server_ca:
+          $ref: '#/components/schemas/ServerCa'
+          description: Server certificate verification mode.
+    TlsEnabledWithMtls:
+      type: object
+      required:
+      - mode
+      - server_ca
+      - client_cert
+      - client_key
+      properties:
+        client_cert:
+          type: string
+          description: |-
+            Name of the client certificate file.
+            Must be uploaded via the certificates endpoint.
+          example: device.pem
+        client_key:
+          type: string
+          description: |-
+            Name of the client private key file.
+            Must be uploaded via the certificates endpoint.
+          example: device-key.pem
+        mode:
+          type: string
+          enum:
+          - ENABLED_WITH_MTLS
+        server_ca:
+          $ref: '#/components/schemas/ServerCa'
+    Transport:
+      type: string
+      description: Transport protocol for syslog. TLS is configured separately.
+      enum:
+      - TCP
+      - UDP
+    UpdateSettings:
+      type: object
+      description: Represents the update configuration for the system used in get and put.
+      required:
+      - signed_update
+      properties:
+        removable_media_update:
+          type: object
+          required:
+          - enabled
+          - recipe_signing
+          properties:
+            enabled:
+              type: boolean
+              description: |-
+                True if removable media updates are enabled, false otherwise.
+
+                Note: Removable media updates are always enabled before initial setup is complete.
+                This value shows only the state after the initial setup.
+            recipe_signing:
+              $ref: '#/components/schemas/RecipeSigning'
+              description: Settings related to signing of removable media updates.
+        signed_update:
+          $ref: '#/components/schemas/SignedUpdateConfig'
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: /oauth2/token
+          scopes:
+            u-os-adm.firewall.readonly: Read access for firewall endpoints
+            u-os-adm.firewall.readwrite: Read and write access for firewall endpoints
+            u-os-adm.logging.readonly: Read access for logging endpoints
+            u-os-adm.network.readonly: Read access for network endpoints
+            u-os-adm.network.readwrite: Read and write access for network endpoints
+            u-os-adm.recovery.readwrite: Read and write access for recovery endpoints
+            u-os-adm.security.readonly: Read access for security endpoints
+            u-os-adm.security.readwrite: Read and write access for security endpoints
+            u-os-adm.serial-interfaces.readonly: Read access for serial interface configuration endpoints
+            u-os-adm.serial-interfaces.readwrite: Read and write access for serial interface configuration endpoints
+            u-os-adm.syslog.readonly: Read access for syslog endpoints
+            u-os-adm.syslog.readwrite: Read and write access for syslog endpoints
+            u-os-adm.system.readonly: Read access for system endpoints
+            u-os-adm.system.readwrite: Read and write access for system endpoints
+            u-os-adm.update.readonly: Read access for update endpoints
+            u-os-adm.update.readwrite: Read and write access for update endpoints
+      description: The HTTP API uses the OAuth2 client credentials flow.
+tags:
+- name: logging
+  description: Centralized system logging, capture and reporting API for u-OS
+- name: syslog
+  description: API for syslog forwarding configuration
+- name: network
+  description: API for network settings and state of u-OS
+- name: firewall
+  description: API for firewall settings of u-OS
+- name: openapi
+  description: API for reading the OpenAPI specification
+- name: operations
+  description: API for u-OS long running operations
+- name: recovery
+  description: API for recovery of u-OS
+- name: security
+  description: API for u-OS security settings
+- name: system
+  description: API for general system informations & actions of u-OS
+- name: update
+  description: API for u-OS update settings
+- name: serial-interfaces
+  description: API for u-OS serial interface settings
