@@ -13,6 +13,11 @@ To explore an API visually, use the API viewer in u-OS or an OpenAPI viewer such
 
 == API Conventions
 
+The following conventions define common design rules and behavior for all u-OS Data Hub HTTP APIs in this directory.
+Clients can rely on them across APIs unless an API documents an exception.
+
+APIs with major version 0 (`0.x`) are under initial development and may not yet follow all of these conventions.
+
 === Declarative Configuration
 
 Configuration capabilities are exposed through declarative endpoints.

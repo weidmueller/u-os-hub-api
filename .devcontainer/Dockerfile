@@ -15,6 +15,7 @@ RUN apt-get update \
     jq \
     reuse \
     sudo \
+    yq \
     && rm -rf /var/lib/apt/lists/*
 
 # Install oasdiff
