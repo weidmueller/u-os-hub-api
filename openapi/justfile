@@ -37,8 +37,14 @@ check: check-client-generation
             git diff --name-status -M origin/main |
                 awk -F '\t' -v current_path="openapi/${spec##*/}" '$1 ~ /^R/ && $3 == current_path { current_path = $2 } END { print current_path }'
         )"
+        if ! git cat-file -e "origin/main:${main_spec_path}" 2>/dev/null; then
+            printf 'Skipping breaking change check for %s: not present on origin/main.\n' "${spec##*/}"
+            continue
+        fi
         printf 'Checking %s for breaking changes...\n' "${spec##*/}"
-        git show "origin/main:${main_spec_path}" | oasdiff breaking - "${spec}" -o WARN --err-ignore "${project_dir}/../tools/oasdiff-ignore.txt"
+        git show "origin/main:${main_spec_path}" | oasdiff breaking - "${spec}" -o WARN \
+            --err-ignore "${project_dir}/../tools/oasdiff-ignore.txt" \
+            --warn-ignore "${project_dir}/../tools/oasdiff-ignore.txt"
     done
 
 check-client-generation:
