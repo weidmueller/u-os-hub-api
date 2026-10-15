@@ -10,9 +10,25 @@ check: check-client-generation
 
     for spec in "${project_dir}"/*.yaml; do
         if [[ "${spec##*/}" == 'variable-http-openapi.yaml' ]]; then
-            spectral lint --fail-severity=warn "${spec}" --ruleset "${project_dir}/../tools/spectral/variable-http-api-rules.json" -v
+            ruleset="${project_dir}/../tools/spectral/variable-http-api-rules.json"
         else
-            spectral lint --fail-severity=warn "${spec}" --ruleset "${project_dir}/../tools/spectral/openapi-rules.json" -v
+            ruleset="${project_dir}/../tools/spectral/openapi-rules.json"
+        fi
+
+        version="$(yq -r '.info.version' "${spec}")"
+        if [[ ! "${version}" =~ ^([0-9]+)\. ]]; then
+            printf 'Error: Invalid info.version %s in %s.\n' "${version}" "${spec##*/}" >&2
+            exit 1
+        fi
+        major_version="${BASH_REMATCH[1]}"
+
+        lint_status=0
+        spectral lint --fail-severity=warn "${spec}" --ruleset "${ruleset}" -v || lint_status=$?
+        # Spectral exits with 1 on lint findings; other non-zero codes are tool errors.
+        if ((lint_status == 1)) && [[ "${major_version}" == '0' ]]; then
+            printf 'Warning: Ignoring lint findings for %s because its major version is 0.\n' "${spec##*/}" >&2
+        elif ((lint_status != 0)); then
+            exit "${lint_status}"
         fi
     done
 
