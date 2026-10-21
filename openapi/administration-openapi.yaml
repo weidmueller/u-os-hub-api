@@ -2372,6 +2372,12 @@ components:
           format: int32
           description: Sort order of the rule. Lower values are evaluated first.
           minimum: 0
+    ForwardingState:
+      type: string
+      enum:
+      - FORWARDING
+      - DISCARDING
+      - LEARNING
     GenericIpv4Config:
       type: object
       description: |-
@@ -3032,9 +3038,9 @@ components:
                 - ip: 192.168.30.101
                   prefix_length: 24
               ports:
-                swp-x4:
+                swp-x6:
                   has_carrier: true
-                swp-x5:
+                swp-x7:
                   has_carrier: false
         routes:
           type: array
@@ -3278,16 +3284,9 @@ components:
     P2pState:
       type: string
       enum:
-      - YES
-      - NO
+      - 'YES'
+      - 'NO'
       - AUTO
-    PState:
-      type: string
-      enum:
-      - FORWARDING
-      - BLOCKING
-      - DISCARDING
-      - LEARNING
     PartialCanInterfaceConfig:
       type: object
       properties:
@@ -4275,7 +4274,7 @@ components:
       enum:
       - ROOT
       - DESIGNATED
-      - ALTERNATED
+      - ALTERNATE
       - DISABLED
       - BACKUP
     PostroutingAction:
@@ -4421,25 +4420,25 @@ components:
               forward_delay_seconds: 15
               max_age_seconds: 6
               ports:
-                swp-x4:
+                swp-x6:
                   admin_edge: false
                   auto_edge: false
                   bpdu_filter: false
                   bpdu_guard: false
                   network_port: false
                   path_cost: 1
-                  point_to_point: YES
+                  point_to_point: 'YES'
                   priority: 2
                   restrict_root_role: false
                   restrict_topology_change: false
-                swp-x5:
+                swp-x7:
                   admin_edge: false
                   auto_edge: false
                   bpdu_filter: false
                   bpdu_guard: false
                   network_port: false
                   path_cost: 1
-                  point_to_point: YES
+                  point_to_point: 'YES'
                   priority: 0
                   restrict_root_role: false
                   restrict_topology_change: false
@@ -4463,7 +4462,7 @@ components:
               forward_delay_seconds: 15
               max_age_seconds: 20
               ports:
-                swp-x4:
+                swp-x6:
                   bpdu_guard_error: false
                   bridge_assurance_inconsistent: false
                   counter:
@@ -4488,7 +4487,7 @@ components:
                   send_rstp: true
                   state: DISCARDING
                   topology_change_ack: false
-                swp-x5:
+                swp-x7:
                   bpdu_guard_error: false
                   bridge_assurance_inconsistent: false
                   counter:
@@ -4516,7 +4515,7 @@ components:
               root_path_cost: 0
               root_port: null
               topology_change:
-                last_topology_change_port: swp-x5
+                last_topology_change_port: swp-x7
                 time_since_topology_change_seconds: 57026
                 topology_change: false
                 topology_change_count: 0
@@ -4735,7 +4734,10 @@ components:
         blocking_transitions:
           type: integer
           format: int32
-          description: Number of times the port has transitioned to the blocking state since bridge enable.
+          description: |-
+            Number of times the port has transitioned to the blocking state since the bridge was enabled.
+            Only transitions to the kernel state `BR_STATE_BLOCKING` are counted.
+            Transitions to `BR_STATE_DISABLED` or `BR_STATE_LISTENING` are not counted.
           minimum: 0
         bpdu_received:
           type: integer
@@ -4881,7 +4883,7 @@ components:
           type: integer
           format: int32
           description: Path cost associated with the port.
-          maximum: 2000000
+          maximum: 200000000
           minimum: 1
         role:
           $ref: '#/components/schemas/PortRole'
@@ -4890,7 +4892,7 @@ components:
           type: boolean
           description: Indicates whether the port is sending RSTP BPDUs. False indicates STP compatible mode.
         state:
-          $ref: '#/components/schemas/PState'
+          $ref: '#/components/schemas/ForwardingState'
           description: Current state of the port.
         topology_change_ack:
           type: boolean
