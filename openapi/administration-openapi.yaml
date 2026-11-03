@@ -4236,7 +4236,7 @@ components:
           description: |-
             The name of the parent interface to which this VLAN is attached.
 
-            Currently, only physical interfaces are supported as parent interfaces.
+            Currently, only physical interfaces that are not attached to a network bridge are supported as parent interfaces.
         shared_mode:
           $ref: '#/components/schemas/PartialSharedModeConfig'
           description: |-
@@ -5609,7 +5609,7 @@ components:
           description: |-
             The name of the parent interface to which this VLAN is attached.
 
-            Currently, only physical interfaces are supported as parent interfaces.
+            Currently, only physical interfaces that are not attached to a network bridge are supported as parent interfaces.
         shared_mode:
           $ref: '#/components/schemas/SharedModeConfig'
           description: |-
