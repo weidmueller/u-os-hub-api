@@ -1957,11 +1957,55 @@ components:
           type: string
         roleMappings:
           $ref: '#/components/schemas/RoleMappings'
+        uidNumberField:
+          type: string
+          description: |
+            LDAP user attribute holding the numeric POSIX user id. Defaults to `uidNumber`.
+        gidNumberField:
+          type: string
+          description: |
+            LDAP user attribute holding the numeric POSIX primary group id. Defaults to `gidNumber`.
+        gidNameField:
+          type: string
+          description: |
+            Attribute of the `posixGroup` entry (matched by `gidNumber`) holding the primary group name.
+            Defaults to `cn`. If no group is found, the group is named after the user.
+        homeDirectoryField:
+          type: string
+          description: |
+            LDAP user attribute holding the home directory. Defaults to `homeDirectory`.
+            Falls back to `/home/<username>` if the attribute is empty.
+        loginShellField:
+          type: string
+          description: |
+            LDAP user attribute holding the login shell. Defaults to `loginShell`.
       required:
         - enabled
         - host
         - port
         - usr_attr
+      example:
+        enabled: true
+        host: ldap.example.com
+        port: 3890
+        usr_attr: uid
+        additional_dn: ou=people,dc=example,dc=com
+        bind_usr_dn: uid=admin,ou=people,dc=example,dc=com
+        bind_usr_pw: secret
+        user_filter: (objectClass=person)
+        usr_login_attr: uid
+        encryption: None
+        displayName: displayName
+        roleMappings:
+          - groupAttribute: memberOf
+            attributeValue: cn=iam_admins,ou=groups,dc=example,dc=com
+            mappedRoleIds:
+              - f47ac10b-58cc-4372-a567-0e02b2c3d479
+        uidNumberField: uidNumber
+        gidNumberField: gidNumber
+        gidNameField: cn
+        homeDirectoryField: homeDirectory
+        loginShellField: loginShell
     
     RoleMappings:
       type: array
