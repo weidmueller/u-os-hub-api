@@ -33,8 +33,12 @@ paths:
   /auth/logout:
     post:
       summary: Logout user from all sessions
-      description: Invalidate all sessions for the given user. The username must match the username in the provided token. |
-        Otherwise, the requesting user must have the "user-management:administrate" permission.
+      description: |
+        Invalidate all sessions for the given user. The username must match the username in the provided token.
+        Otherwise, the requesting user must have the "u-os-iam.administrate" permission.
+
+        Note that despite its name, the `username` property must contain the ID of the user (the subject of the token).
+        All access and refresh tokens of the user are revoked, independent of the client they were issued to.
       tags: [Authentication]
       operationId: Logout
       security:
@@ -56,7 +60,9 @@ paths:
       summary: Change password
       tags: [Authentication]
       operationId: ChangePassword
-      description: Change password using a nonce received from a forced password change after successful login.
+      description: |
+        Change password using a nonce received from a forced password change after successful login.
+        All sessions of the user are revoked.
       requestBody:
         required: true
         content:
@@ -74,7 +80,9 @@ paths:
       summary: Change password
       tags: [Authentication]
       operationId: ChangePasswordUser
-      description: Change password by providing the old password.
+      description: |
+        Change password by providing the old password. Only available for local users, not for users
+        authenticated via LDAP. All sessions of the user are revoked, including the one used for this request.
       security:
         - oauth2Profiles: []
       requestBody:
@@ -114,7 +122,9 @@ paths:
       summary: Create OAuth2 client
       tags: [Authentication]
       operationId: CreateOAuth2Client
-      description: Create a new OAuth2 client.
+      description: |
+        Create a new OAuth2 client.
+        The client secret is only returned in the response of this request.
       security:
         - oauth2Profiles: [u-os-iam.write]
       requestBody:
@@ -161,7 +171,9 @@ paths:
       summary: Update OAuth2 client
       tags: [Authentication]
       operationId: UpdateOAuth2Client
-      description: Update an existing OAuth2 client.
+      description: |
+        Update an existing OAuth2 client.
+        Clients created by the system (`canModify` is false) cannot be updated. The client secret is kept.
       security:
         - oauth2Profiles: [u-os-iam.write]
       parameters:
@@ -189,7 +201,9 @@ paths:
       summary: Delete OAuth2 client
       tags: [Authentication]
       operationId: DeleteOAuth2Client
-      description: Delete an existing OAuth2 client by its ID.
+      description: |
+        Delete an existing OAuth2 client by its ID.
+        Clients created by the system (`canModify` is false) cannot be deleted.
       security:
         - oauth2Profiles: [u-os-iam.write]
       parameters:
@@ -265,7 +279,9 @@ paths:
       summary: Update session configuration
       tags: [Authentication]
       operationId: UpdateSessionConfig
-      description: Update the session configuration.
+      description: |
+        Update the session configuration.
+        The new inactivity timeout applies immediately, including to existing sessions.
       security:
         - oauth2Profiles: [u-os-iam.administrate]
       requestBody:
@@ -337,7 +353,9 @@ paths:
       summary: Update login configuration
       tags: [Authentication]
       operationId: UpdateLoginConfig
-      description: Update the login attempt configuration.
+      description: |
+        Update the login attempt configuration.
+        Users which are already blocked stay blocked, and running timed blocks keep their original duration.
       security:
         - oauth2Profiles: [u-os-iam.administrate]
       requestBody:
@@ -418,7 +436,9 @@ paths:
       summary: Retrieve current LDAP configuration
       tags: [Authentication]
       operationId: GetLDAPConfiguration
-      description: Returns the currently set LDAP configuration
+      description: |
+        Returns the currently set LDAP configuration.
+        The bind password and the SSL certificate are not returned, see `LdapConfiguration`.
       security:
         - oauth2Profiles: [u-os-iam.read]
       responses: 
@@ -434,7 +454,9 @@ paths:
       summary: Update LDAP configuration
       tags: [Authentication]
       operationId: UpdateLDAPConfiguration
-      description: Update the LDAP configuration.
+      description: |
+        Update the LDAP configuration.
+        LDAP users which are currently logged in keep their sessions and roles until they log in again.
       security:
         - oauth2Profiles: [u-os-iam.write]
       requestBody:
@@ -653,7 +675,9 @@ paths:
       summary: Update password rules
       tags: [Users]
       operationId: UpdatePasswordRules
-      description: Update the password rules.
+      description: |
+        Update the password rules.
+        The rules apply to passwords which are set from now on. Existing passwords are not checked again.
       security:
         - oauth2Profiles: [u-os-iam.administrate]
       requestBody:
@@ -723,7 +747,14 @@ paths:
       summary: Delete user
       tags: [Users]
       operationId: DeleteUser
-      description: Delete a specific user by their ID. Note that deleting an admin user additionally requires u-os-iam.administrate
+      description: |
+        Delete a specific user by their ID. Note that deleting an admin user additionally requires u-os-iam.administrate
+
+        Notes:
+          * The last admin user cannot be deleted.
+          * All sessions of the user are revoked.
+          * If SSH access is enabled for users, the system account of the user is removed as well.
+            Its numeric user ID will not be reused.
       security:
         - oauth2Profiles: [u-os-iam.write]
       parameters:
@@ -758,18 +789,19 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Uuid'
-              example:
-                - f47ac10b-58cc-4372-a567-0e02b2c3d479
+                $ref: '#/components/schemas/RoleIdList'
         default:
           $ref: '#/components/responses/ProblemJsonResponse'
     put:
-      summary: Add roles to a user. Note that adding users to the admin role additionally requires u-os-iam.administrate
+      summary: Add roles to a user
       tags: [UsersRoles]
       operationId: AddRolesToUser
-      description: Assign roles to a specific user.
+      description: |
+        Assign roles to a specific user. Note that adding users to the admin role additionally requires u-os-iam.administrate
+
+        The given roles are added to the roles the user already has; existing assignments are kept and
+        duplicates are ignored. To remove roles, use DELETE. The user and all roles must exist.
+        Permission changes take effect when the next access token of the user is issued, admin role changes immediately.
       security:
         - oauth2Profiles: [u-os-iam.write]
       parameters:
@@ -783,11 +815,7 @@ paths:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/Uuid'
-              example:
-                - f47ac10b-58cc-4372-a567-0e02b2c3d479
+              $ref: '#/components/schemas/RoleIdList'
       responses:
         '204':
           description: Successful added roles to user
@@ -797,7 +825,11 @@ paths:
       summary: Remove roles from user
       tags: [UsersRoles]
       operationId: RemoveRolesFromUser
-      description: Remove roles from a specific user. Note that removing users from the admin role additionally requires u-os-iam.administrate
+      description: |
+        Remove roles from a specific user. Note that removing users from the admin role additionally requires u-os-iam.administrate
+
+        Only the given roles are removed; roles which are not assigned to the user are ignored.
+        The last admin user cannot be removed from the admin role.
       security:
         - oauth2Profiles: [u-os-iam.write]
       parameters:
@@ -811,11 +843,7 @@ paths:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/Uuid'
-              example:
-                - f47ac10b-58cc-4372-a567-0e02b2c3d479
+              $ref: '#/components/schemas/RoleIdList'
       responses:
         '204':
           description: Successful removed roles from user
@@ -827,7 +855,9 @@ paths:
       summary: Change user password
       tags: [Users]
       operationId: ChangePasswordAdmin
-      description: Change password for a specific user by an administrator. The user must set a new password at next login.
+      description: |
+        Change password for a specific user by an administrator. The user must set a new password at next login.
+        All sessions of the user are revoked.
       security:
         - oauth2Profiles: [u-os-iam.administrate]
       parameters:
@@ -853,7 +883,9 @@ paths:
       summary: Deactivate user
       tags: [Users]
       operationId: DeactivateUser
-      description: Deactivate a specific user. The user remains deactivated until reactivated.
+      description: |
+        Deactivate a specific user. The user remains deactivated until reactivated.
+        All sessions of the user are revoked and logins are rejected. The last admin user cannot be deactivated.
       security:
         - oauth2Profiles: [u-os-iam.administrate]
       parameters:
@@ -872,7 +904,9 @@ paths:
       summary: Activate user
       tags: [Users]
       operationId: ActivateUser
-      description: Activate a specific user.
+      description: |
+        Activate a specific user.
+        This also resets the failed login attempts of the user and lifts a login block.
       security:
         - oauth2Profiles: [u-os-iam.administrate]
       parameters:
@@ -904,17 +938,7 @@ paths:
           content:
             application/json:
               schema:
-                oneOf:
-                  - type: array
-                    items:
-                      type: string
-                    example:
-                      - permission1
-                      - permission2
-                      - permission3
-                  - type: string
-                    enum:
-                      - "bypassAll"
+                $ref: '#/components/schemas/CurrentUserPermissions'
         default:
           $ref: '#/components/responses/ProblemJsonResponse'
     post:
@@ -940,18 +964,7 @@ paths:
           content:
             application/json:
               schema:
-                oneOf:
-                  - type: array
-                    items:
-                      type: string
-                    example:
-                      - permission1
-                      - permission2
-                      - permission3
-                  - type: string
-                    enum:
-                      - "bypassAll"
-                    example: bypassAll
+                $ref: '#/components/schemas/CurrentUserPermissions'
         default:
           $ref: '#/components/responses/ProblemJsonResponse'
   /users/current/ephemeral:
@@ -979,7 +992,8 @@ paths:
     get:
       summary: Check for system user
       description: |
-        Checks if a system user has already been defined.
+        Checks if a system user has already been defined. If not, the system user can be created
+        via /users/create-system-user.
       tags: [Users]
       operationId: HasSystemUser
       responses:
@@ -996,7 +1010,15 @@ paths:
     post:
       summary: Creates a system user
       description: |
-        Create a system user if none is available
+        Create the system user, which is the first admin user. This request does not require authentication
+        and can only succeed once: it fails as soon as an admin user exists.
+        All other endpoints are unavailable until the system user is created.
+
+        On u-OS this request is part of the first-time setup, which brings the device from its delivery state
+        into its operating state. Besides creating the system user, this has the following side effects:
+          * The EULA is accepted.
+          * The beta policy is accepted (if applicable).
+          * The LUM is disabled.
       tags: [Users]
       operationId: CreateSystemUser
       requestBody:
@@ -1054,9 +1076,9 @@ paths:
         default:
           $ref: '#/components/responses/ProblemJsonResponse'
 
-  /roles/{rolesId}:
+  /roles/{roleId}:
     parameters:
-      - name: rolesId
+      - name: roleId
         in: path
         required: true
         description: The ID of the role
@@ -1106,7 +1128,10 @@ paths:
       summary: Delete role
       tags: [Roles]
       operationId: DeleteRole
-      description: Delete an existing role by its ID. Note that the admin role cannot be deleted.
+      description: |
+        Delete an existing role by its ID. Note that the admin role cannot be deleted.
+
+        The role is also removed from all users, and its ID is removed from the LDAP role mappings.
       security:
         - oauth2Profiles: [u-os-iam.write]
       responses:
@@ -1135,18 +1160,19 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: string
-              example:
-                - user1
+                $ref: '#/components/schemas/UserIdList'
         default:
           $ref: '#/components/responses/ProblemJsonResponse'
     put:
       summary: Add users to role.
       tags: [UsersRoles]
       operationId: AddUsersToRole
-      description: Assign users to a specific role. Note that adding users to admin role additionally requires u-os-iam.administrate
+      description: |
+        Assign users to a specific role. Note that adding users to admin role additionally requires u-os-iam.administrate
+
+        The given users are added to the users which already have the role; existing assignments are kept and
+        duplicates are ignored. To remove users, use DELETE. The role and all users must exist.
+        Permission changes take effect when the next access token of a user is issued, admin role changes immediately.
       security:
         - oauth2Profiles: [u-os-iam.write]
       parameters:
@@ -1160,11 +1186,7 @@ paths:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                type: string
-              example:
-                - user1
+              $ref: '#/components/schemas/UserIdList'
       responses:
         '204':
           description: Successfully added users to role
@@ -1174,7 +1196,11 @@ paths:
       summary: Remove users from role
       tags: [UsersRoles]
       operationId: RemoveUsersFromRole
-      description: Remove users from a specific role. Note that removing users from admin role additionally requires u-os-iam.administrate
+      description: |
+        Remove users from a specific role. Note that removing users from admin role additionally requires u-os-iam.administrate
+
+        Only the given users are removed; users which do not have the role are ignored.
+        The last admin user cannot be removed from the admin role.
       security:
         - oauth2Profiles: [u-os-iam.write]
       parameters:
@@ -1188,11 +1214,7 @@ paths:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                type: string
-              example:
-                - user1
+              $ref: '#/components/schemas/UserIdList'
       responses:
         '204':
           description: Successfully removed users from role
@@ -1219,16 +1241,19 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: string
+                $ref: '#/components/schemas/PermissionScopeList'
         default:
           $ref: '#/components/responses/ProblemJsonResponse'
     put:
       summary: Add permissions to role.
       tags: [RolesPermissions]
       operationId: AddPermissionsToRole
-      description: Assign permissions to a specific role.
+      description: |
+        Assign permissions to a specific role.
+
+        The given permission scopes are added to the scopes the role already has; existing assignments are kept and
+        duplicates are ignored. To remove scopes, use DELETE. All scopes must exist.
+        Changes take effect when the next access token of an affected user is issued.
       security:
         - oauth2Profiles: [u-os-iam.write]
       parameters:
@@ -1242,11 +1267,7 @@ paths:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                type: string
-              example:
-                - permission1
+              $ref: '#/components/schemas/PermissionScopeList'
       responses:
         '204':
           description: Successfully added permissions to role
@@ -1256,7 +1277,11 @@ paths:
       summary: Remove permissions from role
       tags: [RolesPermissions]
       operationId: RemovePermissionsFromRole
-      description: Remove permissions from a specific role.
+      description: |
+        Remove permissions from a specific role.
+
+        Only the given permission scopes are removed; scopes which are not assigned to the role are ignored.
+        Changes take effect when the next access token of an affected user is issued.
       security:
         - oauth2Profiles: [u-os-iam.write]
       parameters:
@@ -1270,11 +1295,7 @@ paths:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                type: string
-              example:
-                - permission1
+              $ref: '#/components/schemas/PermissionScopeList'
       responses:
         '204':
           description: Successfully removed permissions from role
@@ -1305,7 +1326,10 @@ paths:
       summary: Create or update permission
       tags: [Permissions]
       operationId: CreateOrUpdatePermission
-      description: Create a new permission or update an existing one.
+      description: |
+        Create a new permission or update an existing one.
+        When updating, scopes which are no longer part of the permission are removed from all roles and from
+        the unauthenticated access configuration.
       security:
         - oauth2Profiles: [u-os-iam.write]
       requestBody:
@@ -1329,7 +1353,10 @@ paths:
       summary: Delete permission
       tags: [Permissions]
       operationId: DeletePermission
-      description: Delete an existing permission by its service ID.
+      description: |
+        Delete an existing permission by its service ID.
+        Its scopes are removed from all roles and from the unauthenticated access configuration.
+        Permissions which were not created via this API cannot be deleted.
       security:
         - oauth2Profiles: [u-os-iam.write]
       parameters:
@@ -1364,11 +1391,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: string
-              example:
-                - role1
+                $ref: '#/components/schemas/RoleIdList'
         default:
           $ref: '#/components/responses/ProblemJsonResponse'
 
@@ -1481,6 +1504,8 @@ components:
           type: string
         canModify:
           type: boolean
+          description: |
+            Read-only. False for clients created by the system, which cannot be updated or deleted via this API.
       required:
         - redirectURL
         - postLogoutRedirectURL
@@ -1597,7 +1622,6 @@ components:
         id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
         username: jdoe
         lastLogin: 2020-01-01T12:00:00Z
-        status: Offline
         active: Online
 
     
@@ -1857,7 +1881,7 @@ components:
           description: |
             Duration in minutes for which the user is blocked from logging in 
             after reaching the maximum number of failed attempts. 
-            Only applicable if loginBlockType is set to 'LoginBlockTimed'.
+            Only applicable if login_block_type is set to 'LoginBlockTimed'.
       example:
         consecutive_failed_logins_time_frame: 10
         max_consecutive_failed_logins: 3
@@ -1887,35 +1911,82 @@ components:
 
     ProblemJson:
       type: object
+      description: Problem details as per RFC 9457.
       properties:
         type:
           type: string
+          description: URI reference identifying the problem type. "about:blank" means the problem has no semantics beyond the HTTP status code.
         title:
           type: string
+          description: Short, human-readable summary of the problem type.
         status:
           type: integer
           format: int32
+          description: HTTP status code of the response.
         detail:
           type: string
+          description: Human-readable explanation specific to this occurrence of the problem.
         instance:
           type: string
+      required:
+        - type
+        - title
+        - status
       example:
-        type: https://example.com/probs/out-of-credit
-        title: You do not have enough credit.
+        type: about:blank
+        title: Forbidden
         status: 403
-        detail: Your current balance is 30, but that costs 50.
-        instance: /account/12345/transactions/abc
+        detail: Forbidden
     
     Uuid:
       type: string
       format: uuid
       example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+
+    RoleIdList:
+      type: array
+      description: List of role IDs.
+      items:
+        $ref: '#/components/schemas/Uuid'
+      example:
+        - f47ac10b-58cc-4372-a567-0e02b2c3d479
+
+    UserIdList:
+      type: array
+      description: List of user IDs.
+      items:
+        $ref: '#/components/schemas/Uuid'
+      example:
+        - f47ac10b-58cc-4372-a567-0e02b2c3d479
+
+    PermissionScopeList:
+      type: array
+      description: List of permission scopes.
+      items:
+        type: string
+      example:
+        - data_read
+        - data_write
+
+    BypassAllPermissions:
+      type: string
+      description: Returned instead of a list of permission scopes if the user is allowed to access everything.
+      enum:
+        - bypassAll
+      example: bypassAll
+
+    CurrentUserPermissions:
+      description: Either the permission scopes of the user or "bypassAll" for users which are allowed to access everything.
+      oneOf:
+        - $ref: '#/components/schemas/PermissionScopeList'
+        - $ref: '#/components/schemas/BypassAllPermissions'
     
     UserNameString:
       type: string
-      format: ^[a-zA-Z0-9-_]$
       maxLength: 64
-      description: A string for valid user names.
+      description: |
+        A valid user name. Must start with a letter or underscore, followed by at least one letter,
+        digit, underscore or hyphen (regular expression `^[a-zA-Z_][a-zA-Z0-9_-]+$`).
       example: SafeUsername1
     
     LdapConfiguration:
@@ -2053,7 +2124,7 @@ components:
     
   responses:
     ProblemJsonResponse:
-      description: Problem Details as per RFC 7807
+      description: Problem Details as per RFC 9457
       content:
         application/problem+json:
           schema:
