@@ -5,6 +5,19 @@
 # Ignored oasdiff breaking-change findings.
 # See: https://github.com/oasdiff/oasdiff/blob/main/docs/BREAKING-CHANGES.md#ignoring-specific-breaking-changes
 
+POST /auth/clients the `clientName` request property's maxLength was set to `63`
+PUT /auth/clients/{clientId} the `clientName` request property's maxLength was set to `63`
+POST /roles the `name` request property's maxLength was set to `64`
+POST /roles added the pattern `^[a-zA-Z_][a-zA-Z0-9_-]*$` to the request property `name`
+DELETE /roles/{roleId}/users the `items/` request property `format` changed from `none` to `uuid`
+PUT /roles/{roleId}/users the `items/` request property `format` changed from `none` to `uuid`
+GET /users the `items/username` response's property `format` changed from `^[a-zA-Z0-9-_]$` to `none` for status `200`
+POST /users the `username` response's property `format` changed from `^[a-zA-Z0-9-_]$` to `none` for status `200`
+PUT /users the `items/username` response's property `format` changed from `^[a-zA-Z0-9-_]$` to `none` for status `200`
+GET /users/{userId} the `username` response's property `format` changed from `^[a-zA-Z0-9-_]$` to `none` for status `200`
+PUT /users/{userId} the `username` response's property `format` changed from `^[a-zA-Z0-9-_]$` to `none` for status `200`
+PUT /roles/{rolesId} the `allOf[#/components/schemas/RoleNoId]/name` request property's maxLength was set to `64`
+PUT /roles/{rolesId} added the pattern `^[a-zA-Z_][a-zA-Z0-9_-]*$` to the request property `allOf[#/components/schemas/RoleNoId]/name`
 PATCH /update/config removed `subschema #1` from the `signed_update/preinstalled_gpg_keys` request property `oneOf` list
 PATCH /update/config the `signed_update/preinstalled_gpg_keys` request property `type` changed from `any` to `object`
 PUT /update/config added the new required request property `signed_update/preinstalled_gpg_keys/enabled`
