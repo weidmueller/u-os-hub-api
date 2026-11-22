@@ -2910,7 +2910,10 @@ components:
                   enabled: false
         network_bridges:
           type: object
-          description: Contains all network bridges that are configured in the system.
+          description: |-
+            Contains all configurable network bridges in the system.
+
+            Some bridges may only be availabe in the state endpoint and not configurable through this endpoint.
           additionalProperties:
             $ref: '#/components/schemas/NetworkBridgeConfig'
           propertyNames:
@@ -3763,7 +3766,10 @@ components:
                 dhcp: true
         network_bridges:
           type: object
-          description: Contains all network bridges that are configured in the system.
+          description: |-
+            Contains all configurable network bridges in the system.
+
+            Some bridges may only be availabe in the state endpoint and not configurable through this endpoint.
           additionalProperties:
             $ref: '#/components/schemas/PartialNetworkBridgeConfig'
           propertyNames:
@@ -4251,6 +4257,8 @@ components:
             The VLAN ID for this interface.
 
             Must be unique per parent interface.
+            Please note that VLAN ID 0 is special and typically used to indicate priority tagging
+            instead of a normal VLAN.
           example: 10
           maximum: 4094
           minimum: 0
@@ -5624,6 +5632,8 @@ components:
             The VLAN ID for this interface.
 
             Must be unique per parent interface.
+            Please note that VLAN ID 0 is special and typically used to indicate priority tagging
+            instead of a normal VLAN.
           example: 10
           maximum: 4094
           minimum: 0

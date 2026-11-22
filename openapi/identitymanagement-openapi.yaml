@@ -944,9 +944,11 @@ paths:
     post:
       summary: Get current permissions
       description: |
-        Get the current permissions of the authenticated user.
-        This endpoint returns a list of permissions that the user has.
-        The token must be provided in the body as a Bearer token.
+        Get the permissions associated with an access token.
+        This endpoint returns a list of permissions that the token's subject has.
+        It must contain the token as plain text in the form `Bearer <token>`,
+        and the permissions of that token's subject are returned, which need not be the caller.
+        If the body is empty, the permissions of the caller are returned.
       tags: [Users]
       operationId: GetPermissionsForCurrentUserPost
       security:
