@@ -11,7 +11,7 @@ info:
   license:
     name: MIT
     identifier: MIT
-  version: 1.6.1
+  version: 1.6.3
 servers:
 - url: /u-os-adm/api/v1
 paths:
@@ -2910,7 +2910,10 @@ components:
                   enabled: false
         network_bridges:
           type: object
-          description: Contains all network bridges that are configured in the system.
+          description: |-
+            Contains all configurable network bridges in the system.
+
+            Some bridges may only be availabe in the state endpoint and not configurable through this endpoint.
           additionalProperties:
             $ref: '#/components/schemas/NetworkBridgeConfig'
           propertyNames:
@@ -3071,22 +3074,14 @@ components:
       type: object
       required:
       - ntp_synchronized
-      - link_ntp_servers
       - current_server
       properties:
         current_server:
           type: string
           description: |-
             The NTP server currently used for time synchronisation.
-            The NTP servers are used in the following order if a server is unavailable: `link_servers` (DHCP) > configured servers. The fallback servers will only be used when nothing else is configured.
+            The fallback servers will only be used when nothing else is configured.
             If no server is currently being used for synchronisation, this entry is empty.
-        link_ntp_servers:
-          type: array
-          items:
-            type: string
-          description: |-
-            NTP servers provided by network link configuration (DHCP).
-            These are runtime-discovered servers and are independent from `ntp_servers` in `/time/config`.
         ntp_synchronized:
           type: boolean
           description: Whether the system clock is currently synchronized via NTP.
@@ -3763,7 +3758,10 @@ components:
                 dhcp: true
         network_bridges:
           type: object
-          description: Contains all network bridges that are configured in the system.
+          description: |-
+            Contains all configurable network bridges in the system.
+
+            Some bridges may only be availabe in the state endpoint and not configurable through this endpoint.
           additionalProperties:
             $ref: '#/components/schemas/PartialNetworkBridgeConfig'
           propertyNames:
@@ -4251,6 +4249,8 @@ components:
             The VLAN ID for this interface.
 
             Must be unique per parent interface.
+            Please note that VLAN ID 0 is special and typically used to indicate priority tagging
+            instead of a normal VLAN.
           example: 10
           maximum: 4094
           minimum: 0
@@ -5476,9 +5476,6 @@ components:
         local_time: 2026-01-15T12:00:00+02:00
         ntp:
           current_server: time1.google.com
-          link_ntp_servers:
-          - time1.google.com
-          - time2.google.com
           ntp_synchronized: true
     TimezoneItem:
       type: object
@@ -5624,6 +5621,8 @@ components:
             The VLAN ID for this interface.
 
             Must be unique per parent interface.
+            Please note that VLAN ID 0 is special and typically used to indicate priority tagging
+            instead of a normal VLAN.
           example: 10
           maximum: 4094
           minimum: 0
