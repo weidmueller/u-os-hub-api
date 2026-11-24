@@ -11,7 +11,7 @@ info:
   license:
     name: MIT
     identifier: MIT
-  version: 1.6.3
+  version: 1.6.1
 servers:
 - url: /u-os-adm/api/v1
 paths:
@@ -3074,14 +3074,22 @@ components:
       type: object
       required:
       - ntp_synchronized
+      - link_ntp_servers
       - current_server
       properties:
         current_server:
           type: string
           description: |-
             The NTP server currently used for time synchronisation.
-            The fallback servers will only be used when nothing else is configured.
+            The NTP servers are used in the following order if a server is unavailable: `link_servers` (DHCP) > configured servers. The fallback servers will only be used when nothing else is configured.
             If no server is currently being used for synchronisation, this entry is empty.
+        link_ntp_servers:
+          type: array
+          items:
+            type: string
+          description: |-
+            NTP servers provided by network link configuration (DHCP).
+            These are runtime-discovered servers and are independent from `ntp_servers` in `/time/config`.
         ntp_synchronized:
           type: boolean
           description: Whether the system clock is currently synchronized via NTP.
@@ -5476,6 +5484,9 @@ components:
         local_time: 2026-01-15T12:00:00+02:00
         ntp:
           current_server: time1.google.com
+          link_ntp_servers:
+          - time1.google.com
+          - time2.google.com
           ntp_synchronized: true
     TimezoneItem:
       type: object
