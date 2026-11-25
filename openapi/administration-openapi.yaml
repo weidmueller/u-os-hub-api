@@ -11,7 +11,7 @@ info:
   license:
     name: MIT
     identifier: MIT
-  version: 1.6.3
+  version: 1.6.3-next
 servers:
 - url: /u-os-adm/api/v1
 paths:
@@ -4642,7 +4642,7 @@ components:
           propertyNames:
             type: string
             description: Name of an Ethernet interface. Limited to 1..=15 printable ASCII characters, excluding '/' and whitespace.
-            pattern: ^(?:[!-\-0-~][!-.0-~]{0,14}|\.[!-\-0-~][!-.0-~]{0,13}|\.\.[!-.0-~]{1,13})$
+            pattern: '^(?:[!-\-0-~][!-.0-~]{0,14}|\.[!-\-0-~][!-.0-~]{0,13}|\.\.[!-.0-~]{1,13})$'
         priority:
           type: integer
           format: int32
